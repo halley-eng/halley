@@ -1,5 +1,5 @@
 baseurl = "https://halley-eng.github.io/halley/"
-title = "Mainroad"
+title = "Halley's Thinking"
 languageCode = "en-us"
 paginate = "10" # Number of posts per page
 theme = "mainroad"
@@ -7,12 +7,12 @@ disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 
 [Author]
-  name = "John Doe"
-  bio = "John Doe's true identity is unknown. Maybe he is a successful blogger or writer. Nobody knows it."
+  name = "Halley"
+  bio = "I'an interest in compute sience"
   avatar = "img/avatar.png"
 
 [Params]
-  description = "John Doe's Personal blog about everything" # Description of your site
+  description = "about Java、Algorithm and so on" # Description of your site
   opengraph = true
   twitter_cards = false
   readmore = false # Show "Read more" button in list if true
