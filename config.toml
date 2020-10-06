@@ -1,5 +1,5 @@
 baseurl = "https://halley-eng.github.io/halley/"
-title = "Halley's Thinking"
+title = "月亮惹的祸"
 languageCode = "en-us"
 paginate = "10" # Number of posts per page
 theme = "mainroad"
@@ -8,7 +8,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 
 [Author]
   name = "Halley"
-  bio = "I'an interest in compute sience"
+  bio = "I'am interest in compute sience"
   avatar = "img/avatar.png"
 
 [Params]
@@ -21,7 +21,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   post_meta = ["date", "categories"] # Order of post meta information
 
 [Params.logo]
-  subtitle = "Just another site" # Logo subtitle
+  subtitle = "时间过去总得留下些痕迹" # Logo subtitle
 
 [Params.sidebar]
   home = "right"   # Configure layout for home page
