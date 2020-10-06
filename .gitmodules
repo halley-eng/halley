@@ -1,3 +1,6 @@
 [submodule "themes/hugo-primer"]
 	path = themes/hugo-primer
 	url = https://github.com/qqhann/hugo-primer
+[submodule "mainroad"]
+	path = mainroad
+	url = https://github.com/vimux/mainroad
