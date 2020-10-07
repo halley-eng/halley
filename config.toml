@@ -1,6 +1,6 @@
 baseurl = "https://halley-eng.github.io/halley/"
 title = "月亮惹的祸"
-languageCode = "en-us"
+languageCode = "zh_CN"
 paginate = "10" # Number of posts per page
 theme = "mainroad"
 disqusShortname = "" # Enable comments by entering your Disqus shortname
@@ -19,6 +19,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   authorbox = true
   pager = true
   post_meta = ["date", "categories"] # Order of post meta information
+  pluralizelisttitles = false
 
 [Params.logo]
   subtitle = "时间过去总得留下些痕迹" # Logo subtitle
@@ -37,11 +38,11 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 
 [menu]
 
-
   [[menu.main]]
-    name = "算 法"
+    name = "算法"
     title = "leetcode 题解报告"
     post = "<span class='alert'>New!</span>"
     pre = "<i class='fa fa-road'></i>"
     url = "/算法/"
     weight = -100
+    pluralizelisttitles = false
