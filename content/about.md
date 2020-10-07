@@ -1,6 +1,6 @@
 ---
 title: 关于作者
-date: 2010-10-06
+date: 2020-10-06
 authorbox: false
 sidebar: false
 menu: main
