@@ -41,8 +41,17 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   [[menu.main]]
     name = "算法"
     title = "leetcode 题解报告"
-    post = "<span class='alert'>New!</span>"
+    post = "<span class='alert'></span>"
     pre = "<i class='fa fa-road'></i>"
     url = "/算法/"
+    weight = -100
+    pluralizelisttitles = false
+
+  [[menu.main]]
+    name = "JDK"
+    title = "jdk源码解析"
+    post = "<span class='alert'></span>"
+    pre = "<i class='fa fa-road'></i>"
+    url = "/jdk/"
     weight = -100
     pluralizelisttitles = false
