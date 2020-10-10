@@ -7,7 +7,7 @@ draft: false
 
 ![](http://assets.processon.com/chart_image/5f816448f346fb06e1c92ed3.png)
 
-2. [x] 三种不同的初始化方法   
+1. [x] 三种不同的初始化方法   
 2. [x] 扩缩容机制
 3. [x] null元素的特殊处理
 4. [x] removeIf 基于BitSet的实现;
@@ -401,5 +401,6 @@ transient 装饰字段 elementData 标示其不会被自动序列化
 
 
 ### 参考链接
-[c.toArray bug 问题](https://blog.csdn.net/GuLu_GuLu_jp/article/details/51457492)
-[序列化](https://blog.csdn.net/zero__007/article/details/52166306)
+
+1. [c.toArray bug 问题](https://blog.csdn.net/GuLu_GuLu_jp/article/details/51457492)
+2. [序列化](https://blog.csdn.net/zero__007/article/details/52166306)
