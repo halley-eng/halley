@@ -1,0 +1,242 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>集合之ArrayList - 月亮惹的祸</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="集合之ArrayList"><meta property="og:description" content="三种不同的初始化方法
+  扩缩容机制
+  null元素的特殊处理
+  removeIf 基于BitSet的实现;
+  序列化和反序列化
+  迭代器之内部类 ListItr,Itr
+  视图之内部类 SubList
+  底层数组修饰符transient有什么用?
+  ArrayListSpliterator
+transient Object[] elementData;
+  三种不同的初始化方法  指定容量初始化   容量为0时底层数组指向空数组; 容量有效则按需申请; 负数容量抛出异常  public ArrayList(int initialCapacity) { if (initialCapacity > 0) { this.elementData = new Object[initialCapacity]; } else if (initialCapacity == 0) { this.elementData = EMPTY_ELEMENTDATA; } else { throw new IllegalArgumentException(&#34;Illegal Capacity: &#34;+ initialCapacity); } } 默认空数组初始化  public ArrayList() { this."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Barraylist/"><meta property="article:published_time" content="2020-10-10T18:28:19+08:00"><meta property="article:modified_time" content="2020-10-10T18:28:19+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮惹的祸 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮惹的祸</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>集合之ArrayList</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-10-10T18:28:19+08:00>October 10, 2020</time></div></div></header><div class="content post__content clearfix"><p><img src=http://assets.processon.com/chart_image/5f816448f346fb06e1c92ed3.png alt></p><ol start=2><li><p><input checked disabled type=checkbox> 三种不同的初始化方法</p></li><li><p><input checked disabled type=checkbox> 扩缩容机制</p></li><li><p><input checked disabled type=checkbox> null元素的特殊处理</p></li><li><p><input checked disabled type=checkbox> removeIf 基于BitSet的实现;</p></li><li><p><input checked disabled type=checkbox> 序列化和反序列化</p></li><li><p><input checked disabled type=checkbox> 迭代器之内部类 ListItr,Itr</p></li><li><p><input checked disabled type=checkbox> 视图之内部类 SubList</p></li><li><p><input checked disabled type=checkbox> 底层数组修饰符transient有什么用?</p></li><li><p><input disabled type=checkbox> ArrayListSpliterator</p><p>transient Object[] elementData;</p></li></ol><h3 id=三种不同的初始化方法>三种不同的初始化方法</h3><ol><li>指定容量初始化</li></ol><ul><li>容量为0时底层数组指向空数组;</li><li>容量有效则按需申请;</li><li>负数容量抛出异常</li></ul><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>ArrayList</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> initialCapacity<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>initialCapacity <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>elementData</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Object<span style=color:#f92672>[</span>initialCapacity<span style=color:#f92672>];</span>
+        <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>initialCapacity <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>elementData</span> <span style=color:#f92672>=</span> EMPTY_ELEMENTDATA<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Illegal Capacity: &#34;</span><span style=color:#f92672>+</span>
+                                               initialCapacity<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><ol start=2><li>默认空数组初始化</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>   <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>ArrayList</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>elementData</span> <span style=color:#f92672>=</span> DEFAULTCAPACITY_EMPTY_ELEMENTDATA<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>当第一个元素添加的时候,
+会触发申请数组大小为 DEFAULT_CAPACITY == 10</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>E e<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        ensureCapacityInternal<span style=color:#f92672>(</span>size <span style=color:#f92672>+</span> 1<span style=color:#f92672>);</span>  <span style=color:#75715e>// Increments modCount!!
+</span><span style=color:#75715e></span>        elementData<span style=color:#f92672>[</span>size<span style=color:#f92672>++]</span> <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#75715e>// 触发申请数组大小DEFAULT_CAPACITY
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>ensureCapacityInternal</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> minCapacity<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>elementData <span style=color:#f92672>==</span> DEFAULTCAPACITY_EMPTY_ELEMENTDATA<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            minCapacity <span style=color:#f92672>=</span> Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>DEFAULT_CAPACITY<span style=color:#f92672>,</span> minCapacity<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+
+        ensureExplicitCapacity<span style=color:#f92672>(</span>minCapacity<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>所以, 这里其实是有一个延迟效果, 可以有效避免申请数组然后并没有add
+的情况, 但是代价是每次add 或者 ensureCapacityInternal的时候都要检测底层数组引用是否是 DEFAULTCAPACITY_EMPTY_ELEMENTDATA</p><ol start=3><li>依赖其他集合实现</li></ol><p>这里就可以看到Collection接口的toArray方法作用了,
+我们直接用其返回的数组作为ArrayList的底层数组;</p><p>特殊情况是</p><ul><li>非 Object[] 转换之;<ul><li>假如我们有 1 个Object[]数组，并不代表着我们可以将Object对象存进去，这取决于数组中元素实际的类型</li><li>所以这种情况集合的类型其实是Object;</li><li>解决方法是把目标数组在复制一遍, 并且新的类型为Object</li></ul></li><li>空数组还是引用到自身的空数组实现(注意不是默认数组)</li></ul><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>ArrayList</span><span style=color:#f92672>(</span>Collection<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> E<span style=color:#f92672>&gt;</span> c<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        elementData <span style=color:#f92672>=</span> c<span style=color:#f92672>.</span><span style=color:#a6e22e>toArray</span><span style=color:#f92672>();</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>size <span style=color:#f92672>=</span> elementData<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// c.toArray might (incorrectly) not return Object[] (see 6260652)
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>elementData<span style=color:#f92672>.</span><span style=color:#a6e22e>getClass</span><span style=color:#f92672>()</span> <span style=color:#f92672>!=</span> Object<span style=color:#f92672>[].</span><span style=color:#a6e22e>class</span><span style=color:#f92672>)</span>
+                elementData <span style=color:#f92672>=</span> Arrays<span style=color:#f92672>.</span><span style=color:#a6e22e>copyOf</span><span style=color:#f92672>(</span>elementData<span style=color:#f92672>,</span> size<span style=color:#f92672>,</span> Object<span style=color:#f92672>[].</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// replace with empty array.
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>elementData</span> <span style=color:#f92672>=</span> EMPTY_ELEMENTDATA<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h3 id=扩缩容机制>扩缩容机制</h3><h4 id=扩容>扩容</h4><p>还是以add方法为例</p><ol><li>游标移动前通过ensureCapacityInternal函数实现
+目标元素有效或者说容量足够;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>E e<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+
+        ensureCapacityInternal<span style=color:#f92672>(</span>size <span style=color:#f92672>+</span> 1<span style=color:#f92672>);</span>  <span style=color:#75715e>// Increments modCount!!
+</span><span style=color:#75715e></span>        elementData<span style=color:#f92672>[</span>size<span style=color:#f92672>++]</span> <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><ol start=2><li>如果目前底层函数是无参构造函数构建出来的则设置即将扩容为默认容量</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>ensureCapacityInternal</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> minCapacity<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>elementData <span style=color:#f92672>==</span> DEFAULTCAPACITY_EMPTY_ELEMENTDATA<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            minCapacity <span style=color:#f92672>=</span> Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>DEFAULT_CAPACITY<span style=color:#f92672>,</span> minCapacity<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+
+        ensureExplicitCapacity<span style=color:#f92672>(</span>minCapacity<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><ol start=3><li>更新修改标记, 如果确实不够才触发扩容;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>   <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>ensureExplicitCapacity</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> minCapacity<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        modCount<span style=color:#f92672>++;</span>
+
+        <span style=color:#75715e>// overflow-conscious code
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>minCapacity <span style=color:#f92672>-</span> elementData<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span>
+            grow<span style=color:#f92672>(</span>minCapacity<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><ol start=4><li>实际扩容</li></ol><p>实际扩容1.5倍, 当然最大不能超过Integer.MAX,
+并且优先设置为MAX_ARRAY_SIZE, 后者会距离最大整数8个距离
+为了避免 OutOfMemoryError</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * The maximum size of array to allocate.
+</span><span style=color:#75715e>     * Some VMs reserve some header words in an array.
+</span><span style=color:#75715e>     * Attempts to allocate larger arrays may result in
+</span><span style=color:#75715e>     * OutOfMemoryError: Requested array size exceeds VM limit
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> MAX_ARRAY_SIZE <span style=color:#f92672>=</span> Integer<span style=color:#f92672>.</span><span style=color:#a6e22e>MAX_VALUE</span> <span style=color:#f92672>-</span> 8<span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>grow</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> minCapacity<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// overflow-conscious code
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>int</span> oldCapacity <span style=color:#f92672>=</span> elementData<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>int</span> newCapacity <span style=color:#f92672>=</span> oldCapacity <span style=color:#f92672>+</span> <span style=color:#f92672>(</span>oldCapacity <span style=color:#f92672>&gt;&gt;</span> 1<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>newCapacity <span style=color:#f92672>-</span> minCapacity <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span>
+            newCapacity <span style=color:#f92672>=</span> minCapacity<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>newCapacity <span style=color:#f92672>-</span> MAX_ARRAY_SIZE <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span>
+            newCapacity <span style=color:#f92672>=</span> hugeCapacity<span style=color:#f92672>(</span>minCapacity<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// minCapacity is usually close to size, so this is a win:
+</span><span style=color:#75715e></span>        elementData <span style=color:#f92672>=</span> Arrays<span style=color:#f92672>.</span><span style=color:#a6e22e>copyOf</span><span style=color:#f92672>(</span>elementData<span style=color:#f92672>,</span> newCapacity<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=缩容>缩容</h4><p>将底层数组容量缩小为实际占用的容量, 需要程序主动调用.
+目标数组可能为:</p><ol><li>空数组</li><li>容量恰当正好的新数组;</li><li>容量恰当正好的原数组, 当size == element.length</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Trims the capacity of this &lt;tt&gt;ArrayList&lt;/tt&gt; instance to be the
+</span><span style=color:#75715e>     * list&#39;s current size.  An application can use this operation to minimize
+</span><span style=color:#75715e>     * the storage of an &lt;tt&gt;ArrayList&lt;/tt&gt; instance.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>trimToSize</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        modCount<span style=color:#f92672>++;</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>size <span style=color:#f92672>&lt;</span> elementData<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            elementData <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>size <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span>
+              <span style=color:#f92672>?</span> EMPTY_ELEMENTDATA
+              <span style=color:#f92672>:</span> Arrays<span style=color:#f92672>.</span><span style=color:#a6e22e>copyOf</span><span style=color:#f92672>(</span>elementData<span style=color:#f92672>,</span> size<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h3 id=null元素的特殊处理>NULL元素的特殊处理</h3><ol><li>新增或者设置的时候不用关心, 不去检测报异常即可</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> E <span style=color:#a6e22e>set</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> index<span style=color:#f92672>,</span> E element<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        rangeCheck<span style=color:#f92672>(</span>index<span style=color:#f92672>);</span>
+
+        E oldValue <span style=color:#f92672>=</span> elementData<span style=color:#f92672>(</span>index<span style=color:#f92672>);</span>
+        elementData<span style=color:#f92672>[</span>index<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> element<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> oldValue<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>E e<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        ensureCapacityInternal<span style=color:#f92672>(</span>size <span style=color:#f92672>+</span> 1<span style=color:#f92672>);</span>  <span style=color:#75715e>// Increments modCount!!
+</span><span style=color:#75715e></span>        elementData<span style=color:#f92672>[</span>size<span style=color:#f92672>++]</span> <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><ol start=2><li>删除的时候需要特殊处理;</li></ol><p>如下第一个分支代码就是删除null元素, 会扫描底层数组,找到第一个null, 并使用fastRemove(index)删除;</p><p>注意:</p><ol><li>该函数只是删除首个匹配对象, 但是list本身是允许重复的</li><li>所以 <strong>删除某个对象后, 并不代表里面不存在该对象了</strong></li><li>可以使用removeIf函数, 确保其被删除;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>remove</span><span style=color:#f92672>(</span>Object o<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 删除null元素
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>o <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> index <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> index <span style=color:#f92672>&lt;</span> size<span style=color:#f92672>;</span> index<span style=color:#f92672>++)</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>elementData<span style=color:#f92672>[</span>index<span style=color:#f92672>]</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    fastRemove<span style=color:#f92672>(</span>index<span style=color:#f92672>);</span>
+                    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> index <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> index <span style=color:#f92672>&lt;</span> size<span style=color:#f92672>;</span> index<span style=color:#f92672>++)</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>o<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>elementData<span style=color:#f92672>[</span>index<span style=color:#f92672>]))</span> <span style=color:#f92672>{</span>
+                    fastRemove<span style=color:#f92672>(</span>index<span style=color:#f92672>);</span>
+                    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h3 id=removeif实现>removeIf实现</h3><ol><li>使用输入函数检测底层数组的每一个元素,
+并将检测结果存储在BitSet中;</li><li>双指针分别指向下一个写入的位置和待搬迁的位置
+并迭代搬迁</li><li>清理数组尾巴;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>removeIf</span><span style=color:#f92672>(</span>Predicate<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>super</span> E<span style=color:#f92672>&gt;</span> filter<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Objects<span style=color:#f92672>.</span><span style=color:#a6e22e>requireNonNull</span><span style=color:#f92672>(</span>filter<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// figure out which elements are to be removed
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// any exception thrown from the filter predicate at this stage
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// will leave the collection unmodified
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>int</span> removeCount <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>final</span> BitSet removeSet <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BitSet<span style=color:#f92672>(</span>size<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> expectedModCount <span style=color:#f92672>=</span> modCount<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> size <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>size</span><span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 收集需要修改的元素;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i<span style=color:#f92672>=</span>0<span style=color:#f92672>;</span> modCount <span style=color:#f92672>==</span> expectedModCount <span style=color:#f92672>&amp;&amp;</span> i <span style=color:#f92672>&lt;</span> size<span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+            <span style=color:#a6e22e>@SuppressWarnings</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;unchecked&#34;</span><span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>final</span> E element <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>E<span style=color:#f92672>)</span> elementData<span style=color:#f92672>[</span>i<span style=color:#f92672>];</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>filter<span style=color:#f92672>.</span><span style=color:#a6e22e>test</span><span style=color:#f92672>(</span>element<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+                removeSet<span style=color:#f92672>.</span><span style=color:#a6e22e>set</span><span style=color:#f92672>(</span>i<span style=color:#f92672>);</span>
+                removeCount<span style=color:#f92672>++;</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#75715e>// shift surviving elements left over the spaces left by removed elements
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> anyToRemove <span style=color:#f92672>=</span> removeCount <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>anyToRemove<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 1. 搬迁旧数组;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> newSize <span style=color:#f92672>=</span> size <span style=color:#f92672>-</span> removeCount<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i<span style=color:#f92672>=</span>0<span style=color:#f92672>,</span> j<span style=color:#f92672>=</span>0<span style=color:#f92672>;</span> <span style=color:#f92672>(</span>i <span style=color:#f92672>&lt;</span> size<span style=color:#f92672>)</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>(</span>j <span style=color:#f92672>&lt;</span> newSize<span style=color:#f92672>);</span> i<span style=color:#f92672>++,</span> j<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+                i <span style=color:#f92672>=</span> removeSet<span style=color:#f92672>.</span><span style=color:#a6e22e>nextClearBit</span><span style=color:#f92672>(</span>i<span style=color:#f92672>);</span>
+                elementData<span style=color:#f92672>[</span>j<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> elementData<span style=color:#f92672>[</span>i<span style=color:#f92672>];</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#75715e>// 2. 清扫尾部空间;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> k<span style=color:#f92672>=</span>newSize<span style=color:#f92672>;</span> k <span style=color:#f92672>&lt;</span> size<span style=color:#f92672>;</span> k<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+                elementData<span style=color:#f92672>[</span>k<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>  <span style=color:#75715e>// Let gc do its work
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span>
+            <span style=color:#75715e>// 3. 更新列表容量;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>size</span> <span style=color:#f92672>=</span> newSize<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+            <span style=color:#f92672>}</span>
+            modCount<span style=color:#f92672>++;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>return</span> anyToRemove<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+    
+    
+</code></pre></div><h3 id=序列化>序列化</h3><h4 id=反序列化>反序列化</h4><ol><li>读对象标记位</li><li>读数组容量;</li><li>申请数组空间;</li><li>依次读数组元素;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>readObject</span><span style=color:#f92672>(</span>java<span style=color:#f92672>.</span><span style=color:#a6e22e>io</span><span style=color:#f92672>.</span><span style=color:#a6e22e>ObjectInputStream</span> s<span style=color:#f92672>)</span>
+        <span style=color:#66d9ef>throws</span> java<span style=color:#f92672>.</span><span style=color:#a6e22e>io</span><span style=color:#f92672>.</span><span style=color:#a6e22e>IOException</span><span style=color:#f92672>,</span> ClassNotFoundException <span style=color:#f92672>{</span>
+        elementData <span style=color:#f92672>=</span> EMPTY_ELEMENTDATA<span style=color:#f92672>;</span>
+
+        <span style=color:#75715e>// Read in size, and any hidden stuff
+</span><span style=color:#75715e></span>        s<span style=color:#f92672>.</span><span style=color:#a6e22e>defaultReadObject</span><span style=color:#f92672>();</span>
+
+        <span style=color:#75715e>// Read in capacity
+</span><span style=color:#75715e></span>        s<span style=color:#f92672>.</span><span style=color:#a6e22e>readInt</span><span style=color:#f92672>();</span> <span style=color:#75715e>// ignored
+</span><span style=color:#75715e></span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>size <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// be like clone(), allocate array based upon size not capacity
+</span><span style=color:#75715e></span>            ensureCapacityInternal<span style=color:#f92672>(</span>size<span style=color:#f92672>);</span>
+
+            Object<span style=color:#f92672>[]</span> a <span style=color:#f92672>=</span> elementData<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// Read in all elements in the proper order.
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i<span style=color:#f92672>=</span>0<span style=color:#f92672>;</span> i<span style=color:#f92672>&lt;</span>size<span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+                a<span style=color:#f92672>[</span>i<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> s<span style=color:#f92672>.</span><span style=color:#a6e22e>readObject</span><span style=color:#f92672>();</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=序列化-1>序列化</h4><ol><li>写数组标记位</li><li>写输入大小</li><li>依次写入数组元素对象</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>writeObject</span><span style=color:#f92672>(</span>java<span style=color:#f92672>.</span><span style=color:#a6e22e>io</span><span style=color:#f92672>.</span><span style=color:#a6e22e>ObjectOutputStream</span> s<span style=color:#f92672>)</span>
+        <span style=color:#66d9ef>throws</span> java<span style=color:#f92672>.</span><span style=color:#a6e22e>io</span><span style=color:#f92672>.</span><span style=color:#a6e22e>IOException</span><span style=color:#f92672>{</span>
+        <span style=color:#75715e>// Write out element count, and any hidden stuff
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>int</span> expectedModCount <span style=color:#f92672>=</span> modCount<span style=color:#f92672>;</span>
+        s<span style=color:#f92672>.</span><span style=color:#a6e22e>defaultWriteObject</span><span style=color:#f92672>();</span>
+
+        <span style=color:#75715e>// Write out size as capacity for behavioural compatibility with clone()
+</span><span style=color:#75715e></span>        s<span style=color:#f92672>.</span><span style=color:#a6e22e>writeInt</span><span style=color:#f92672>(</span>size<span style=color:#f92672>);</span>
+
+        <span style=color:#75715e>// Write out all elements in the proper order.
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i<span style=color:#f92672>=</span>0<span style=color:#f92672>;</span> i<span style=color:#f92672>&lt;</span>size<span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+            s<span style=color:#f92672>.</span><span style=color:#a6e22e>writeObject</span><span style=color:#f92672>(</span>elementData<span style=color:#f92672>[</span>i<span style=color:#f92672>]);</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h3 id=迭代器之内部类-listitr-itr>迭代器之内部类 ListItr, Itr</h3><p>和vector实现原理一致, vector使用syschorize实现并发安全,
+这里使用修改标记保证不存在并发更新;</p><h3 id=视图之内部类sublist>视图之内部类SubList</h3><p>和AbstractList逻辑一致, 这里会同步原列表的modCount
+并同步更新之;</p><h3 id=底层数组修饰符transient有什么用>底层数组修饰符transient有什么用?</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>transient</span> Object<span style=color:#f92672>[]</span> elementData<span style=color:#f92672>;</span>
+</code></pre></div><p>transient 装饰字段 elementData 标示其不会被自动序列化</p><p>原因如下:</p><pre><code>ArrayList在序列化的时候会调用writeObject，直接将size和element写入ObjectOutputStream；反序列化时调用readObject，从ObjectInputStream获取size和element，再恢复到elementData。
+</code></pre><p>为什么不直接用elementData来序列化，而采用上诉的方式来实现序列化呢？</p><pre><code>原因在于elementData是一个缓存数组，它通常会预留一些容量，等容量不足时再扩充容量，那么有些空间可能就没有实际存储元素，采用上诉的方式来实现序列化时，就可以保证只序列化实际存储的那些元素，而不是整个数组，从而节省空间和时间。
+</code></pre><h3 id=参考链接>参考链接</h3><p><a href=https://blog.csdn.net/GuLu_GuLu_jp/article/details/51457492>c.toArray bug 问题</a>
+<a href=https://blog.csdn.net/zero__007/article/details/52166306>序列化</a></p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Bvector/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>集合之Vector</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E7%8E%AF%E5%BD%A2%E9%93%BE%E8%A1%A8ii-142/>环形链表ii 142</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E7%8E%AF%E5%BD%A2%E9%93%BE%E8%A1%A8-141/>环形链表 141</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%8F%8D%E8%BD%AC%E5%AD%97%E7%AC%A6%E4%B8%B2-344/>反转字符串 344</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E9%A2%9C%E8%89%B2%E5%88%86%E7%B1%BB-75/>颜色分类 75</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮惹的祸.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
