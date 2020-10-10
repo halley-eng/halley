@@ -7,7 +7,8 @@
 你能用 O(1)（即，常量）内存解决此问题吗？
 题解报告 重复子过程(while)
 检测快慢指针有效性 检测是否有环 移动指针; public class Solution { public boolean hasCycle(ListNode head) { // 1. 检测边界条件 if(head == null || head.next == null) return false; // 2. 初始化快慢指针; ListNode fast = head.next.next; ListNode slow = head.next; // 3. 快慢指针迭代链表; while (fast !</description></item><item><title>集合之Vector</title><link>https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Bvector/</link><pubDate>Thu, 08 Oct 2020 23:59:32 +0800</pubDate><guid>https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Bvector/</guid><description>关键点拆分如下:
-扩所容机制 迭代器实现 视图实现</description></item><item><title>集合包</title><link>https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E5%8C%85/</link><pubDate>Thu, 08 Oct 2020 16:22:17 +0800</pubDate><guid>https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E5%8C%85/</guid><description>计划通过如下两个视角来总结相关实现;
+扩缩容机制 迭代器实现 普通迭代器 列表迭代器 并行迭代器 视图实现 子列表视图 随机访问视图 扩容机制 在新增元素的时候, 确保容量足够
+private void ensureCapacityHelper(int minCapacity) { // overflow-conscious code if (minCapacity - elementData.length &amp;gt; 0) grow(minCapacity); } /** * The maximum size of array to allocate. * Some VMs reserve some header words in an array. * Attempts to allocate larger arrays may result in * OutOfMemoryError: Requested array size exceeds VM limit */ private static final int MAX_ARRAY_SIZE = Integer.</description></item><item><title>集合包</title><link>https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E5%8C%85/</link><pubDate>Thu, 08 Oct 2020 16:22:17 +0800</pubDate><guid>https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E5%8C%85/</guid><description>计划通过如下两个视角来总结相关实现;
 结构视角: High Level 俯视 聚焦视角: 每个类的每个方法详细解说; 集合包结构视图 聚焦计划及进度 目前先只考虑非并发集合实现
 List
 Vector ArrayList LinkedList CopyOnWriteArrayList Queue
