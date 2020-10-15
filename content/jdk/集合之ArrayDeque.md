@@ -5,17 +5,18 @@ draft: false
 ---
 
 
-![uml](http://assets.processon.com/chart_image/5f830cfc5653bb06eff68bfc.png)
 
+![uml](http://assets.processon.com/chart_image/5f830cfc5653bb06eff68bfc.png)
 ### 核心点
 
 1. [x] 初始化
 2. [ ] 关键函数
     1. [x] 头部新增
     2. [x] 尾部新增
+    3. [x] 头尾新增对比
     2. [x] 头部删除
     3. [x] 尾部删除
-    4. [ ] 任意位置删除
+    4. [x] 任意位置删除
 3. [x] 扩缩容
 4. [x] 迭代器
     1. [x] DeqIterator
@@ -34,7 +35,11 @@ draft: false
 #### 2. 指定参数最少8个或者2的n次方个
 
 1. 默认最小申请8个
-2. 否则申请>=当前需要容量的 2的n次方个; 
+2. 否则申请 >= 当前需要容量的 2的n次方个; 
+    1. 通过无符号右移 1、2、4、8、16 位分别保证
+        连续的 2、4、6、16、32 位都是 1 
+    2. 在 + 1
+    3. 得到最近的 2的n次方    
 
 ```java
     public ArrayDeque(int numElements) {
@@ -47,12 +52,12 @@ draft: false
         // Tests "<=" because arrays aren't kept full.
         if (numElements >= initialCapacity) {
             initialCapacity = numElements;
-            initialCapacity |= (initialCapacity >>>  1);
-            initialCapacity |= (initialCapacity >>>  2);
-            initialCapacity |= (initialCapacity >>>  4);
-            initialCapacity |= (initialCapacity >>>  8);
-            initialCapacity |= (initialCapacity >>> 16);
-            initialCapacity++;
+            initialCapacity |= (initialCapacity >>>  1); // 保证最高位及右边的2位为1
+            initialCapacity |= (initialCapacity >>>  2); // 保证最高位及右边的4位为1
+            initialCapacity |= (initialCapacity >>>  4); // 保证最高位及右边的8位为1
+            initialCapacity |= (initialCapacity >>>  8); // 保证最高位及右边的16位为1
+            initialCapacity |= (initialCapacity >>> 16); // 保证最高位及右边的32位为1
+            initialCapacity++;  // 最近的2次幂
 
             if (initialCapacity < 0)   // Too many elements, must back off
                 initialCapacity >>>= 1;// Good luck allocating 2 ^ 30 elements
@@ -131,10 +136,21 @@ tail 表示下一个要存尾部元素的索引;
 
 ```
 
+#### 头尾新增对比
+
+不同点:
+1. 头部先移动索引, 再放置元素;
+2. 尾部先放置元素, 再移动索引;
+相同点: 
+1. 都是最后检测到头尾指针碰撞, 则触发扩容; 
 
 #### 头部删除
 
+head 指向头指针当前已存数据的索引, 特殊情况是初始时为null表示队列为空;
 
+执行过程: 
+1. 空队列返回空;
+2. 有值队列重置头部为null, 并右移一位;
 
 ```java
 
@@ -154,6 +170,11 @@ tail 表示下一个要存尾部元素的索引;
 
 #### 尾部删除
 
+尾指针表示下一次存放尾巴数据的索引位置; 
+    所以如果队列只append一个尾部数据, 它表示尾巴节点, 或者是当前已存入的头节点; 
+
+1. 尾部重置为null 
+2. 先移动指针, 在获取和清空数据并提交尾指针;
 
 ```java
     public E pollLast() {
@@ -173,6 +194,17 @@ tail 表示下一个要存尾部元素的索引;
 #### 任意位置删除
 
 
+1. head不越过索引0, 一次拷贝调用, 对应代码2.1
+
+![7580806a0262e866d4ebc6159cdad1bf.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p457)
+
+
+2. head越过索引0, 二次分段拷贝调用, 对应代码2.2
+
+![509883d16f5df5b23f0f4d00d5561313.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p456)
+
+
+
 ```java
     /**
      * Removes the element at the specified position in the elements array,
@@ -190,23 +222,27 @@ tail 表示下一个要存尾部元素的索引;
         final int mask = elements.length - 1;
         final int h = head;
         final int t = tail;
-        final int front = (i - h) & mask;
-        final int back  = (t - i) & mask;
+        // 1. 计算偏移量
+        final int front = (i - h) & mask; // 计算离头偏移量
+        final int back  = (t - i) & mask; // 计算离尾偏移量
 
         // Invariant: head <= i < tail mod circularity
         if (front >= ((t - h) & mask))
             throw new ConcurrentModificationException();
 
         // Optimize for least element motion
-        // 优化元素的最少移动;
+        // 2. 使用最少偏移: 优化元素的最少移动;
         if (front < back) {  // 前面的都往后移动一个单位;
+            // 2.1 head 不越界
             if (h <= i) {
                 System.arraycopy(elements, h, elements, h + 1, front);
             } else { // Wrap around
+            // 2.2 head 越过索引0到尾部
                 System.arraycopy(elements, 0, elements, 1, i);
                 elements[0] = elements[mask];
                 System.arraycopy(elements, h, elements, h + 1, mask - h);
             }
+            // 2.2 头部移动
             elements[h] = null;
             head = (h + 1) & mask;
             return false;
@@ -236,7 +272,7 @@ tail 表示下一个要存尾部元素的索引;
     发生在头尾部新增时, 如果发生碰撞, 则触发 doubleCapacity 函数
     
 扩容方法:
-    1. 创建2倍长度的心数组;
+    1. 创建2倍长度的新数组;
     2. 将旧数组中的元素旋转数组旋转后(头部放在0这个位置), 重新放置在新数组中; 
        另外原地旋转还有个杂耍算法, 但是这里避免不了开辟新数组, 所以可以这么简答的处理; 
 
@@ -403,3 +439,12 @@ tail 表示下一个要存尾部元素的索引;
         }
     }
 ```
+
+
+### 参考
+
+[大大纸飞机](https://www.jianshu.com/p/1c1c3f24762e)
+
+[性能](http://www.justdojava.com/2019/11/27/java-collection-12/)
+
+http://www.justdojava.com/2020/01/17/java-collection-17/
