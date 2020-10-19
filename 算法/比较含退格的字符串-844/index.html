@@ -1,0 +1,119 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>比较含退格的字符串 844 - 月亮惹的祸</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="比较含退格的字符串 844"><meta property="og:description" content="比较含退格的字符串  给定 S 和 T 两个字符串，当它们分别被输入到空白的文本编辑器后，判断二者是否相等，并返回结果。 # 代表退格字符。
+注意：如果对空文本输入退格字符，文本继续为空。
+ 示例 1：
+输入：S = &ldquo;ab#c&rdquo;, T = &ldquo;ad#c&rdquo; 输出：true 解释：S 和 T 都会变成 “ac”。 示例 2：
+输入：S = &ldquo;ab##&rdquo;, T = &ldquo;c#d#&rdquo; 输出：true 解释：S 和 T 都会变成 “”。 示例 3：
+输入：S = &ldquo;a##c&rdquo;, T = &ldquo;#a#c&rdquo; 输出：true 解释：S 和 T 都会变成 “c”。 示例 4：
+输入：S = &ldquo;a#c&rdquo;, T = &ldquo;b&rdquo; 输出：false 解释：S 会变成 “c”，但 T 仍然是 “b”。 提示：
+1 <= S."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E6%AF%94%E8%BE%83%E5%90%AB%E9%80%80%E6%A0%BC%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2-844/"><meta property="article:published_time" content="2020-10-19T23:55:25+08:00"><meta property="article:modified_time" content="2020-10-19T23:55:25+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮惹的祸 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮惹的祸</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>比较含退格的字符串 844</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-10-19T23:55:25+08:00>October 19, 2020</time></div></div></header><div class="content post__content clearfix"><ol start=844><li>比较含退格的字符串</li></ol><p>给定 S 和 T 两个字符串，当它们分别被输入到空白的文本编辑器后，判断二者是否相等，并返回结果。 # 代表退格字符。</p><p>注意：如果对空文本输入退格字符，文本继续为空。</p><p> </p><p>示例 1：</p><p>输入：S = &ldquo;ab#c&rdquo;, T = &ldquo;ad#c&rdquo;
+输出：true
+解释：S 和 T 都会变成 “ac”。
+示例 2：</p><p>输入：S = &ldquo;ab##&rdquo;, T = &ldquo;c#d#&rdquo;
+输出：true
+解释：S 和 T 都会变成 “”。
+示例 3：</p><p>输入：S = &ldquo;a##c&rdquo;, T = &ldquo;#a#c&rdquo;
+输出：true
+解释：S 和 T 都会变成 “c”。
+示例 4：</p><p>输入：S = &ldquo;a#c&rdquo;, T = &ldquo;b&rdquo;
+输出：false
+解释：S 会变成 “c”，但 T 仍然是 “b”。
+ </p><p>提示：</p><p>1 &lt;= S.length &lt;= 200
+1 &lt;= T.length &lt;= 200
+S 和 T 只含有小写字母以及字符 &lsquo;#'。
+ </p><h4 id=双指针迭代>双指针迭代</h4><p>本质是一个字符删除与否, 取决于后面有多少个回退符号, 而且不一定是临近的
+比如
+sa#b###
+index == 4的字符会讲字符s删掉;</p><p>如上, 因为删字符需要参考后面的空格字符, 暂且称为后参考性, 我们可以考虑从后往前扫描</p><ol><li>统计空格字符数量, 并删除空格字符, 移动索引index;</li><li>如果不是空格，就用空格数删除字符, 移动索引index;</li><li>如果以上两种情况都不能删除字符, 则停止;</li></ol><p>然后对比两个字符串的索引字符;</p><ol><li>如果两个字符相等,则两个字符同时删除一个字符</li><li>否则, 两个字符不等则退出</li></ol><p>边界情况</p><ol><li>任意一个字符走完索引, 但是另一个没有走完(有剩余), 则返回false, 两个字符串不等;</li><li>两个字符都走完所有的索引, 返回true;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Solution</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>backspaceCompare</span><span style=color:#f92672>(</span>String S<span style=color:#f92672>,</span> String T<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        
+        <span style=color:#66d9ef>int</span> lenS <span style=color:#f92672>=</span> S<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>(),</span> lenT <span style=color:#f92672>=</span> T<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>();</span>
+        <span style=color:#66d9ef>int</span> indexS <span style=color:#f92672>=</span> lenS <span style=color:#f92672>-</span> 1<span style=color:#f92672>,</span> indexT <span style=color:#f92672>=</span> lenT <span style=color:#f92672>-</span> 1<span style=color:#f92672>,</span> backS <span style=color:#f92672>=</span> 0<span style=color:#f92672>,</span> backT <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>while</span><span style=color:#f92672>(</span> indexS <span style=color:#f92672>&gt;=</span> 0 <span style=color:#f92672>||</span> indexT <span style=color:#f92672>&gt;=</span> 0<span style=color:#f92672>){</span>
+            <span style=color:#75715e>// 1. 处理字符串S的空格;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>while</span><span style=color:#f92672>(</span>indexS <span style=color:#f92672>&gt;=</span> 0<span style=color:#f92672>){</span>
+                <span style=color:#75715e>// 1.1 统计空格数量
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>S<span style=color:#f92672>.</span><span style=color:#a6e22e>charAt</span><span style=color:#f92672>(</span>indexS<span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;#&#39;</span><span style=color:#f92672>){</span>
+                    backS<span style=color:#f92672>++;</span>
+                    indexS<span style=color:#f92672>--;</span>
+                <span style=color:#75715e>// 1.2 删掉空格数量哥非空格;    
+</span><span style=color:#75715e></span>                <span style=color:#f92672>}</span><span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>backS <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>){</span>
+                    backS<span style=color:#f92672>--;</span>
+                    <span style=color:#75715e>// System.out.println(&#34;S delete: &#34; + S.charAt(indexS));
+</span><span style=color:#75715e></span>                    indexS<span style=color:#f92672>--;</span>
+                    
+                <span style=color:#f92672>}</span><span style=color:#66d9ef>else</span><span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 1.3 所有空格删除完毕, 退出    
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#75715e>// 2. 处理字符串T的空格;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>while</span><span style=color:#f92672>(</span>indexT <span style=color:#f92672>&gt;=</span> 0<span style=color:#f92672>){</span>
+                <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>T<span style=color:#f92672>.</span><span style=color:#a6e22e>charAt</span><span style=color:#f92672>(</span>indexT<span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#39;#&#39;</span><span style=color:#f92672>){</span>
+                    backT<span style=color:#f92672>++;</span>
+                    indexT<span style=color:#f92672>--;</span>
+                <span style=color:#f92672>}</span><span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>backT <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>){</span>
+                    backT<span style=color:#f92672>--;</span>
+                    <span style=color:#75715e>// System.out.println(&#34;T delete: &#34; + T.charAt(indexT));
+</span><span style=color:#75715e></span>                    indexT<span style=color:#f92672>--;</span>
+                <span style=color:#f92672>}</span><span style=color:#66d9ef>else</span><span style=color:#f92672>{</span>
+                    <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+
+            <span style=color:#75715e>// 3. 两个索引都有效, 则对比之
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>indexS <span style=color:#f92672>&gt;=</span> 0 <span style=color:#f92672>&amp;&amp;</span> indexT <span style=color:#f92672>&gt;=</span> 0<span style=color:#f92672>){</span>
+                <span style=color:#75715e>// 3.1 不想等, 就直接返回
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>S<span style=color:#f92672>.</span><span style=color:#a6e22e>charAt</span><span style=color:#f92672>(</span>indexS<span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> T<span style=color:#f92672>.</span><span style=color:#a6e22e>charAt</span><span style=color:#f92672>(</span>indexT<span style=color:#f92672>)){</span>
+                    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 3.2 相等, 移动索引;    
+</span><span style=color:#75715e></span>                <span style=color:#f92672>}</span><span style=color:#66d9ef>else</span><span style=color:#f92672>{</span>
+                    indexS<span style=color:#f92672>--;</span>
+                    indexT<span style=color:#f92672>--;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#75715e>// 4. 有一个索引有效(或者说一个无效), 则返回false;    
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span><span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>indexS <span style=color:#f92672>&gt;=</span> 0 <span style=color:#f92672>||</span> indexT <span style=color:#f92672>&gt;=</span> 0<span style=color:#f92672>){</span>
+                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+            <span style=color:#75715e>// 5. 两个索引都失效, 则两个字符串都扫描完成, 并且没有找到不同的字符;    
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span><span style=color:#66d9ef>else</span><span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+<span style=color:#f92672>}</span>
+</code></pre></div><p>时间复杂度: O(N + M)
+空间复杂度: O(1)</p><h3 id=重构字符串>重构字符串</h3><p>这种解法利用 StringBuffer 的 append()和 deleteCharAt(len - 1) 两个函数
+一次遍历字符串, 较少代码量即可解决</p><ol><li>遇到 # 则删除</li><li>否则append</li></ol><p>缺点是较耗费空间;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Solution</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>backspaceCompare</span><span style=color:#f92672>(</span>String S<span style=color:#f92672>,</span> String T<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> build<span style=color:#f92672>(</span>S<span style=color:#f92672>).</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>build<span style=color:#f92672>(</span>T<span style=color:#f92672>));</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>public</span> String <span style=color:#a6e22e>build</span><span style=color:#f92672>(</span>String str<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        StringBuffer ret <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> StringBuffer<span style=color:#f92672>();</span>
+        <span style=color:#66d9ef>int</span> length <span style=color:#f92672>=</span> str<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>();</span>
+        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> i <span style=color:#f92672>&lt;</span> length<span style=color:#f92672>;</span> <span style=color:#f92672>++</span>i<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>char</span> ch <span style=color:#f92672>=</span> str<span style=color:#f92672>.</span><span style=color:#a6e22e>charAt</span><span style=color:#f92672>(</span>i<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ch <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#39;#&#39;</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                ret<span style=color:#f92672>.</span><span style=color:#a6e22e>append</span><span style=color:#f92672>(</span>ch<span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ret<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()</span> <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    ret<span style=color:#f92672>.</span><span style=color:#a6e22e>deleteCharAt</span><span style=color:#f92672>(</span>ret<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>()</span> <span style=color:#f92672>-</span> 1<span style=color:#f92672>);</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> ret<span style=color:#f92672>.</span><span style=color:#a6e22e>toString</span><span style=color:#f92672>();</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+
+</code></pre></div><p>时间复杂度: O(N + M)
+空间复杂度: O(N + M)</p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E7%9A%84%E5%80%92%E6%95%B0%E7%AC%ACn%E4%B8%AA%E8%8A%82%E7%82%B9-19/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>删除链表的倒数第N个节点 19</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%AF%94%E8%BE%83%E5%90%AB%E9%80%80%E6%A0%BC%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2-844/>比较含退格的字符串 844</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E7%9A%84%E5%80%92%E6%95%B0%E7%AC%ACn%E4%B8%AA%E8%8A%82%E7%82%B9-19/>删除链表的倒数第N个节点 19</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/n-%E5%85%AB%E7%9A%87%E5%90%8Eii-52/>N 八皇后ii 52</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%9C%89%E5%BA%8F%E6%95%B0%E7%BB%84%E7%9A%84%E5%B9%B3%E6%96%B9-977/>有序数组的平方 977</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%A1%AB%E5%85%85%E6%AF%8F%E4%B8%AA%E8%8A%82%E7%82%B9%E7%9A%84%E4%B8%8B%E4%B8%80%E4%B8%AA%E5%8F%B3%E4%BE%A7%E8%8A%82%E7%82%B9%E6%8C%87%E9%92%88-116/>填充每个节点的下一个右侧节点指针 116</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮惹的祸.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
