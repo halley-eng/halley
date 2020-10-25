@@ -1,0 +1,556 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>集合之HashMap - 月亮惹的祸</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="集合之HashMap"><meta property="og:description" content="[TOC]
+关键知识点分解  数据结构 构造方法 插入过程  hash定位算法; 红黑树插入 链表插入  链表插入触发树化过程;     删除过程 迭代器 LinkedHashMap 钩子函数  uml 数据结构 核心属性如下:
+transient Node<K,V>[] table; transient Set<Map.Entry<K,V>> entrySet; transient int size; transient int modCount; int threshold; final float loadFactor; 4个构造方法   容量 + 负载因子构造
+ initialCapacity : 检测有效性及赋值; loadFactor : 检测有效性及赋值; 设置初始阈值为 最小满足的2次方数;  public HashMap(int initialCapacity, float loadFactor) { // 检测容量有效性; 太小则报错;  if (initialCapacity < 0) throw new IllegalArgumentException(&#34;Illegal initial capacity: &#34; + initialCapacity); // 太大则取最大值;  if (initialCapacity > MAXIMUM_CAPACITY) initialCapacity = MAXIMUM_CAPACITY; // 检测负载因子的有效性;  if (loadFactor <= 0 || Float."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Bhashmap/"><meta property="article:published_time" content="2020-10-26T00:28:37+08:00"><meta property="article:modified_time" content="2020-10-26T00:28:37+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮惹的祸 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮惹的祸</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>集合之HashMap</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-10-26T00:28:37+08:00>October 26, 2020</time></div></div></header><div class="content post__content clearfix"><p>[TOC]</p><h4 id=关键知识点分解>关键知识点分解</h4><ol><li><input checked disabled type=checkbox> 数据结构</li><li><input checked disabled type=checkbox> 构造方法</li><li><input checked disabled type=checkbox> 插入过程<ol><li><input checked disabled type=checkbox> hash定位算法;</li><li><input checked disabled type=checkbox> 红黑树插入</li><li><input checked disabled type=checkbox> 链表插入<ol><li><input checked disabled type=checkbox> 链表插入触发树化过程;</li></ol></li></ol></li><li><input disabled type=checkbox> 删除过程</li><li><input disabled type=checkbox> 迭代器</li><li><input disabled type=checkbox> LinkedHashMap 钩子函数</li></ol><h4 id=uml>uml</h4><p><img src=http://assets.processon.com/chart_image/5f8dbe2d07912906db314a57.png alt=hashmap></p><h4 id=数据结构>数据结构</h4><p>核心属性如下:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>transient</span> Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;[]</span> table<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>transient</span> Set<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;&gt;</span> entrySet<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>transient</span> <span style=color:#66d9ef>int</span> size<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>transient</span> <span style=color:#66d9ef>int</span> modCount<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>int</span> threshold<span style=color:#f92672>;</span>
+<span style=color:#66d9ef>final</span> <span style=color:#66d9ef>float</span> loadFactor<span style=color:#f92672>;</span>
+</code></pre></div><h4 id=4个构造方法>4个构造方法</h4><ol><li><p>容量 + 负载因子构造</p><ol><li>initialCapacity : 检测有效性及赋值;</li><li>loadFactor : 检测有效性及赋值;</li><li>设置初始阈值为 最小满足的2次方数;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#a6e22e>HashMap</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> initialCapacity<span style=color:#f92672>,</span> <span style=color:#66d9ef>float</span> loadFactor<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e>// 检测容量有效性; 太小则报错;
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>initialCapacity <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span>
+        <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Illegal initial capacity: &#34;</span> <span style=color:#f92672>+</span>
+                                           initialCapacity<span style=color:#f92672>);</span>
+    <span style=color:#75715e>// 太大则取最大值;                                       
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>initialCapacity <span style=color:#f92672>&gt;</span> MAXIMUM_CAPACITY<span style=color:#f92672>)</span>
+        initialCapacity <span style=color:#f92672>=</span> MAXIMUM_CAPACITY<span style=color:#f92672>;</span>
+       
+    <span style=color:#75715e>// 检测负载因子的有效性;    
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>loadFactor <span style=color:#f92672>&lt;=</span> 0 <span style=color:#f92672>||</span> Float<span style=color:#f92672>.</span><span style=color:#a6e22e>isNaN</span><span style=color:#f92672>(</span>loadFactor<span style=color:#f92672>))</span>
+        <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Illegal load factor: &#34;</span> <span style=color:#f92672>+</span>
+                                           loadFactor<span style=color:#f92672>);</span>                                                                                      
+    <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>loadFactor</span> <span style=color:#f92672>=</span> loadFactor<span style=color:#f92672>;</span>
+       
+    <span style=color:#75715e>// 设置初始阈值
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>threshold</span> <span style=color:#f92672>=</span> tableSizeFor<span style=color:#f92672>(</span>initialCapacity<span style=color:#f92672>);</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>最小满足的二次方数及后置处理</p><ol><li>最小满足的二次方数, 容量 - 1, 在求二次方数, 最后在+1<ol><li>小于0 则取 1;</li><li><input disabled type=checkbox> 这里和ArrayDeque不同:
+<a href=https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Barraydeque/>ArrayDeque</a></li></ol></li><li>不能超过最大容量, 否则取最大容量;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>tableSizeFor</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> cap<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>int</span> n <span style=color:#f92672>=</span> cap <span style=color:#f92672>-</span> 1<span style=color:#f92672>;</span>
+    n <span style=color:#f92672>|=</span> n <span style=color:#f92672>&gt;&gt;&gt;</span> 1<span style=color:#f92672>;</span>
+    n <span style=color:#f92672>|=</span> n <span style=color:#f92672>&gt;&gt;&gt;</span> 2<span style=color:#f92672>;</span>
+    n <span style=color:#f92672>|=</span> n <span style=color:#f92672>&gt;&gt;&gt;</span> 4<span style=color:#f92672>;</span>
+    n <span style=color:#f92672>|=</span> n <span style=color:#f92672>&gt;&gt;&gt;</span> 8<span style=color:#f92672>;</span>
+    n <span style=color:#f92672>|=</span> n <span style=color:#f92672>&gt;&gt;&gt;</span> 16<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>return</span> <span style=color:#f92672>(</span>n <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>?</span> 1 <span style=color:#f92672>:</span> <span style=color:#f92672>(</span>n <span style=color:#f92672>&gt;=</span> MAXIMUM_CAPACITY<span style=color:#f92672>)</span> <span style=color:#f92672>?</span> MAXIMUM_CAPACITY <span style=color:#f92672>:</span> n <span style=color:#f92672>+</span> 1<span style=color:#f92672>;</span>
+<span style=color:#f92672>}</span>
+</code></pre></div></li><li><p>指定容量 + 默认负载因子</p><p>默认负载因子是0.75</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#a6e22e>HashMap</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> initialCapacity<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>this</span><span style=color:#f92672>(</span>initialCapacity<span style=color:#f92672>,</span> DEFAULT_LOAD_FACTOR<span style=color:#f92672>);</span>
+<span style=color:#f92672>}</span>
+
+</code></pre></div></li><li><p>默认容量 + 默认负载因子</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#a6e22e>HashMap</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>loadFactor</span> <span style=color:#f92672>=</span> DEFAULT_LOAD_FACTOR<span style=color:#f92672>;</span> <span style=color:#75715e>// all other fields defaulted
+</span><span style=color:#75715e></span><span style=color:#f92672>}</span>    
+</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>putMapEntries</span><span style=color:#f92672>(</span>Map<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> K<span style=color:#f92672>,</span> <span style=color:#f92672>?</span> <span style=color:#66d9ef>extends</span> V<span style=color:#f92672>&gt;</span> m<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> evict<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>int</span> s <span style=color:#f92672>=</span> m<span style=color:#f92672>.</span><span style=color:#a6e22e>size</span><span style=color:#f92672>();</span>
+    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 使用参数map扩展信息 -- 等待put数据的时候会触发table初始化
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>table <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span> <span style=color:#75715e>// pre-size
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>float</span> ft <span style=color:#f92672>=</span> <span style=color:#f92672>((</span><span style=color:#66d9ef>float</span><span style=color:#f92672>)</span>s <span style=color:#f92672>/</span> loadFactor<span style=color:#f92672>)</span> <span style=color:#f92672>+</span> 1<span style=color:#f92672>.</span><span style=color:#a6e22e>0F</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>int</span> t <span style=color:#f92672>=</span> <span style=color:#f92672>((</span>ft <span style=color:#f92672>&lt;</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>float</span><span style=color:#f92672>)</span>MAXIMUM_CAPACITY<span style=color:#f92672>)</span> <span style=color:#f92672>?</span>
+                     <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span><span style=color:#f92672>)</span>ft <span style=color:#f92672>:</span> MAXIMUM_CAPACITY<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>&gt;</span> threshold<span style=color:#f92672>)</span>
+                threshold <span style=color:#f92672>=</span> tableSizeFor<span style=color:#f92672>(</span>t<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 对旧map进行扩容升级; 
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>&gt;</span> threshold<span style=color:#f92672>)</span>
+            resize<span style=color:#f92672>();</span>
+
+        <span style=color:#75715e>// 迭代旧map, 依次迁移到新字典;     
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> K<span style=color:#f92672>,</span> <span style=color:#f92672>?</span> <span style=color:#66d9ef>extends</span> V<span style=color:#f92672>&gt;</span> e <span style=color:#f92672>:</span> m<span style=color:#f92672>.</span><span style=color:#a6e22e>entrySet</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            K key <span style=color:#f92672>=</span> e<span style=color:#f92672>.</span><span style=color:#a6e22e>getKey</span><span style=color:#f92672>();</span>
+            V value <span style=color:#f92672>=</span> e<span style=color:#f92672>.</span><span style=color:#a6e22e>getValue</span><span style=color:#f92672>();</span>
+            putVal<span style=color:#f92672>(</span>hash<span style=color:#f92672>(</span>key<span style=color:#f92672>),</span> key<span style=color:#f92672>,</span> value<span style=color:#f92672>,</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> evict<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div></li></ol><h4 id=新增-put>新增 Put</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java> <span style=color:#66d9ef>public</span> V <span style=color:#a6e22e>put</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>,</span> V value<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> putVal<span style=color:#f92672>(</span>hash<span style=color:#f92672>(</span>key<span style=color:#f92672>),</span> key<span style=color:#f92672>,</span> value<span style=color:#f92672>,</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+ <span style=color:#f92672>}</span>
+</code></pre></div><p>其中先会对key取hash值</p><h5 id=hash定位算法>Hash定位算法</h5><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>   <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>hash</span><span style=color:#f92672>(</span>Object key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>int</span> h<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#f92672>(</span>key <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>?</span> 0 <span style=color:#f92672>:</span> <span style=color:#f92672>(</span>h <span style=color:#f92672>=</span> key<span style=color:#f92672>.</span><span style=color:#a6e22e>hashCode</span><span style=color:#f92672>())</span> <span style=color:#f92672>^</span> <span style=color:#f92672>(</span>h <span style=color:#f92672>&gt;&gt;&gt;</span> 16<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><ol><li><p>对于 null 的 key, hash 值取 0</p><p>后期查找会通过以下表达式 锁定一个Node</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>hash</span> <span style=color:#f92672>==</span> hash <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>((</span>k <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> key <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>key <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> key<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>k<span style=color:#f92672>))))</span>
+</code></pre></div><p>此时 (k = p.key) == null, key == null , 并且 (null == null) == true</p><p>所以后期能够查出来Node;</p></li></ol><h5 id=put-主流程----负载均衡数组链表红黑树插入>Put 主流程 &ndash; 负载均衡数组、链表、红黑树插入;</h5><ol><li><p>初始化表格 tab</p></li><li><p>桶插入：</p><ol><li>未 冲 突 : 数组(空桶) 直插</li><li>冲突处理: 其他插入或者获取已存节点;<ol><li>冲突 在数组: 数组获取已存节点;</li><li>冲突不在数组上, 根据数组上节点类型再路由:<ol><li>红黑树节点: 红黑树插入或者获取已经存在的节点;</li><li>链表节点: 链表插入或者获取已经存在的节点;<ol><li>触发树化过程</li></ol></li></ol></li></ol></li><li>如果查找到已存节点则根据插入参数决定是否替换之;</li></ol></li><li><p>回调处理：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>final</span> V <span style=color:#a6e22e>putVal</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> hash<span style=color:#f92672>,</span> K key<span style=color:#f92672>,</span> V value<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> onlyIfAbsent<span style=color:#f92672>,</span>
+                   <span style=color:#66d9ef>boolean</span> evict<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                      
+        Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;[]</span> tab<span style=color:#f92672>;</span> Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p<span style=color:#f92672>;</span> <span style=color:#66d9ef>int</span> n<span style=color:#f92672>,</span> i<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 1. tab 为 null, 则初始化, 并更新长度 n;
+</span><span style=color:#75715e></span>        <span style=color:#75715e>//    确保表格已经初始化; 
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>tab <span style=color:#f92672>=</span> table<span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>n <span style=color:#f92672>=</span> tab<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span>
+            n <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>tab <span style=color:#f92672>=</span> resize<span style=color:#f92672>()).</span><span style=color:#a6e22e>length</span><span style=color:#f92672>;</span> <span style=color:#75715e>// n 为数组长度
+</span><span style=color:#75715e></span>
+        <span style=color:#75715e>// 2. 插入或者重新绑定表格中已存在的该key对应的节点;  
+</span><span style=color:#75715e></span>           
+        <span style=color:#75715e>// 2.1 空桶未冲突直接插入, 插入数组中:
+</span><span style=color:#75715e></span>        <span style=color:#75715e>//     check 桶是否为null, 如果是则插入到桶中;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>p <span style=color:#f92672>=</span> tab<span style=color:#f92672>[</span>i <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>n <span style=color:#f92672>-</span> 1<span style=color:#f92672>)</span> <span style=color:#f92672>&amp;</span> hash<span style=color:#f92672>])</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>  <span style=color:#75715e>//  判断该bucket是否为空 顺便计算下标
+</span><span style=color:#75715e></span>            tab<span style=color:#f92672>[</span>i<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> newNode<span style=color:#f92672>(</span>hash<span style=color:#f92672>,</span> key<span style=color:#f92672>,</span> value<span style=color:#f92672>,</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>   <span style=color:#75715e>// bucket为null, 直接放在数组位置上;
+</span><span style=color:#75715e></span>           
+        <span style=color:#75715e>// 2.2 非空桶则会冲突, 则将插入链表或者是红黑树中, 或者是替换数组、链表、红黑树中节点;
+</span><span style=color:#75715e></span>        <span style=color:#75715e>//     数组不为null, 则可能存在与数组、链表、红黑树，或者需要插入链表和红黑树;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>  <span style=color:#75715e>// 该bucket 不为空插入原有链表头部或者是红黑树
+</span><span style=color:#75715e></span>
+            <span style=color:#75715e>// 2.2.1 插入或者获得已经存在的节点;
+</span><span style=color:#75715e></span>            Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> e<span style=color:#f92672>;</span> K k<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// 2.2.1.1 存在于数组中: 新key和原有的key equal或者为null或者引用相等, 直接替换
+</span><span style=color:#75715e></span>            <span style=color:#75715e>//        该节点可能是链表或者是红黑树的头部; 
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>hash</span> <span style=color:#f92672>==</span> hash <span style=color:#f92672>&amp;&amp;</span>
+                <span style=color:#f92672>((</span>k <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> key <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>key <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> key<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>k<span style=color:#f92672>))))</span>
+                e <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// 2.2.1.2 插入红黑树 或者 获取链表中的节点;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#66d9ef>instanceof</span> TreeNode<span style=color:#f92672>)</span>
+                e <span style=color:#f92672>=</span> <span style=color:#f92672>((</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;)</span>p<span style=color:#f92672>).</span><span style=color:#a6e22e>putTreeVal</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> tab<span style=color:#f92672>,</span> hash<span style=color:#f92672>,</span> key<span style=color:#f92672>,</span> value<span style=color:#f92672>);</span>
+            <span style=color:#75715e>// 2.2.1.3 插入链表或者获取链表节点;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 遍历链表直到到末尾, binCount为链表的长度;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> binCount <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> <span style=color:#f92672>;</span> <span style=color:#f92672>++</span>binCount<span style=color:#f92672>)</span> <span style=color:#f92672>{</span> <span style=color:#75715e>// 统计链表长度;
+</span><span style=color:#75715e></span>                    <span style=color:#75715e>// 检测是否到达链表结尾, 是则插入; 
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>e <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        <span style=color:#75715e>// 插入到链表结尾;
+</span><span style=color:#75715e></span>                        p<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> newNode<span style=color:#f92672>(</span>hash<span style=color:#f92672>,</span> key<span style=color:#f92672>,</span> value<span style=color:#f92672>,</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+                        <span style=color:#75715e>// 加上自己够8个, 就要转换成红黑树
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>binCount <span style=color:#f92672>&gt;=</span> TREEIFY_THRESHOLD <span style=color:#f92672>-</span> 1<span style=color:#f92672>)</span> <span style=color:#75715e>// -1 for 1st
+</span><span style=color:#75715e></span>                            treeifyBin<span style=color:#f92672>(</span>tab<span style=color:#f92672>,</span> hash<span style=color:#f92672>);</span>  <span style=color:#75715e>//
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#75715e>// 出现相等的key退出
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>e<span style=color:#f92672>.</span><span style=color:#a6e22e>hash</span> <span style=color:#f92672>==</span> hash <span style=color:#f92672>&amp;&amp;</span>
+                        <span style=color:#f92672>((</span>k <span style=color:#f92672>=</span> e<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> key <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>key <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> key<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>k<span style=color:#f92672>))))</span>
+                        <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                    <span style=color:#75715e>//  移动链表指针;
+</span><span style=color:#75715e></span>                    p <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+
+            <span style=color:#75715e>// 3.2 得到已经存在的节点, 则替换值, 并返回;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>e <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span> <span style=color:#75715e>// existing mapping for key
+</span><span style=color:#75715e></span>                V oldValue <span style=color:#f92672>=</span> e<span style=color:#f92672>.</span><span style=color:#a6e22e>value</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 无条件替换null值, 按配置替换旧值;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>onlyIfAbsent <span style=color:#f92672>||</span> oldValue <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    e<span style=color:#f92672>.</span><span style=color:#a6e22e>value</span> <span style=color:#f92672>=</span> value<span style=color:#f92672>;</span>
+                afterNodeAccess<span style=color:#f92672>(</span>e<span style=color:#f92672>);</span> <span style=color:#75715e>// 为LinkHashMap提供钩子;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>return</span> oldValue<span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 如果没有因为已经存在节点并提前跳出, 则会继续往下走;
+</span><span style=color:#75715e></span>
+        <span style=color:#75715e>// 4. 无条件更新标记位置;
+</span><span style=color:#75715e></span>        <span style=color:#f92672>++</span>modCount<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 5. 累计大小, 并扩容;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(++</span>size <span style=color:#f92672>&gt;</span> threshold<span style=color:#f92672>)</span>
+            resize<span style=color:#f92672>();</span>
+        <span style=color:#75715e>// 6. 调用节点插入后置回调;
+</span><span style=color:#75715e></span>        afterNodeInsertion<span style=color:#f92672>(</span>evict<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div></li></ol><h5 id=树插入>树插入</h5><p>因为红黑树是在构建在基础的树结构上面的
+所以开始依然是二叉树的插入过程</p><ol><li>根据hash值确定下沉方向 dir;<ol><li>hash值冲突的情况下, 使用key类名或者是System.identityHashCode(a) 确定方向;</li></ol></li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>        <span style=color:#75715e>/**
+</span><span style=color:#75715e>         * Tree version of putVal.
+</span><span style=color:#75715e>         */</span>
+        <span style=color:#66d9ef>final</span> TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>putTreeVal</span><span style=color:#f92672>(</span>HashMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> map<span style=color:#f92672>,</span> Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;[]</span> tab<span style=color:#f92672>,</span>
+                                       <span style=color:#66d9ef>int</span> h<span style=color:#f92672>,</span> K k<span style=color:#f92672>,</span> V v<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            Class<span style=color:#f92672>&lt;?&gt;</span> kc <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>boolean</span> searched <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+            TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> root <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>parent <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>?</span> root<span style=color:#f92672>()</span> <span style=color:#f92672>:</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>;</span>
+            <span style=color:#75715e>// 1. 根据hash值确定下沉方向dir;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;;)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>int</span> dir<span style=color:#f92672>,</span> ph<span style=color:#f92672>;</span> K pk<span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 1. 根据hash值确定方向: 
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>ph <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>hash</span><span style=color:#f92672>)</span> <span style=color:#f92672>&gt;</span> h<span style=color:#f92672>)</span>
+                    dir <span style=color:#f92672>=</span> <span style=color:#f92672>-</span>1<span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ph <span style=color:#f92672>&lt;</span> h<span style=color:#f92672>)</span>
+                    dir <span style=color:#f92672>=</span> 1<span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 2. hash值相等, 判定是否找到key:
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>pk <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> k <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>k <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> k<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>pk<span style=color:#f92672>)))</span>
+                    <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 3. hash值冲突, 通过comparable确认方向:    
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>kc <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span>
+                          <span style=color:#f92672>(</span>kc <span style=color:#f92672>=</span> comparableClassFor<span style=color:#f92672>(</span>k<span style=color:#f92672>))</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>||</span>
+                         <span style=color:#f92672>(</span>dir <span style=color:#f92672>=</span> compareComparables<span style=color:#f92672>(</span>kc<span style=color:#f92672>,</span> k<span style=color:#f92672>,</span> pk<span style=color:#f92672>))</span> <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    <span style=color:#75715e>// 3.1 去左右查找, 如果查找到则返回:
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>searched<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> q<span style=color:#f92672>,</span> ch<span style=color:#f92672>;</span>
+                        searched <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(((</span>ch <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span>
+                             <span style=color:#f92672>(</span>q <span style=color:#f92672>=</span> ch<span style=color:#f92672>.</span><span style=color:#a6e22e>find</span><span style=color:#f92672>(</span>h<span style=color:#f92672>,</span> k<span style=color:#f92672>,</span> kc<span style=color:#f92672>))</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>||</span>
+                            <span style=color:#f92672>((</span>ch <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span>
+                             <span style=color:#f92672>(</span>q <span style=color:#f92672>=</span> ch<span style=color:#f92672>.</span><span style=color:#a6e22e>find</span><span style=color:#f92672>(</span>h<span style=color:#f92672>,</span> k<span style=color:#f92672>,</span> kc<span style=color:#f92672>))</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>))</span>
+                            <span style=color:#66d9ef>return</span> q<span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#75715e>// 3.2 保底方案是通过比较类名和System.identityHashCode(a), 得到方向;
+</span><span style=color:#75715e></span>                    dir <span style=color:#f92672>=</span> tieBreakOrder<span style=color:#f92672>(</span>k<span style=color:#f92672>,</span> pk<span style=color:#f92672>);</span>
+                <span style=color:#f92672>}</span>
+                <span style=color:#75715e>// 暂存当前节点;
+</span><span style=color:#75715e></span>                TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> xp <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 从当前节点 P 和 方向 dir 移动到新节点 p;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>p <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>dir <span style=color:#f92672>&lt;=</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>?</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>:</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    <span style=color:#75715e>// 链接到新节点后面; 
+</span><span style=color:#75715e></span>                    Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> xpn <span style=color:#f92672>=</span> xp<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>;</span>
+                    TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> x <span style=color:#f92672>=</span> map<span style=color:#f92672>.</span><span style=color:#a6e22e>newTreeNode</span><span style=color:#f92672>(</span>h<span style=color:#f92672>,</span> k<span style=color:#f92672>,</span> v<span style=color:#f92672>,</span> xpn<span style=color:#f92672>);</span> <span style=color:#75715e>// 新节点插入原节点后面; 
+</span><span style=color:#75715e></span>                    <span style=color:#75715e>// 新节点插入到树上;
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>dir <span style=color:#f92672>&lt;=</span> 0<span style=color:#f92672>)</span>
+                        xp<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>else</span>
+                        xp<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+                    xp<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+                    <span style=color:#75715e>// 新节点的前缀接入前缀节点; 
+</span><span style=color:#75715e></span>                    x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>prev</span> <span style=color:#f92672>=</span> xp<span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>xpn <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                        <span style=color:#f92672>((</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;)</span>xpn<span style=color:#f92672>).</span><span style=color:#a6e22e>prev</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+                    <span style=color:#75715e>// 保证红黑树的平衡性策略;     
+</span><span style=color:#75715e></span>                    moveRootToFront<span style=color:#f92672>(</span>tab<span style=color:#f92672>,</span> balanceInsertion<span style=color:#f92672>(</span>root<span style=color:#f92672>,</span> x<span style=color:#f92672>));</span>
+
+                    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+
+
+</code></pre></div><h5 id=红黑树插入过程>红黑树插入过程:</h5><h6 id=红黑树的5个特性>红黑树的5个特性</h6><pre><code>1. 节点是红色或黑色。
+2. 根是黑色。
+3. 所有叶子都是黑色（叶子是NIL节点）。
+4. 每个红色节点必须有两个黑色的子节点。（从每个叶子到根的所有路径上不能有两个连续的红色节点。）
+   注意相反却是可以有两个连续的红色节点; 
+5. 从任一节点到其每个叶子的所有简单路径都包含相同数目的黑色节点。
+
+以上特性确保: 
+    从根节点到叶子节点的最长可能路径(黑红节点交叉的情况) **不超过**, 最短可能路径(两个连续的黑色节点)的两倍长   
+
+
+性质一、三:  不会变;
+性质二：  
+性质四:  只在增加红色节点、重绘黑色节点为红色，或做旋转时受到威胁。
+性质五： 只在增加黑色节点、重绘红色节点为黑色，或做旋转时受到威胁。
+</code></pre><h6 id=红黑树插入>红黑树插入</h6><p>balanceInsertion 处在一个循环子过程之中:</p><ol><li>循转子过程共分成五种情况</li><li>前两种情况后退出循环</li><li>后三种情况后触发颜色改变或者旋转;</li></ol><h6 id=二种情况下会退出该循环>二种情况下会退出该循环:</h6><p>前两种情况() 对应维基百科的 情形一和情形二:</p><ol><li><p>x 父亲节点xp为null</p><ol><li>x 改为黑色即可, 常见插入到一个空树中;</li></ol></li><li><p>x 父亲节点xp为黑色</p><ol><li>不影响性质二: 根是黑色;</li><li>不影响性质四： 红色节点必须有两个黑色节点;</li><li>不影响性质五: 每条简单路径上都有相同数目的黑色节点;<ol><li>虽然新增的红色节点替换了, 原本的黑色的叶子节点, 但是同时它也新增了新的黑色叶子节点, 所以当前路径上的黑色节点数目是不变的;<ol><li>黑色节点什么时候会新增呢 ?
+在红色节点下面, 新增红色节点, 将会重绘前者为黑色节点;</li></ol></li></ol></li></ol></li><li><p>x 祖先节点为null
+这种情况应该不存在</p></li></ol><h6 id=旋转逻辑>旋转逻辑</h6><p>下面树形逻辑, 共产生三条有效路径,对应三种情况:</p><ol><li><p>父亲是左孩子(不是情形二, 则已经确保父亲节点xp为红色)
+所以下面会根据叔叔节点, 确定下一步处理方案:</p><p>下面两条是选择执行(if-else):</p><ol><li>情形三: 红色叔叔节点(好叔叔):<br>父亲和叔叔节点染成黑色, 祖父节点xpp染成红色, 在递归处理祖父节点xpp</li><li>黑色叔叔节点(环叔叔):
+再根据当前节点再父亲节点下面的位置, 决定旋转方案;
+注意下面两种情况是顺序执行(step-by-step):<ol><li>情形四: 如果x为xp的右孩子:<ol><li>先左旋转(调整新节点x和父亲节点xp的位置), 这样左旋后以xp的角度来看, 其为父亲节点x的左孩子
+<img src=https://zh.wikipedia.org/wiki/File:Red-black_tree_insert_case_4.png alt=左旋></li></ol></li><li>情形五: x为xp的左孩子<ol><li>右旋转:
+切换当前父亲节点xp为黑色, 祖先节点xpp为黑色, 并有旋转xpp</li></ol></li></ol></li></ol></li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+        <span style=color:#75715e>// 根节点为root, 新插入的节点为 x;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>static</span> <span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>balanceInsertion</span><span style=color:#f92672>(</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> root<span style=color:#f92672>,</span>
+                                                    TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> x<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 1. 新插入的节点为红节点;
+</span><span style=color:#75715e></span>            x<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> xp<span style=color:#f92672>,</span> xpp<span style=color:#f92672>,</span> xppl<span style=color:#f92672>,</span> xppr<span style=color:#f92672>;;)</span> <span style=color:#f92672>{</span>
+            
+                <span style=color:#75715e>// 1.1 获取非NULL的父亲节点; 
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>xp <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    x<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>return</span> x<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span> 
+                <span style=color:#75715e>// 1.2 获取非NULL的祖先节点, 并且父亲节点为红色; 
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>xp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>xpp <span style=color:#f92672>=</span> xp<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    <span style=color:#66d9ef>return</span> root<span style=color:#f92672>;</span>
+                
+                <span style=color:#75715e>// 1.3 父亲节点为祖先节点的左孩子, 当前节点在祖先节点的左子树; 
+</span><span style=color:#75715e></span>                <span style=color:#75715e>//     左孩子的父亲
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>xp <span style=color:#f92672>==</span> <span style=color:#f92672>(</span>xppl <span style=color:#f92672>=</span> xpp<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+                
+                    <span style=color:#75715e>// 1.3.1 祖先节点的右孩子 ( 叔叔节点 ) 为红色; 
+</span><span style=color:#75715e></span>                    <span style=color:#75715e>//       拥有一个红右孩子;    --- 好爸爸和好叔叔
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>xppr <span style=color:#f92672>=</span> xpp<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> xppr<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        <span style=color:#75715e>// 从当前节点(红色)开始 往上层回溯, 将其转化为黑红; 
+</span><span style=color:#75715e></span>                        xppr<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                        xp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                        xpp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                        <span style=color:#75715e>// 并再次从红色祖先节点出发;
+</span><span style=color:#75715e></span>                        x <span style=color:#f92672>=</span> xpp<span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    <span style=color:#75715e>// 1.3.2 祖先节点的右孩子 (叔叔节点) 为 null 或者为黑色; 
+</span><span style=color:#75715e></span>                        
+                        <span style=color:#75715e>// 当前节点为父亲节点的右孩子;  --- 好爸爸和坏叔叔; 
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>x <span style=color:#f92672>==</span> xp<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>  <span style=color:#75715e>// 右新节点 有好爸爸和坏叔叔; 
+</span><span style=color:#75715e></span>                            <span style=color:#75715e>// 左旋:  当前节点变为坏叔叔的左孩子;  当前节点x更新为父亲节点; 
+</span><span style=color:#75715e></span>                            <span style=color:#75715e>//       左旋好爸爸; 
+</span><span style=color:#75715e></span>                            root <span style=color:#f92672>=</span> rotateLeft<span style=color:#f92672>(</span>root<span style=color:#f92672>,</span> x <span style=color:#f92672>=</span> xp<span style=color:#f92672>);</span>
+                            <span style=color:#75715e>// 更新上游节点xp xpp
+</span><span style=color:#75715e></span>                            xpp <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>xp <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>?</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>:</span> xp<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                        <span style=color:#f92672>}</span>
+                        <span style=color:#75715e>// 染色并右旋, 如果上游两层节点不为null, 则旋转之; 
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>xp <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                            xp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>xpp <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                                xpp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                                root <span style=color:#f92672>=</span> rotateRight<span style=color:#f92672>(</span>root<span style=color:#f92672>,</span> xpp<span style=color:#f92672>);</span>
+                            <span style=color:#f92672>}</span>
+                        <span style=color:#f92672>}</span>
+                    <span style=color:#f92672>}</span>
+                <span style=color:#f92672>}</span>
+
+                <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>xppl <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> xppl<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        xppl<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                        xp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                        xpp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                        x <span style=color:#f92672>=</span> xpp<span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>x <span style=color:#f92672>==</span> xp<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                            root <span style=color:#f92672>=</span> rotateRight<span style=color:#f92672>(</span>root<span style=color:#f92672>,</span> x <span style=color:#f92672>=</span> xp<span style=color:#f92672>);</span>
+                            xpp <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>xp <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>?</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>:</span> xp<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                        <span style=color:#f92672>}</span>
+                        <span style=color:#75715e>// 
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>xp <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                            xp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>xpp <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                                xpp<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                                root <span style=color:#f92672>=</span> rotateLeft<span style=color:#f92672>(</span>root<span style=color:#f92672>,</span> xpp<span style=color:#f92672>);</span>
+                            <span style=color:#f92672>}</span>
+                        <span style=color:#f92672>}</span>
+                    <span style=color:#f92672>}</span>
+                <span style=color:#f92672>}</span>
+                
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+
+</code></pre></div><ol start=2><li>左旋</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#75715e>/*************对红黑树节点x进行左旋操作 ******************/</span>
+<span style=color:#75715e>/*
+</span><span style=color:#75715e> * 左旋示意图：对节点x进行左旋
+</span><span style=color:#75715e> *     p                       p
+</span><span style=color:#75715e> *    /                       /
+</span><span style=color:#75715e> *   x                       y
+</span><span style=color:#75715e> *  / \                     / \
+</span><span style=color:#75715e> * lx  y      -----&gt;       x  ry
+</span><span style=color:#75715e> *    / \                 / \
+</span><span style=color:#75715e> *   ly ry               lx ly
+</span><span style=color:#75715e> * 左旋做了三件事：
+</span><span style=color:#75715e> * 1. 将y的左子节点赋给x的右子节点,并将x赋给y左子节点的父节点(y左子节点非空时)
+</span><span style=color:#75715e> * 2. 将x的父节点p(非空时)赋给y的父节点，同时更新p的子节点为y(左或右)
+</span><span style=color:#75715e> * 3. 将y的左子节点设为x，将x的父节点设为y
+</span><span style=color:#75715e> */</span>
+<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>leftRotate</span><span style=color:#f92672>(</span>RBNode<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> x<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e>//1. 将y的左子节点赋给x的右子节点，并将x赋给y左子节点的父节点(y左子节点非空时)
+</span><span style=color:#75715e></span>    RBNode<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> y <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+    x<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> y<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>y<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> 
+        y<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+
+    <span style=color:#75715e>//2. 将x的父节点p(非空时)赋给y的父节点，同时更新p的子节点为y(左或右)
+</span><span style=color:#75715e></span>    y<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>root</span> <span style=color:#f92672>=</span> y<span style=color:#f92672>;</span> <span style=color:#75715e>//如果x的父节点为空，则将y设为父节点
+</span><span style=color:#75715e></span>    <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span><span style=color:#f92672>(</span>x <span style=color:#f92672>==</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span> <span style=color:#75715e>//如果x是左子节点
+</span><span style=color:#75715e></span>            x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> y<span style=color:#f92672>;</span> <span style=color:#75715e>//则也将y设为左子节点
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>else</span>
+            x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> y<span style=color:#f92672>;</span><span style=color:#75715e>//否则将y设为右子节点
+</span><span style=color:#75715e></span>    <span style=color:#f92672>}</span>
+
+    <span style=color:#75715e>//3. 将y的左子节点设为x，将x的父节点设为y
+</span><span style=color:#75715e></span>    y<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+    x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> y<span style=color:#f92672>;</span>       
+<span style=color:#f92672>}</span>
+
+
+</code></pre></div><ol start=3><li>右旋:</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>        <span style=color:#66d9ef>static</span> <span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>rotateRight</span><span style=color:#f92672>(</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> root<span style=color:#f92672>,</span>
+                                               TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> l<span style=color:#f92672>,</span> pp<span style=color:#f92672>,</span> lr<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>(</span>l <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>lr <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> l<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    lr<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>pp <span style=color:#f92672>=</span> l<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    <span style=color:#f92672>(</span>root <span style=color:#f92672>=</span> l<span style=color:#f92672>).</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>pp<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>==</span> p<span style=color:#f92672>)</span>
+                    pp<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> l<span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span>
+                    pp<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> l<span style=color:#f92672>;</span>
+                l<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> l<span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#66d9ef>return</span> root<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=链表插入>链表插入</h4><p>注意初始化的时候 p 为数组中的节点, 其肯定是和key不匹配的;
+所以如下循环子过程会直接 获取并检测 p.next;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>                <span style=color:#75715e>// 遍历链表直到到末尾, binCount为链表的长度;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> binCount <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> <span style=color:#f92672>;</span> <span style=color:#f92672>++</span>binCount<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    <span style=color:#75715e>// 获取下一个可能匹配的节点e, 
+</span><span style=color:#75715e></span>                    <span style=color:#75715e>//     如果获取不到,则证明检测到链表尾巴, 则执行插入链表的过程; 
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>e <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        p<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> newNode<span style=color:#f92672>(</span>hash<span style=color:#f92672>,</span> key<span style=color:#f92672>,</span> value<span style=color:#f92672>,</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+                        <span style=color:#75715e>// 加上自己够8个, 就要转换成红黑树
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>binCount <span style=color:#f92672>&gt;=</span> TREEIFY_THRESHOLD <span style=color:#f92672>-</span> 1<span style=color:#f92672>)</span> <span style=color:#75715e>// -1 for 1st
+</span><span style=color:#75715e></span>                            treeifyBin<span style=color:#f92672>(</span>tab<span style=color:#f92672>,</span> hash<span style=color:#f92672>);</span>  <span style=color:#75715e>//
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#75715e>// 出现相等的key则触发退出;
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>e<span style=color:#f92672>.</span><span style=color:#a6e22e>hash</span> <span style=color:#f92672>==</span> hash <span style=color:#f92672>&amp;&amp;</span>
+                        <span style=color:#f92672>((</span>k <span style=color:#f92672>=</span> e<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> key <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>key <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> key<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>k<span style=color:#f92672>))))</span>
+                        <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                        
+                    <span style=color:#75715e>// 移动链表指针: 相当于 p = p.next;
+</span><span style=color:#75715e></span>                    p <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+</code></pre></div><p>链表转红黑树的过程如下:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Replaces all linked nodes in bin at index for given hash unless
+</span><span style=color:#75715e>     * table is too small, in which case resizes instead.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>treeifyBin</span><span style=color:#f92672>(</span>Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;[]</span> tab<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> hash<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>int</span> n<span style=color:#f92672>,</span> index<span style=color:#f92672>;</span> Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> e<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 表长度小于64 直接扩容
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>tab <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>||</span> <span style=color:#f92672>(</span>n <span style=color:#f92672>=</span> tab<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>)</span> <span style=color:#f92672>&lt;</span> MIN_TREEIFY_CAPACITY<span style=color:#f92672>)</span>
+            resize<span style=color:#f92672>();</span>
+
+        <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>e <span style=color:#f92672>=</span> tab<span style=color:#f92672>[</span>index <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>n <span style=color:#f92672>-</span> 1<span style=color:#f92672>)</span> <span style=color:#f92672>&amp;</span> hash<span style=color:#f92672>])</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 将Node节点替换为树节点
+</span><span style=color:#75715e></span>            TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> hd <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>,</span> tl <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>do</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 将Node转换为TreeNode
+</span><span style=color:#75715e></span>                TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> replacementTreeNode<span style=color:#f92672>(</span>e<span style=color:#f92672>,</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>tl <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    hd <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span> <span style=color:#75715e>// 更新头节点;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    p<span style=color:#f92672>.</span><span style=color:#a6e22e>prev</span> <span style=color:#f92672>=</span> tl<span style=color:#f92672>;</span>    <span style=color:#75715e>// 将当前节点和上一个节点链接起来
+</span><span style=color:#75715e></span>                    tl<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+                tl <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span> <span style=color:#75715e>// 更新上一次插入的树节点;
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span> <span style=color:#66d9ef>while</span> <span style=color:#f92672>((</span>e <span style=color:#f92672>=</span> e<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+
+            <span style=color:#75715e>// 树根节点更新到数组的位置;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>tab<span style=color:#f92672>[</span>index<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> hd<span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                hd<span style=color:#f92672>.</span><span style=color:#a6e22e>treeify</span><span style=color:#f92672>(</span>tab<span style=color:#f92672>);</span>    <span style=color:#75715e>//
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+    
+        
+
+
+</code></pre></div><p>通过桶中的第一个节点触发, 链表转红黑树的过程：</p><ol><li>迭代链表, 每个节点<ol><li>如果不曾初始化树, 升级为root节点;</li><li>根据root节点, 插入树中<ol><li>确定位移方向， 不断逼近叶子节点;</li><li>插入叶子节点;</li><li>平衡性均衡;</li></ol></li></ol></li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+        <span style=color:#75715e>// from java.util.HashMap.TreeNode
+</span><span style=color:#75715e></span>
+         <span style=color:#75715e>/**
+</span><span style=color:#75715e>         * Forms tree of the nodes linked from this node.
+</span><span style=color:#75715e>         * @return root of tree
+</span><span style=color:#75715e>         */</span>
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>treeify</span><span style=color:#f92672>(</span>Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;[]</span> tab<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> root <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> x <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> next<span style=color:#f92672>;</span> x <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span> x <span style=color:#f92672>=</span> next<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 缓存下一个节点;
+</span><span style=color:#75715e></span>                next <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;)</span>x<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>;</span>
+
+                x<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 初始化根节点为当前节点;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>root <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                    x<span style=color:#f92672>.</span><span style=color:#a6e22e>red</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                    root <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+                <span style=color:#75715e>// 二叉树插入过程 + 红黑树调整
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    K k <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>int</span> h <span style=color:#f92672>=</span> x<span style=color:#f92672>.</span><span style=color:#a6e22e>hash</span><span style=color:#f92672>;</span>
+                    Class<span style=color:#f92672>&lt;?&gt;</span> kc <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                    <span style=color:#75715e>// 
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;;)</span> <span style=color:#f92672>{</span>
+                        <span style=color:#66d9ef>int</span> dir<span style=color:#f92672>,</span> ph<span style=color:#f92672>;</span>
+                        K pk <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>;</span>
+                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>ph <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>hash</span><span style=color:#f92672>)</span> <span style=color:#f92672>&gt;</span> h<span style=color:#f92672>)</span>
+                            dir <span style=color:#f92672>=</span> <span style=color:#f92672>-</span>1<span style=color:#f92672>;</span>
+                        <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ph <span style=color:#f92672>&lt;</span> h<span style=color:#f92672>)</span>
+                            dir <span style=color:#f92672>=</span> 1<span style=color:#f92672>;</span>
+                        <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>kc <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span>
+                                  <span style=color:#f92672>(</span>kc <span style=color:#f92672>=</span> comparableClassFor<span style=color:#f92672>(</span>k<span style=color:#f92672>))</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>||</span>
+                                 <span style=color:#f92672>(</span>dir <span style=color:#f92672>=</span> compareComparables<span style=color:#f92672>(</span>kc<span style=color:#f92672>,</span> k<span style=color:#f92672>,</span> pk<span style=color:#f92672>))</span> <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span>
+                            dir <span style=color:#f92672>=</span> tieBreakOrder<span style=color:#f92672>(</span>k<span style=color:#f92672>,</span> pk<span style=color:#f92672>);</span>
+
+                        TreeNode<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> xp <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                        <span style=color:#75715e>// 位移并确定是否找到叶子节点, 即插入位置;
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>p <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>dir <span style=color:#f92672>&lt;=</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>?</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>:</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                            x<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> xp<span style=color:#f92672>;</span>
+                            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>dir <span style=color:#f92672>&lt;=</span> 0<span style=color:#f92672>)</span>
+                                xp<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+                            <span style=color:#66d9ef>else</span>
+                                xp<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+                            root <span style=color:#f92672>=</span> balanceInsertion<span style=color:#f92672>(</span>root<span style=color:#f92672>,</span> x<span style=color:#f92672>);</span>
+                            <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                        <span style=color:#f92672>}</span>
+                    <span style=color:#f92672>}</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+            moveRootToFront<span style=color:#f92672>(</span>tab<span style=color:#f92672>,</span> root<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=迭代器>迭代器</h4><p>桶内元素通过 Node::next 属性找下一个节点;
+当桶内元素访问完毕后, 通过数组索引, 扩展到其他桶中, 继续迭代;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+    <span style=color:#75715e>// iterators
+</span><span style=color:#75715e></span>
+    <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>HashIterator</span> <span style=color:#f92672>{</span>
+        Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> next<span style=color:#f92672>;</span>        <span style=color:#75715e>// next entry to return
+</span><span style=color:#75715e></span>        Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> current<span style=color:#f92672>;</span>     <span style=color:#75715e>// current entry
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>int</span> expectedModCount<span style=color:#f92672>;</span>  <span style=color:#75715e>// for fast-fail
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>int</span> index<span style=color:#f92672>;</span>             <span style=color:#75715e>// current slot
+</span><span style=color:#75715e></span>
+        HashIterator<span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            expectedModCount <span style=color:#f92672>=</span> modCount<span style=color:#f92672>;</span>
+            Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;[]</span> t <span style=color:#f92672>=</span> table<span style=color:#f92672>;</span>
+            current <span style=color:#f92672>=</span> next <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            index <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> size <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span> <span style=color:#75715e>// advance to first entry
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>do</span> <span style=color:#f92672>{}</span> <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>index <span style=color:#f92672>&lt;</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>(</span>next <span style=color:#f92672>=</span> t<span style=color:#f92672>[</span>index<span style=color:#f92672>++])</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>hasNext</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> next <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>final</span> Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>nextNode</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;[]</span> t<span style=color:#f92672>;</span>
+            Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> e <span style=color:#f92672>=</span> next<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>e <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> NoSuchElementException<span style=color:#f92672>();</span>
+            <span style=color:#75715e>// 关键:   
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>next <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>current <span style=color:#f92672>=</span> e<span style=color:#f92672>).</span><span style=color:#a6e22e>next</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>=</span> table<span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>do</span> <span style=color:#f92672>{}</span> <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>index <span style=color:#f92672>&lt;</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>(</span>next <span style=color:#f92672>=</span> t<span style=color:#f92672>[</span>index<span style=color:#f92672>++])</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#66d9ef>return</span> e<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>remove</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            Node<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> current<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalStateException<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+            current <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            K key <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>;</span>
+            removeNode<span style=color:#f92672>(</span>hash<span style=color:#f92672>(</span>key<span style=color:#f92672>),</span> key<span style=color:#f92672>,</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>);</span>
+            expectedModCount <span style=color:#f92672>=</span> modCount<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>KeyIterator</span> <span style=color:#66d9ef>extends</span> HashIterator
+        <span style=color:#66d9ef>implements</span> Iterator<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> K <span style=color:#a6e22e>next</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> nextNode<span style=color:#f92672>().</span><span style=color:#a6e22e>key</span><span style=color:#f92672>;</span> <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ValueIterator</span> <span style=color:#66d9ef>extends</span> HashIterator
+        <span style=color:#66d9ef>implements</span> Iterator<span style=color:#f92672>&lt;</span>V<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> V <span style=color:#a6e22e>next</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> nextNode<span style=color:#f92672>().</span><span style=color:#a6e22e>value</span><span style=color:#f92672>;</span> <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>EntryIterator</span> <span style=color:#66d9ef>extends</span> HashIterator
+        <span style=color:#66d9ef>implements</span> Iterator<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;&gt;</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>next</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> nextNode<span style=color:#f92672>();</span> <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+    
+</code></pre></div><p>关键点在于</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>          <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>next <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>current <span style=color:#f92672>=</span> e<span style=color:#f92672>).</span><span style=color:#a6e22e>next</span><span style=color:#f92672>)</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>=</span> table<span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>do</span> <span style=color:#f92672>{}</span> <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>index <span style=color:#f92672>&lt;</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>(</span>next <span style=color:#f92672>=</span> t<span style=color:#f92672>[</span>index<span style=color:#f92672>++])</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+           <span style=color:#f92672>}</span>
+</code></pre></div><p>如果当前桶通过next指针拿不到, 将移动数组索引index;</p><h4 id=参考链接>参考链接</h4><p><a href=https://zh.wikipedia.org/wiki/%E7%BA%A2%E9%BB%91%E6%A0%91>维基百科</a>
+<a href="https://gaoyichao.com/Xiaotu/?book=data_and_algorithm&title=%E7%BA%A2%E9%BB%91%E6%A0%91">无处不在的小土</a></p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Barraydeque/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>集合之ArrayDeque</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/>长按键入 925</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E9%87%8D%E6%8E%92%E9%93%BE%E8%A1%A8-143/>重排链表 143</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%AF%94%E8%BE%83%E5%90%AB%E9%80%80%E6%A0%BC%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2-844/>比较含退格的字符串 844</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E7%9A%84%E5%80%92%E6%95%B0%E7%AC%ACn%E4%B8%AA%E8%8A%82%E7%82%B9-19/>删除链表的倒数第N个节点 19</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/n-%E5%85%AB%E7%9A%87%E5%90%8Eii-52/>N 八皇后ii 52</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮惹的祸.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
