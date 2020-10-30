@@ -5,10 +5,7 @@
 输入: [[0,1,0,0], [1,1,1,0], [0,1,0,0], [1,1,0,0]]
 输出: 16
 解释: 它的周长是下面图片中的 16 个黄色的边：
-题解 迭代法 对于一个陆地格子的每条边，它被算作岛屿的周长
-当且仅当这条边为网格的边界或者相邻的另一个格子为水域。 因此，我们可以遍历每个陆地格子，看其四个方向是否为边界或者水域，如果是，将这条边的贡献（即 11）加入答案 ans 中即可。
-注意上面的边不可能重复计数，因为格子是陆地的情况下才会参与计算，每个边计数的条件为边的两边为 &amp;lt;陆地，边界或水域&amp;gt; 因为只有一遍为陆地，所以同一条边会被计数一次.
-class Solution { static int[] dx = {0, 1, 0, -1}; static int[] dy = {1, 0, -1, 0}; public int islandPerimeter(int[][] grid) { int n = grid.length, m = grid[0].</description></item><item><title>长按键入 925</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</link><pubDate>Wed, 21 Oct 2020 21:30:49 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</guid><description>你的朋友正在使用键盘输入他的名字 name。偶尔，在键入字符 c 时，按键可能会被长按，而字符可能被输入 1 次或多次。
+题解 迭代法: 反向思考 class Solution { public int islandPerimeter(int[][] grid) { //重点关注前面遍历过得方格，如果之前有相邻方格，就-2; if (grid == null || grid.length == 0) { return 0; } int rsp = 0; for (int i = 0; i &amp;lt; grid.length; i++) { for (int j = 0; j &amp;lt; grid[i].</description></item><item><title>长按键入 925</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</link><pubDate>Wed, 21 Oct 2020 21:30:49 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</guid><description>你的朋友正在使用键盘输入他的名字 name。偶尔，在键入字符 c 时，按键可能会被长按，而字符可能被输入 1 次或多次。
 你将会检查键盘输入的字符 typed。如果它对应的可能是你的朋友的名字（其中一些字符可能被长按），那么就返回 True。
 示例 1：
 输入：name = &amp;ldquo;alex&amp;rdquo;, typed = &amp;ldquo;aaleex&amp;rdquo; 输出：true 解释：&amp;lsquo;alex&amp;rsquo; 中的 &amp;lsquo;a&amp;rsquo; 和 &amp;lsquo;e&amp;rsquo; 被长按。 示例 2：
