@@ -1,0 +1,605 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>集合之TreeMap - 月亮惹的祸</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="集合之TreeMap"><meta property="og:description" content="核心点分解  插入过程 删除过程 导航方法  lowerEntry floorEntry ceilingEntry higherEntry   视图  headMap subMap tailMap   迭代器 查询  firstKey lastKey    插入 两种情况下返回null
+ 根节点root == null 遍历整颗树后依然没有发现已存在的节点  空指针异常:
+ 当key为null, 且没有指定comparator， 使用key对象的compareTo(T t); 存在排序器 comparator 但是其不支持;  ClassCastException:
+当没有制定排序器时，会提取Key值的 Compareble接口, 如果不能cast到则会抛出对应的ClassCastException  public V put(K key, V value) { // 本地化根节点 root 到 t;  Entry<K,V> t = root; if (t == null) { compare(key, key); // type (and possibly null) check  // 初始化root节点;  root = new Entry<>(key, value, null); size = 1; modCount++; // 返回旧节点为null;  return null; } int cmp; Entry<K,V> parent; // split comparator and comparable paths  Comparator<?"><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Btreemap/"><meta property="article:published_time" content="2020-10-30T22:16:46+08:00"><meta property="article:modified_time" content="2020-10-30T22:16:46+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮惹的祸 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮惹的祸</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>集合之TreeMap</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-10-30T22:16:46+08:00>October 30, 2020</time></div></div></header><div class="content post__content clearfix"><p><img src=http://assets.processon.com/chart_image/5f98283b5653bb30178b9e38.png alt=TreeMap></p><h3 id=核心点分解>核心点分解</h3><ul><li><input checked disabled type=checkbox> 插入过程</li><li><input checked disabled type=checkbox> 删除过程</li><li><input disabled type=checkbox> 导航方法<ul><li><input checked disabled type=checkbox> lowerEntry</li><li><input checked disabled type=checkbox> floorEntry</li><li><input checked disabled type=checkbox> ceilingEntry</li><li><input checked disabled type=checkbox> higherEntry</li></ul></li><li><input checked disabled type=checkbox> 视图<ul><li><input checked disabled type=checkbox> headMap</li><li><input checked disabled type=checkbox> subMap</li><li><input checked disabled type=checkbox> tailMap</li></ul></li><li><input checked disabled type=checkbox> 迭代器</li><li><input checked disabled type=checkbox> 查询<ul><li><input checked disabled type=checkbox> firstKey</li><li><input checked disabled type=checkbox> lastKey</li></ul></li></ul><h3 id=插入>插入</h3><p>两种情况下返回null</p><ol><li>根节点root == null</li><li>遍历整颗树后依然没有发现已存在的节点</li></ol><p>空指针异常:</p><ol><li>当key为null, 且没有指定comparator，
+使用key对象的compareTo(T t);</li><li>存在排序器 comparator 但是其不支持;</li></ol><p>ClassCastException:</p><pre><code>当没有制定排序器时，会提取Key值的 Compareble接口, 如果不能cast到则会抛出对应的ClassCastException
+</code></pre><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+    <span style=color:#66d9ef>public</span> V <span style=color:#a6e22e>put</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>,</span> V value<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+
+        <span style=color:#75715e>// 本地化根节点 root 到 t;
+</span><span style=color:#75715e></span>        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> t <span style=color:#f92672>=</span> root<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            compare<span style=color:#f92672>(</span>key<span style=color:#f92672>,</span> key<span style=color:#f92672>);</span> <span style=color:#75715e>// type (and possibly null) check
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// 初始化root节点;
+</span><span style=color:#75715e></span>            root <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Entry<span style=color:#f92672>&lt;&gt;(</span>key<span style=color:#f92672>,</span> value<span style=color:#f92672>,</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+            size <span style=color:#f92672>=</span> 1<span style=color:#f92672>;</span>
+            modCount<span style=color:#f92672>++;</span>
+            <span style=color:#75715e>// 返回旧节点为null;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>int</span> cmp<span style=color:#f92672>;</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> parent<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// split comparator and comparable paths
+</span><span style=color:#75715e></span>        Comparator<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>super</span> K<span style=color:#f92672>&gt;</span> cpr <span style=color:#f92672>=</span> comparator<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 存在Comparator
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cpr <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>do</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 继续位移起始点;
+</span><span style=color:#75715e></span>                parent <span style=color:#f92672>=</span> t<span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 定方向
+</span><span style=color:#75715e></span>                cmp <span style=color:#f92672>=</span> cpr<span style=color:#f92672>.</span><span style=color:#a6e22e>compare</span><span style=color:#f92672>(</span>key<span style=color:#f92672>,</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>);</span>
+                <span style=color:#75715e>// 比较后位移或者设置值并返回;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span>
+                    t <span style=color:#f92672>=</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span>
+                    t <span style=color:#f92672>=</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span>
+                    <span style=color:#66d9ef>return</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>setValue</span><span style=color:#f92672>(</span>value<span style=color:#f92672>);</span>
+
+                <span style=color:#75715e>// 成功位移的情况下，继续循环，或者是走到了结尾, 后期插入到parent后面即可;
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span> <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 不存在Comparator, 但是key实现了Comparable接口的情况下也可以;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>key <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> NullPointerException<span style=color:#f92672>();</span>
+            <span style=color:#a6e22e>@SuppressWarnings</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;unchecked&#34;</span><span style=color:#f92672>)</span>
+                Comparable<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>super</span> K<span style=color:#f92672>&gt;</span> k <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>Comparable<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>super</span> K<span style=color:#f92672>&gt;)</span> key<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>do</span> <span style=color:#f92672>{</span>
+                parent <span style=color:#f92672>=</span> t<span style=color:#f92672>;</span>
+                cmp <span style=color:#f92672>=</span> k<span style=color:#f92672>.</span><span style=color:#a6e22e>compareTo</span><span style=color:#f92672>(</span>t<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>);</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span>
+                    t <span style=color:#f92672>=</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span>
+                    t <span style=color:#f92672>=</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span>
+                    <span style=color:#66d9ef>return</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>setValue</span><span style=color:#f92672>(</span>value<span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span> <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 以上并没有查询到已存在到节点, 所以合理可以直接插入进去;
+</span><span style=color:#75715e></span>        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> e <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Entry<span style=color:#f92672>&lt;&gt;(</span>key<span style=color:#f92672>,</span> value<span style=color:#f92672>,</span> parent<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span>
+            parent<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>else</span>
+            parent<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 插入节点后进行平衡性修复;
+</span><span style=color:#75715e></span>        fixAfterInsertion<span style=color:#f92672>(</span>e<span style=color:#f92672>);</span>
+        size<span style=color:#f92672>++;</span>
+        modCount<span style=color:#f92672>++;</span>
+        <span style=color:#75715e>// 新插入节点返回旧节点为null;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><h3 id=删除>删除</h3><p>主程序如下, 主要是实现返回旧节点中的旧值, 旧节点非null的情况下从树中删除;
+注意值当然可以为null;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> V <span style=color:#a6e22e>remove</span><span style=color:#f92672>(</span>Object key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 查询旧值
+</span><span style=color:#75715e></span>        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> getEntry<span style=color:#f92672>(</span>key<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 没有旧值 直接返回不用删除
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 提取旧值 后期返回
+</span><span style=color:#75715e></span>        V oldValue <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>value</span><span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 从树中删除旧值; 
+</span><span style=color:#75715e></span>        deleteEntry<span style=color:#f92672>(</span>p<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 返回旧值;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>return</span> oldValue<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>删除过程依赖一个找后继的函数如下:</p><p>找节点t的后继(下一个大于)节点;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Returns the successor of the specified Entry, or null if no such.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>static</span> <span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> TreeMap<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>successor</span><span style=color:#f92672>(</span>Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> t<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 空节点没有后继节点;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 右子树上找最小值;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>t<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 右子树的左边极值;
+</span><span style=color:#75715e></span>            Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 空右子树: 迭代父亲和当前节点直到当前节点为父亲的左孩子; 
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 定位父节点;
+</span><span style=color:#75715e></span>            Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> t<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+            <span style=color:#75715e>// 当前节点;
+</span><span style=color:#75715e></span>            Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> ch <span style=color:#f92672>=</span> t<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// loop when 当前节点为父亲的右孩子;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> ch <span style=color:#f92672>==</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                ch <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#75715e>// 直到找到当前节点为父亲节点的左孩子;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><p>删除主程序如下:</p><ol><li>对于内部节点(有两个孩子), 找到后继节点s，并拷贝到当前节点上, 后期在执行删除s的动作;</li><li>找一个非null的孩子节点并替换当前节点：<ol><li>孩子的父亲指向当前节点p的父亲</li><li>p 的父亲指向原本指向当前节点的指针, 指向孩子节点;</li><li><input disabled type=checkbox> TODO: 这里是如何保证只有一个孩子节点的;</li></ol></li><li>没有孩子、没有父亲:<ol><li>删除root节点;</li></ol></li><li>没有孩子、有父亲：<ol><li>如果当前节点为黑色，则需调整红黑树</li><li>删除父亲节点上的引用；</li></ol></li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Delete node p, and then rebalance the tree.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>deleteEntry</span><span style=color:#f92672>(</span>Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        modCount<span style=color:#f92672>++;</span>
+        size<span style=color:#f92672>--;</span>
+
+        <span style=color:#75715e>// If strictly internal, copy successor&#39;s element to p and then make p
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// point to successor.
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// 两个孩子都是非null的节点: 后继上的值复制到当前节点，并让p指向s, 后期相当于删除后继节点s;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 找后继节点;
+</span><span style=color:#75715e></span>            Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> s <span style=color:#f92672>=</span> successor<span style=color:#f92672>(</span>p<span style=color:#f92672>);</span>
+            <span style=color:#75715e>// 将后继节点内容复制到 p
+</span><span style=color:#75715e></span>            p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span> <span style=color:#f92672>=</span> s<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>;</span>
+            p<span style=color:#f92672>.</span><span style=color:#a6e22e>value</span> <span style=color:#f92672>=</span> s<span style=color:#f92672>.</span><span style=color:#a6e22e>value</span><span style=color:#f92672>;</span>
+            <span style=color:#75715e>// p 重新指向 s;
+</span><span style=color:#75715e></span>            p <span style=color:#f92672>=</span> s<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span> <span style=color:#75715e>// p has 2 children
+</span><span style=color:#75715e></span>
+
+        <span style=color:#75715e>// 在替换节点上启动修复;
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// Start fixup at replacement node, if it exists.
+</span><span style=color:#75715e></span>        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> replacement <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>?</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>:</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>);</span>
+
+        <span style=color:#75715e>// 将左右任意一个孩子提升上来;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>replacement <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// Link replacement to parent
+</span><span style=color:#75715e></span>            replacement<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                root <span style=color:#f92672>=</span> replacement<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>==</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span>
+                p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>left</span>  <span style=color:#f92672>=</span> replacement<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>else</span>
+                p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> replacement<span style=color:#f92672>;</span>
+
+            <span style=color:#75715e>// Null out links so they are OK to use by fixAfterDeletion.
+</span><span style=color:#75715e></span>            p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+
+            <span style=color:#75715e>// Fix replacement
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>color</span> <span style=color:#f92672>==</span> BLACK<span style=color:#f92672>)</span>
+                fixAfterDeletion<span style=color:#f92672>(</span>replacement<span style=color:#f92672>);</span>
+        <span style=color:#75715e>//  没有孩子，没有父亲：p 就是root, 所以其被删除后 root == null
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span> <span style=color:#75715e>// return if we are the only node.
+</span><span style=color:#75715e></span>            root <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 没有孩子, 有父亲: 所以其被删除后,
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span> <span style=color:#75715e>//  No children. Use self as phantom replacement and unlink.
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// 如果删除黑色节点，根据红黑树的性质，每条路径的黑色节点数目相同，这样删除后则不同，所以需要调整；
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>color</span> <span style=color:#f92672>==</span> BLACK<span style=color:#f92672>)</span>
+                fixAfterDeletion<span style=color:#f92672>(</span>p<span style=color:#f92672>);</span>
+
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>==</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span>
+                    p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>==</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span>
+                    p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h3 id=导航方法>导航方法</h3><h4 id=lowerentry-小于key的最大值>lowerEntry 小于key的最大值</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>lowerEntry</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> exportEntry<span style=color:#f92672>(</span>getLowerEntry<span style=color:#f92672>(</span>key<span style=color:#f92672>));</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getLowerEntry</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+
+            <span style=color:#66d9ef>int</span> cmp <span style=color:#f92672>=</span> compare<span style=color:#f92672>(</span>key<span style=color:#f92672>,</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>);</span>
+            <span style=color:#75715e>// key更大: 让对手更逼近key
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span> 
+                <span style=color:#75715e>// 增强对手，继续查询;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 不能增强对手， 直接返回;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span>
+                    <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// key更小: 降低对手使得其小于key;       
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 找更小的对手节点
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 回溯父亲节点, 继续查找更小的节点;    
+</span><span style=color:#75715e></span>                <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> parent <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> ch <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                    <span style=color:#75715e>// 迭代右上角的父亲
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>parent <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> ch <span style=color:#f92672>==</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        ch <span style=color:#f92672>=</span> parent<span style=color:#f92672>;</span>
+                        parent <span style=color:#f92672>=</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#75715e>// 直到左拐:  为父亲的右孩子
+</span><span style=color:#75715e></span>                    <span style=color:#75715e>// 直到当前节点为父亲节点的右孩子; 
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>return</span> parent<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=floorentry>floorEntry</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getFloorEntry</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>int</span> cmp <span style=color:#f92672>=</span> compare<span style=color:#f92672>(</span>key<span style=color:#f92672>,</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>);</span>
+            <span style=color:#75715e>// key 更大，则需要增强对手节点
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 可以增强对手节点，则增强之；
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+                    
+                <span style=color:#75715e>// 不能增强之，即没有右孩子的节点;    
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span>
+                    <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+                    
+            <span style=color:#75715e>//  key 更小, 则需要降低对手节点;        
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 可以降低对手节点则降低之。
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 当前子树不能降低对手节点，则回退到当前右子树的父亲节点
+</span><span style=color:#75715e></span>                <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> parent <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> ch <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>parent <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> ch <span style=color:#f92672>==</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        ch <span style=color:#f92672>=</span> parent<span style=color:#f92672>;</span>
+                        parent <span style=color:#f92672>=</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#75715e>// ch为parent的右孩子或者是parent == null
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>return</span> parent<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span>
+                <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><h4 id=ceilingkey-找大于等于key的最小值>ceilingKey 找大于等于key的最小值</h4><p>key需要小于等于目标值;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getCeilingEntry</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>int</span> cmp <span style=color:#f92672>=</span> compare<span style=color:#f92672>(</span>key<span style=color:#f92672>,</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>);</span>
+            <span style=color:#75715e>// key 更小则降低对手节点; 
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 能降低则降低
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 否则找到之;    
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span>
+                    <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// key 更大则增强对手节点;        
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&gt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 能增强则增强;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+                <span style=color:#75715e>// 不能增强, 则回退到当前左子树的父亲;    
+</span><span style=color:#75715e></span>                <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> parent <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> ch <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                    <span style=color:#75715e>// 如果是右孩子则一直回溯;
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>parent <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> ch <span style=color:#f92672>==</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        ch <span style=color:#f92672>=</span> parent<span style=color:#f92672>;</span>
+                        parent <span style=color:#f92672>=</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#75715e>// 直到当前左子树完成; 
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>return</span> parent<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span>
+                <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><h4 id=higherkey>higherKey</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+    <span style=color:#66d9ef>public</span> K <span style=color:#a6e22e>higherKey</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> keyOrNull<span style=color:#f92672>(</span>getHigherEntry<span style=color:#f92672>(</span>key<span style=color:#f92672>));</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#75715e>// 找更大的或者即使小也是相差最小的;
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 找第一个大于key的Entry
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getHigherEntry</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>int</span> cmp <span style=color:#f92672>=</span> compare<span style=color:#f92672>(</span>key<span style=color:#f92672>,</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>key</span><span style=color:#f92672>);</span>
+            <span style=color:#75715e>// key较小, 需要找更大的;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cmp <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+                 <span style=color:#75715e>// 不能在大则找到了;   
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>else</span>
+                    <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>        
+            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// key较大, 需要找更小的; 
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> parent <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> ch <span style=color:#f92672>=</span> p<span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>parent <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> ch <span style=color:#f92672>==</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        ch <span style=color:#f92672>=</span> parent<span style=color:#f92672>;</span>
+                        parent <span style=color:#f92672>=</span> parent<span style=color:#f92672>.</span><span style=color:#a6e22e>parent</span><span style=color:#f92672>;</span>
+                    <span style=color:#f92672>}</span>
+                    <span style=color:#66d9ef>return</span> parent<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h3 id=视图>视图</h3><p>视图使用如下类型作为切片框架</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * @serial include
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>AscendingSubMap</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#66d9ef>extends</span> NavigableSubMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>long</span> serialVersionUID <span style=color:#f92672>=</span> 912986545866124060L<span style=color:#f92672>;</span>
+        
+        <span style=color:#75715e>// 根据原始map和左右边界情况去对map进行切片;
+</span><span style=color:#75715e></span>        AscendingSubMap<span style=color:#f92672>(</span>TreeMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> m<span style=color:#f92672>,</span> <span style=color:#75715e>// 原始map
+</span><span style=color:#75715e></span>                        <span style=color:#75715e>// 是否如何定义左边界
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>boolean</span> fromStart<span style=color:#f92672>,</span> K lo<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> loInclusive<span style=color:#f92672>,</span>
+                        <span style=color:#75715e>// 是否如何定义有边界
+</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>boolean</span> toEnd<span style=color:#f92672>,</span>     K hi<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> hiInclusive<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>super</span><span style=color:#f92672>(</span>m<span style=color:#f92672>,</span> fromStart<span style=color:#f92672>,</span> lo<span style=color:#f92672>,</span> loInclusive<span style=color:#f92672>,</span> toEnd<span style=color:#f92672>,</span> hi<span style=color:#f92672>,</span> hiInclusive<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> Comparator<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>super</span> K<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>comparator</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> m<span style=color:#f92672>.</span><span style=color:#a6e22e>comparator</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> NavigableMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subMap</span><span style=color:#f92672>(</span>K fromKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> fromInclusive<span style=color:#f92672>,</span>
+                                        K toKey<span style=color:#f92672>,</span>   <span style=color:#66d9ef>boolean</span> toInclusive<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>inRange<span style=color:#f92672>(</span>fromKey<span style=color:#f92672>,</span> fromInclusive<span style=color:#f92672>))</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;fromKey out of range&#34;</span><span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>inRange<span style=color:#f92672>(</span>toKey<span style=color:#f92672>,</span> toInclusive<span style=color:#f92672>))</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;toKey out of range&#34;</span><span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> AscendingSubMap<span style=color:#f92672>&lt;&gt;(</span>m<span style=color:#f92672>,</span>
+                                         <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> fromKey<span style=color:#f92672>,</span> fromInclusive<span style=color:#f92672>,</span>
+                                         <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> toKey<span style=color:#f92672>,</span>   toInclusive<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> NavigableMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>headMap</span><span style=color:#f92672>(</span>K toKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> inclusive<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>inRange<span style=color:#f92672>(</span>toKey<span style=color:#f92672>,</span> inclusive<span style=color:#f92672>))</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;toKey out of range&#34;</span><span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> AscendingSubMap<span style=color:#f92672>&lt;&gt;(</span>m<span style=color:#f92672>,</span>
+                                         fromStart<span style=color:#f92672>,</span> lo<span style=color:#f92672>,</span>    loInclusive<span style=color:#f92672>,</span>
+                                         <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span>     toKey<span style=color:#f92672>,</span> inclusive<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> NavigableMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>tailMap</span><span style=color:#f92672>(</span>K fromKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> inclusive<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>inRange<span style=color:#f92672>(</span>fromKey<span style=color:#f92672>,</span> inclusive<span style=color:#f92672>))</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;fromKey out of range&#34;</span><span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> AscendingSubMap<span style=color:#f92672>&lt;&gt;(</span>m<span style=color:#f92672>,</span>
+                                         <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> fromKey<span style=color:#f92672>,</span> inclusive<span style=color:#f92672>,</span>
+                                         toEnd<span style=color:#f92672>,</span> hi<span style=color:#f92672>,</span>      hiInclusive<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> NavigableMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>descendingMap</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            NavigableMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> mv <span style=color:#f92672>=</span> descendingMapView<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#f92672>(</span>mv <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>?</span> mv <span style=color:#f92672>:</span>
+                <span style=color:#f92672>(</span>descendingMapView <span style=color:#f92672>=</span>
+                 <span style=color:#66d9ef>new</span> DescendingSubMap<span style=color:#f92672>&lt;&gt;(</span>m<span style=color:#f92672>,</span>
+                                        fromStart<span style=color:#f92672>,</span> lo<span style=color:#f92672>,</span> loInclusive<span style=color:#f92672>,</span>
+                                        toEnd<span style=color:#f92672>,</span>     hi<span style=color:#f92672>,</span> hiInclusive<span style=color:#f92672>));</span>
+        <span style=color:#f92672>}</span>
+
+        Iterator<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>keyIterator</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> SubMapKeyIterator<span style=color:#f92672>(</span>absLowest<span style=color:#f92672>(),</span> absHighFence<span style=color:#f92672>());</span>
+        <span style=color:#f92672>}</span>
+
+        Spliterator<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>keySpliterator</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> SubMapKeyIterator<span style=color:#f92672>(</span>absLowest<span style=color:#f92672>(),</span> absHighFence<span style=color:#f92672>());</span>
+        <span style=color:#f92672>}</span>
+
+        Iterator<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>descendingKeyIterator</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> DescendingSubMapKeyIterator<span style=color:#f92672>(</span>absHighest<span style=color:#f92672>(),</span> absLowFence<span style=color:#f92672>());</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>AscendingEntrySetView</span> <span style=color:#66d9ef>extends</span> EntrySetView <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>public</span> Iterator<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;&gt;</span> <span style=color:#a6e22e>iterator</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> SubMapEntryIterator<span style=color:#f92672>(</span>absLowest<span style=color:#f92672>(),</span> absHighFence<span style=color:#f92672>());</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> Set<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;&gt;</span> <span style=color:#a6e22e>entrySet</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            EntrySetView es <span style=color:#f92672>=</span> entrySetView<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#f92672>(</span>es <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>?</span> es <span style=color:#f92672>:</span> <span style=color:#f92672>(</span>entrySetView <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> AscendingEntrySetView<span style=color:#f92672>());</span>
+        <span style=color:#f92672>}</span>
+
+        TreeMap<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subLowest</span><span style=color:#f92672>()</span>       <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> absLowest<span style=color:#f92672>();</span> <span style=color:#f92672>}</span>
+        TreeMap<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subHighest</span><span style=color:#f92672>()</span>      <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> absHighest<span style=color:#f92672>();</span> <span style=color:#f92672>}</span>
+        TreeMap<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subCeiling</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span> <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> absCeiling<span style=color:#f92672>(</span>key<span style=color:#f92672>);</span> <span style=color:#f92672>}</span>
+        TreeMap<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subHigher</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span>  <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> absHigher<span style=color:#f92672>(</span>key<span style=color:#f92672>);</span> <span style=color:#f92672>}</span>
+        TreeMap<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subFloor</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span>   <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> absFloor<span style=color:#f92672>(</span>key<span style=color:#f92672>);</span> <span style=color:#f92672>}</span>
+        TreeMap<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subLower</span><span style=color:#f92672>(</span>K key<span style=color:#f92672>)</span>   <span style=color:#f92672>{</span> <span style=color:#66d9ef>return</span> absLower<span style=color:#f92672>(</span>key<span style=color:#f92672>);</span> <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=headmap>headmap</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * @throws ClassCastException       {@inheritDoc}
+</span><span style=color:#75715e>     * @throws NullPointerException if {@code toKey} is null
+</span><span style=color:#75715e>     *         and this map uses natural ordering, or its comparator
+</span><span style=color:#75715e>     *         does not permit null keys
+</span><span style=color:#75715e>     * @throws IllegalArgumentException {@inheritDoc}
+</span><span style=color:#75715e>     * @since 1.6
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> NavigableMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>headMap</span><span style=color:#f92672>(</span>K toKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> inclusive<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> AscendingSubMap<span style=color:#f92672>&lt;&gt;(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span>
+                                     <span style=color:#75715e>//  左边界头开始， 闭区间
+</span><span style=color:#75715e></span>                                     <span style=color:#66d9ef>true</span><span style=color:#f92672>,</span>  <span style=color:#66d9ef>null</span><span style=color:#f92672>,</span>  <span style=color:#66d9ef>true</span><span style=color:#f92672>,</span>
+                                     <span style=color:#75715e>//  右边界到toKey结束
+</span><span style=color:#75715e></span>                                     <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> toKey<span style=color:#f92672>,</span> inclusive<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><h4 id=tailmap>tailMap</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * @throws ClassCastException       {@inheritDoc}
+</span><span style=color:#75715e>     * @throws NullPointerException if {@code fromKey} is null
+</span><span style=color:#75715e>     *         and this map uses natural ordering, or its comparator
+</span><span style=color:#75715e>     *         does not permit null keys
+</span><span style=color:#75715e>     * @throws IllegalArgumentException {@inheritDoc}
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> SortedMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>tailMap</span><span style=color:#f92672>(</span>K fromKey<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> tailMap<span style=color:#f92672>(</span>fromKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    
+    
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * @throws ClassCastException       {@inheritDoc}
+</span><span style=color:#75715e>     * @throws NullPointerException if {@code fromKey} is null
+</span><span style=color:#75715e>     *         and this map uses natural ordering, or its comparator
+</span><span style=color:#75715e>     *         does not permit null keys
+</span><span style=color:#75715e>     * @throws IllegalArgumentException {@inheritDoc}
+</span><span style=color:#75715e>     * @since 1.6
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> NavigableMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>tailMap</span><span style=color:#f92672>(</span>K fromKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> inclusive<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> AscendingSubMap<span style=color:#f92672>&lt;&gt;(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span>
+                                     <span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> fromKey<span style=color:#f92672>,</span> inclusive<span style=color:#f92672>,</span>
+                                     <span style=color:#66d9ef>true</span><span style=color:#f92672>,</span>  <span style=color:#66d9ef>null</span><span style=color:#f92672>,</span>    <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=submap>submap</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * @throws ClassCastException       {@inheritDoc}
+</span><span style=color:#75715e>     * @throws NullPointerException if {@code fromKey} or {@code toKey} is
+</span><span style=color:#75715e>     *         null and this map uses natural ordering, or its comparator
+</span><span style=color:#75715e>     *         does not permit null keys
+</span><span style=color:#75715e>     * @throws IllegalArgumentException {@inheritDoc}
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> SortedMap<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>subMap</span><span style=color:#f92672>(</span>K fromKey<span style=color:#f92672>,</span> K toKey<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> subMap<span style=color:#f92672>(</span>fromKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>,</span> toKey<span style=color:#f92672>,</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=迭代器>迭代器</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Base class for TreeMap Iterators
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>PrivateEntryIterator</span><span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> <span style=color:#66d9ef>implements</span> Iterator<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> next<span style=color:#f92672>;</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> lastReturned<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>int</span> expectedModCount<span style=color:#f92672>;</span>
+
+        PrivateEntryIterator<span style=color:#f92672>(</span>Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> first<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            expectedModCount <span style=color:#f92672>=</span> modCount<span style=color:#f92672>;</span>
+            lastReturned <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            next <span style=color:#f92672>=</span> first<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>hasNext</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> next <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>nextEntry</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 拿到当前要返回或者校验的entry
+</span><span style=color:#75715e></span>            Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> e <span style=color:#f92672>=</span> next<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>e <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> NoSuchElementException<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+            <span style=color:#75715e>// 每次使用后继查询器找到下一个节点    
+</span><span style=color:#75715e></span>            next <span style=color:#f92672>=</span> successor<span style=color:#f92672>(</span>e<span style=color:#f92672>);</span>
+            lastReturned <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>return</span> e<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>prevEntry</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> e <span style=color:#f92672>=</span> next<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>e <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> NoSuchElementException<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+            next <span style=color:#f92672>=</span> predecessor<span style=color:#f92672>(</span>e<span style=color:#f92672>);</span>
+            lastReturned <span style=color:#f92672>=</span> e<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>return</span> e<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>remove</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>lastReturned <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalStateException<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+            <span style=color:#75715e>// deleted entries are replaced by their successors
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>lastReturned<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> lastReturned<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                next <span style=color:#f92672>=</span> lastReturned<span style=color:#f92672>;</span>
+            deleteEntry<span style=color:#f92672>(</span>lastReturned<span style=color:#f92672>);</span>
+            expectedModCount <span style=color:#f92672>=</span> modCount<span style=color:#f92672>;</span>
+            lastReturned <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>EntryIterator</span> <span style=color:#66d9ef>extends</span> PrivateEntryIterator<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;&gt;</span> <span style=color:#f92672>{</span>
+        EntryIterator<span style=color:#f92672>(</span>Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> first<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>super</span><span style=color:#f92672>(</span>first<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>public</span> Map<span style=color:#f92672>.</span><span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>next</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> nextEntry<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ValueIterator</span> <span style=color:#66d9ef>extends</span> PrivateEntryIterator<span style=color:#f92672>&lt;</span>V<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+        ValueIterator<span style=color:#f92672>(</span>Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> first<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>super</span><span style=color:#f92672>(</span>first<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>public</span> V <span style=color:#a6e22e>next</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> nextEntry<span style=color:#f92672>().</span><span style=color:#a6e22e>value</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>KeyIterator</span> <span style=color:#66d9ef>extends</span> PrivateEntryIterator<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+        KeyIterator<span style=color:#f92672>(</span>Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> first<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>super</span><span style=color:#f92672>(</span>first<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>public</span> K <span style=color:#a6e22e>next</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> nextEntry<span style=color:#f92672>().</span><span style=color:#a6e22e>key</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DescendingKeyIterator</span> <span style=color:#66d9ef>extends</span> PrivateEntryIterator<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+        DescendingKeyIterator<span style=color:#f92672>(</span>Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> first<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>super</span><span style=color:#f92672>(</span>first<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>public</span> K <span style=color:#a6e22e>next</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> prevEntry<span style=color:#f92672>().</span><span style=color:#a6e22e>key</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>remove</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>lastReturned <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalStateException<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>modCount <span style=color:#f92672>!=</span> expectedModCount<span style=color:#f92672>)</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ConcurrentModificationException<span style=color:#f92672>();</span>
+            deleteEntry<span style=color:#f92672>(</span>lastReturned<span style=color:#f92672>);</span>
+            lastReturned <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            expectedModCount <span style=color:#f92672>=</span> modCount<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><h3 id=查询>查询</h3><h4 id=firstentry>firstEntry</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>    * @throws NoSuchElementException {@inheritDoc}
+</span><span style=color:#75715e>    */</span>
+    <span style=color:#66d9ef>public</span> K <span style=color:#a6e22e>firstKey</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> key<span style=color:#f92672>(</span>getFirstEntry<span style=color:#f92672>());</span>
+    <span style=color:#f92672>}</span>
+    
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Returns the first Entry in the TreeMap (according to the TreeMap&#39;s
+</span><span style=color:#75715e>     * key-sort function).  Returns null if the TreeMap is empty.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getFirstEntry</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>  <span style=color:#75715e>// 找极左节点 就是首节点;
+</span><span style=color:#75715e></span>                p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>left</span><span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=lastentry>lastEntry</h4><p>找极右节点就是最后一个元素;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>   <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * @throws NoSuchElementException {@inheritDoc}
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> K <span style=color:#a6e22e>lastKey</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> key<span style=color:#f92672>(</span>getLastEntry<span style=color:#f92672>());</span>
+    <span style=color:#f92672>}</span>
+
+
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Returns the last Entry in the TreeMap (according to the TreeMap&#39;s
+</span><span style=color:#75715e>     * key-sort function).  Returns null if the TreeMap is empty.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>final</span> Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getLastEntry</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        Entry<span style=color:#f92672>&lt;</span>K<span style=color:#f92672>,</span>V<span style=color:#f92672>&gt;</span> p <span style=color:#f92672>=</span> root<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>p <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                p <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span><span style=color:#a6e22e>right</span><span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> p<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Blinkedhashmap/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>集合之LinkedHashMap</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/>长按键入 925</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E9%87%8D%E6%8E%92%E9%93%BE%E8%A1%A8-143/>重排链表 143</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%AF%94%E8%BE%83%E5%90%AB%E9%80%80%E6%A0%BC%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2-844/>比较含退格的字符串 844</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E7%9A%84%E5%80%92%E6%95%B0%E7%AC%ACn%E4%B8%AA%E8%8A%82%E7%82%B9-19/>删除链表的倒数第N个节点 19</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/n-%E5%85%AB%E7%9A%87%E5%90%8Eii-52/>N 八皇后ii 52</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮惹的祸.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
