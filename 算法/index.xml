@@ -1,4 +1,14 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>题解报告 on 月亮惹的祸</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/</link><description>Recent content in 题解报告 on 月亮惹的祸</description><generator>Hugo -- gohugo.io</generator><language>zh_CN</language><lastBuildDate>Wed, 07 Oct 2020 10:37:33 +0800</lastBuildDate><atom:link href="https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml"/><item><title>长按键入 925</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</link><pubDate>Wed, 21 Oct 2020 21:30:49 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</guid><description>你的朋友正在使用键盘输入他的名字 name。偶尔，在键入字符 c 时，按键可能会被长按，而字符可能被输入 1 次或多次。
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>题解报告 on 月亮惹的祸</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/</link><description>Recent content in 题解报告 on 月亮惹的祸</description><generator>Hugo -- gohugo.io</generator><language>zh_CN</language><lastBuildDate>Wed, 07 Oct 2020 10:37:33 +0800</lastBuildDate><atom:link href="https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml"/><item><title>岛屿数量_463</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E5%B2%9B%E5%B1%BF%E6%95%B0%E9%87%8F_463/</link><pubDate>Sat, 31 Oct 2020 00:04:11 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E5%B2%9B%E5%B1%BF%E6%95%B0%E9%87%8F_463/</guid><description>给定一个包含 0 和 1 的二维网格地图，其中 1 表示陆地 0 表示水域。
+网格中的格子水平和垂直方向相连（对角线方向不相连）。整个网格被水完全包围，但其中恰好有一个岛屿（或者说，一个或多个表示陆地的格子相连组成的岛屿）。
+岛屿中没有“湖”（“湖” 指水域在岛屿内部且不和岛屿周围的水相连）。格子是边长为 1 的正方形。网格为长方形，且宽度和高度均不超过 100 。计算这个岛屿的周长。
+ 示例 :
+输入: [[0,1,0,0], [1,1,1,0], [0,1,0,0], [1,1,0,0]]
+输出: 16
+解释: 它的周长是下面图片中的 16 个黄色的边：
+题解 迭代法 对于一个陆地格子的每条边，它被算作岛屿的周长
+当且仅当这条边为网格的边界或者相邻的另一个格子为水域。 因此，我们可以遍历每个陆地格子，看其四个方向是否为边界或者水域，如果是，将这条边的贡献（即 11）加入答案 ans 中即可。
+注意上面的边不可能重复计数，因为格子是陆地的情况下才会参与计算，每个边计数的条件为边的两边为 &amp;lt;陆地，边界或水域&amp;gt; 因为只有一遍为陆地，所以同一条边会被计数一次.
+class Solution { static int[] dx = {0, 1, 0, -1}; static int[] dy = {1, 0, -1, 0}; public int islandPerimeter(int[][] grid) { int n = grid.length, m = grid[0].</description></item><item><title>长按键入 925</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</link><pubDate>Wed, 21 Oct 2020 21:30:49 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</guid><description>你的朋友正在使用键盘输入他的名字 name。偶尔，在键入字符 c 时，按键可能会被长按，而字符可能被输入 1 次或多次。
 你将会检查键盘输入的字符 typed。如果它对应的可能是你的朋友的名字（其中一些字符可能被长按），那么就返回 True。
 示例 1：
 输入：name = &amp;ldquo;alex&amp;rdquo;, typed = &amp;ldquo;aaleex&amp;rdquo; 输出：true 解释：&amp;lsquo;alex&amp;rsquo; 中的 &amp;lsquo;a&amp;rsquo; 和 &amp;lsquo;e&amp;rsquo; 被长按。 示例 2：
