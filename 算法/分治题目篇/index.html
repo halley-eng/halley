@@ -1,0 +1,142 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>分治题目篇 - 月亮</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="分治题目篇"><meta property="og:description" content="连续数列的最大和 方法一: 基于 Kadane 算法解决
+int maxSubArray(int[] nums) { int maxHere = 0, maxSoFar = Integer.MIN_VALUE; for (int num : nums) { // 包含当前元素的最大连续区间  maxHere = Math.max(maxHere + num, num); // 目前为止的最大连续区间;  maxSoFar = Math.max(maxHere, maxSoFar); } return maxSoFar; } 方法二: 分治
+首先分治法解题思路如下:
+  分解：将原问题分解成一系列子问题； 数组[left,right]最大和, 按中点mid切分 可以得到三个子问题
+ [left,mid] [mid+1,right] 区间交界处可能构成的最大子序列和    解决(自顶向下)： 2.1 递归地求解两个同类型的区间子问题, 剩余一个边界子问题等回溯的时候在解决;
+max(left,right) = max( max(left,mid), max(mid+1, right), [最小左边界left,mid] [mid+1,最大右边界right] // left <=mid, right > mid )"><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E5%88%86%E6%B2%BB%E9%A2%98%E7%9B%AE%E7%AF%87/"><meta property="article:published_time" content="2020-11-25T22:49:02+08:00"><meta property="article:modified_time" content="2020-11-25T22:49:02+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>分治题目篇</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-11-25T22:49:02+08:00>November 25, 2020</time></div></div></header><div class="content post__content clearfix"><h3 id=连续数列的最大和>连续数列的最大和</h3><p><img src=evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p262 alt=6b4fa1992c4ffb415f606a3242b1c377.png></p><p>方法一: 基于 Kadane 算法解决</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>  <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>maxSubArray</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> nums<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>int</span> maxHere <span style=color:#f92672>=</span> 0<span style=color:#f92672>,</span> maxSoFar <span style=color:#f92672>=</span> Integer<span style=color:#f92672>.</span><span style=color:#a6e22e>MIN_VALUE</span><span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> num <span style=color:#f92672>:</span> nums<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+      <span style=color:#75715e>// 包含当前元素的最大连续区间
+</span><span style=color:#75715e></span>      maxHere <span style=color:#f92672>=</span> Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>maxHere <span style=color:#f92672>+</span> num<span style=color:#f92672>,</span> num<span style=color:#f92672>);</span>
+      <span style=color:#75715e>// 目前为止的最大连续区间;
+</span><span style=color:#75715e></span>      maxSoFar <span style=color:#f92672>=</span> Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>maxHere<span style=color:#f92672>,</span> maxSoFar<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>return</span> maxSoFar<span style=color:#f92672>;</span>
+  <span style=color:#f92672>}</span>
+</code></pre></div><p>方法二: 分治</p><p>首先分治法解题思路如下:</p><ol><li><p>分解：将原问题分解成一系列子问题；
+数组[left,right]最大和, 按中点mid切分
+可以得到三个子问题</p><ol><li>[left,mid]</li><li>[mid+1,right]</li><li>区间交界处可能构成的最大子序列和</li></ol></li><li><p>解决(自顶向下)：
+2.1 递归地求解两个同类型的区间子问题,
+剩余一个边界子问题等回溯的时候在解决;</p><p>max(left,right) = max(
+max(left,mid),
+max(mid+1, right),
+[最小左边界left,mid] [mid+1,最大右边界right] // left &lt;=mid, right > mid
+)</p><p>2.2 若子问题足够小，则直接求解
+区间长度为1时, 最大子序列和为唯一数组元素，即边界条件;</p></li><li><p>合并(自底向上)：将子问题的结果合并成原问题。</p><ol><li>递归求解的2个子问题将保证得到子问题的最大子序列和;</li><li>另外需要基于mid和mid+1, 得到区间交界处的最大子序列和
+即 [最小左边界,mid] [mid+1,最大右边界],
+注意 这里的mid和mid+1必须包含!</li><li>在以上三个子问题中寻找最大;</li></ol></li></ol><p><img src=evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p264 alt=b570b65a0994ec6041f92b01f70cb0e9.png></p><p>综上, 我们分别使用Kidana算法和分治解决连续数列的最大和问题;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+  <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>maxSubArray</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> nums<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>nums<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#66d9ef>return</span> Integer<span style=color:#f92672>.</span><span style=color:#a6e22e>MIN_VALUE</span><span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>return</span> divide<span style=color:#f92672>(</span>nums<span style=color:#f92672>,</span> 0<span style=color:#f92672>,</span> nums<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>-</span> 1<span style=color:#f92672>);</span>
+  <span style=color:#f92672>}</span>
+
+
+  <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>divide</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> nums<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> left<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> right<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>left <span style=color:#f92672>==</span> right<span style=color:#f92672>)</span> <span style=color:#66d9ef>return</span> nums<span style=color:#f92672>[</span>left<span style=color:#f92672>];</span>
+    <span style=color:#66d9ef>int</span> mid <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>left <span style=color:#f92672>+</span> right<span style=color:#f92672>)</span> <span style=color:#f92672>/</span> 2<span style=color:#f92672>;</span>
+    <span style=color:#75715e>// 1. [left,mid] 左边最大和
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>int</span> sumLeft <span style=color:#f92672>=</span> divide<span style=color:#f92672>(</span>nums<span style=color:#f92672>,</span> left<span style=color:#f92672>,</span> mid<span style=color:#f92672>);</span>
+    <span style=color:#75715e>// 2. [mid,right]右面最大和
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>int</span> sumRight <span style=color:#f92672>=</span> divide<span style=color:#f92672>(</span>nums<span style=color:#f92672>,</span> mid <span style=color:#f92672>+</span> 1<span style=color:#f92672>,</span> right<span style=color:#f92672>);</span>
+    <span style=color:#75715e>// 3. 合并区间是否能够得到最大和
+</span><span style=color:#75715e></span>
+    <span style=color:#75715e>// 对于区间[left, mid] 从mid累加贪心最大和
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>int</span> leftSum <span style=color:#f92672>=</span> 0<span style=color:#f92672>,</span> leftMaxSum <span style=color:#f92672>=</span> Integer<span style=color:#f92672>.</span><span style=color:#a6e22e>MIN_VALUE</span><span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> mid<span style=color:#f92672>;</span> i <span style=color:#f92672>&gt;=</span> left<span style=color:#f92672>;</span> i<span style=color:#f92672>--)</span> <span style=color:#f92672>{</span>
+      leftSum <span style=color:#f92672>+=</span> nums<span style=color:#f92672>[</span>i<span style=color:#f92672>];</span>
+      leftMaxSum <span style=color:#f92672>=</span> Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>leftMaxSum<span style=color:#f92672>,</span> leftSum<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#75715e>// 对于区间[mid, right] 从mid累加 贪心最大和
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>int</span> rightSum <span style=color:#f92672>=</span> 0<span style=color:#f92672>,</span> rightMaxSum <span style=color:#f92672>=</span> Integer<span style=color:#f92672>.</span><span style=color:#a6e22e>MIN_VALUE</span><span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> mid <span style=color:#f92672>+</span> 1<span style=color:#f92672>;</span> i <span style=color:#f92672>&lt;=</span> right<span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+      rightSum <span style=color:#f92672>+=</span> nums<span style=color:#f92672>[</span>i<span style=color:#f92672>];</span>
+      rightMaxSum <span style=color:#f92672>=</span> Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>rightMaxSum<span style=color:#f92672>,</span> rightSum<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#66d9ef>return</span> Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>Math<span style=color:#f92672>.</span><span style=color:#a6e22e>max</span><span style=color:#f92672>(</span>sumLeft<span style=color:#f92672>,</span> sumRight<span style=color:#f92672>),</span> leftMaxSum <span style=color:#f92672>+</span> rightMaxSum<span style=color:#f92672>);</span>
+  <span style=color:#f92672>}</span>
+
+
+</code></pre></div><h3 id=23-merge-k-sorted-lists>23. Merge k Sorted Lists</h3><p><img src=evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p266 alt=2e51c55dcab4026f46bb3572f5d2fd44.png></p><p>分治法思路如下:</p><ol><li><p>分解：将原问题分解成一系列子问题；</p><p>链表集合[left, right] 按中点划分
+可以得到两个子问题 [left,mid] [mid+1,right]</p></li><li><p>解决(自顶向下)：</p><p>2.1 递归地求解各个子问题，</p><pre><code> merge(left,right) = merge(
+    merge(left, mid), 
+    merge(mid+1, right), 
+ )
+</code></pre><p>2.2 若子问题足够小，则直接求解
+这里最小的子问题合并左右区间一致的链表,即不用合并
+即: 边界条件为 left == right,
+则 输入为单链表, 直接输出为结果</p></li><li><p>合并(自底向上)：以上递归将每个子问题的解转换成单链表,
+因此在自底向上的过程中, 就可以不断合并这两个链表</p></li></ol><p><img src=evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p265 alt=3fcdda4f23a1aa77b83c388915398923.png></p><p>综上, 我们分析了基于分治思想的两个题目《连续数列的最大和》和《23. Merge k Sorted Lists》 接下来进入讨论环节, 大家畅所欲言～</p><p><a href=https://leetcode-cn.com/problems/contiguous-sequence-lcci/>https://leetcode-cn.com/problems/contiguous-sequence-lcci/</a></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>  <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ListNode</span> <span style=color:#f92672>{</span>
+    <span style=color:#66d9ef>int</span> val<span style=color:#f92672>;</span>
+    ListNode next<span style=color:#f92672>;</span>
+
+    ListNode<span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> x<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+      val <span style=color:#f92672>=</span> x<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+  <span style=color:#f92672>}</span>
+
+  <span style=color:#66d9ef>public</span> ListNode <span style=color:#a6e22e>mergeKLists</span><span style=color:#f92672>(</span>ListNode<span style=color:#f92672>[]</span> lists<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e>// 1. 空链表集合无法合并, 即下面的合并区间[0, len -1] -&gt; [0,-1] 无效
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>lists<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+      <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#75715e>// 2. 初始合并区间[0,len-1]
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>return</span> merge<span style=color:#f92672>(</span>lists<span style=color:#f92672>,</span> 0<span style=color:#f92672>,</span> lists<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>-</span> 1<span style=color:#f92672>);</span>
+  <span style=color:#f92672>}</span>
+
+
+  <span style=color:#75715e>/**
+</span><span style=color:#75715e>   *  分治法
+</span><span style=color:#75715e>   *  1. 分解子问题
+</span><span style=color:#75715e>   *  2. 合并子问题
+</span><span style=color:#75715e>   */</span>
+  <span style=color:#66d9ef>private</span> ListNode <span style=color:#a6e22e>merge</span><span style=color:#f92672>(</span>ListNode<span style=color:#f92672>[]</span> lists<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> left<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> right<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>left <span style=color:#f92672>==</span> right<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+      <span style=color:#66d9ef>return</span> lists<span style=color:#f92672>[</span>left<span style=color:#f92672>];</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#75715e>// 1. 分解成子问题: 将区间[left,right] 分解成子问题[left, mid] 和 [mid + 1,right]
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>int</span> mid <span style=color:#f92672>=</span> left <span style=color:#f92672>+</span> <span style=color:#f92672>(</span>right <span style=color:#f92672>-</span> left<span style=color:#f92672>)</span> <span style=color:#f92672>/</span> 2<span style=color:#f92672>;</span>
+    ListNode l1 <span style=color:#f92672>=</span> merge<span style=color:#f92672>(</span>lists<span style=color:#f92672>,</span> left<span style=color:#f92672>,</span> mid<span style=color:#f92672>);</span>
+    ListNode l2 <span style=color:#f92672>=</span> merge<span style=color:#f92672>(</span>lists<span style=color:#f92672>,</span> mid <span style=color:#f92672>+</span> 1<span style=color:#f92672>,</span> right<span style=color:#f92672>);</span>
+    <span style=color:#75715e>// 2. 合并子问题的解;
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>return</span> merge<span style=color:#f92672>(</span>l1<span style=color:#f92672>,</span> l2<span style=color:#f92672>);</span>
+  <span style=color:#f92672>}</span>
+
+  <span style=color:#75715e>/**
+</span><span style=color:#75715e>   *  合并两个链表
+</span><span style=color:#75715e>   */</span>
+  <span style=color:#66d9ef>private</span> ListNode <span style=color:#a6e22e>merge</span><span style=color:#f92672>(</span>ListNode l1<span style=color:#f92672>,</span> ListNode l2<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e>// 1. 使用哨兵优化 头节点/空节点处理
+</span><span style=color:#75715e></span>    ListNode dummyHead <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ListNode<span style=color:#f92672>(</span>0<span style=color:#f92672>);</span> <span style=color:#75715e>// 已合并链表的头部
+</span><span style=color:#75715e></span>    ListNode tail <span style=color:#f92672>=</span> dummyHead<span style=color:#f92672>;</span> <span style=color:#75715e>// 已合并链表的尾部
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 2. 迭代合并链表头部, 并追加到已合并链表的尾部;
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>l1 <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> l2 <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+      <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>l1<span style=color:#f92672>.</span><span style=color:#a6e22e>val</span> <span style=color:#f92672>&lt;</span> l2<span style=color:#f92672>.</span><span style=color:#a6e22e>val</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        tail<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> l1<span style=color:#f92672>;</span>
+        l1 <span style=color:#f92672>=</span> l1<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>;</span>
+      <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+        tail<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> l2<span style=color:#f92672>;</span>
+        l2 <span style=color:#f92672>=</span> l2<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>;</span>
+      <span style=color:#f92672>}</span>
+      tail <span style=color:#f92672>=</span> tail<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#75715e>// 3. 处理剩余单支链表;
+</span><span style=color:#75715e></span>    tail<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> l1 <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>?</span> l2 <span style=color:#f92672>:</span> l1<span style=color:#f92672>;</span>
+
+    <span style=color:#75715e>// 4. 返回已合并链表的头
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>return</span> dummyHead<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>;</span>
+  <span style=color:#f92672>}</span>
+
+
+
+</code></pre></div></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/%E7%AE%97%E6%B3%95/%E6%89%91%E5%85%8B%E7%89%8C%E9%97%AE%E9%A2%98/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>扑克牌问题</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-executorcompletionservice/>并发编程框架 ExecutorCompletionService</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-abstractqueuedsynchronizer-%E7%8B%AC%E5%8D%A0%E5%92%8C%E5%85%B1%E4%BA%AB%E9%94%81/>并发编程框架 AbstractQueuedSynchronizer 独占和共享锁</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-abstractqueuedsynchronizer-%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/>并发编程框架 AbstractQueuedSynchronizer 条件变量</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-countdown/>并发编程框架 CountDown</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-cyclicbarrier/>并发编程框架 CyclicBarrier</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
