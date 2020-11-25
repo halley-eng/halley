@@ -5,6 +5,8 @@ draft: false
 ---
 
 
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/concurrent/aqs_variable.png)
+
 ### wait 去竞争锁
 
 1. 将当前线程加入条件队列
