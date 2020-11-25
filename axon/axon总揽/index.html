@@ -1,0 +1,246 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>Axon总揽 - 月亮</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="Axon总揽"><meta property="og:description" content="Messaging Concepts(消息概念) Axon 核心 概念之一是使用消息来做组件中的通信, 这样可以使得组件间位置透明, 以此做到灵活扩缩容;
+所有的消息都实现Message接口, 不同的类型的消息可以做到明显区分
+ 所有消息包含 payload、meta data 和 unique identifier 三个部分; payload: 消息体  主要是包含类型 和 对象数据组成;   meta data: 描述消息体的上下文  可以用来存储tracing信息 &ndash; 辅助根因分析 存储security context    注意:
+ 所有的消息都是不可修改的(immutable), 去消息中存储数据, 意味着基于之前的消息创建一个新的消息; 这样可以保证消息在多线程和分布式环境的并发安全性;  命令(Commands) 命令用来描述更改程序状态的意图, 通常为CommandMessage接口的实现类;
+命令总是有唯一的一个目标, 它不关心哪个组件处理该命令或者是该组件在哪里, 但是可能关心其输出, 所以通常命令消息通过 Command Bus 发送, 并且支持得到一个返回值;
+事件(Events) 事件用来描述程序内部发生的事情, 通常的事件源为Aggregate, 在Axon中, 事件可以是所有的对象, 所以强烈建议将所有的事件都支持序列化;
+当事件被派发的时候, 事件被包装成EventMessage, 实际的消息类型将会取决于事件来源
+ 来自Aggregate: DominEventMessage 除了所有事件都有的唯一标识, 该事件还包含  类型(type) 时间戳(timestamp) sequence number: 发射源发送事件的序号;   其他: EventMessage  注意："><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/axon/axon%E6%80%BB%E6%8F%BD/"><meta property="article:published_time" content="2020-11-25T23:34:02+08:00"><meta property="article:modified_time" content="2020-11-25T23:34:02+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>Axon总揽</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-11-25T23:34:02+08:00>November 25, 2020</time></div></div></header><div class="content post__content clearfix"><h3 id=messaging-concepts消息概念>Messaging Concepts(消息概念)</h3><p>Axon 核心 概念之一是使用消息来做组件中的通信, 这样可以使得组件间位置透明, 以此做到灵活扩缩容;</p><p>所有的消息都实现Message接口, 不同的类型的消息可以做到明显区分</p><ol><li>所有消息包含 payload、meta data 和 unique identifier 三个部分;</li><li>payload: 消息体<ol><li>主要是包含类型 和 对象数据组成;</li></ol></li><li>meta data: 描述消息体的上下文<ol><li>可以用来存储tracing信息 &ndash; 辅助根因分析</li><li>存储security context</li></ol></li></ol><p>注意:</p><pre><code>  所有的消息都是不可修改的(immutable), 去消息中存储数据, 意味着基于之前的消息创建一个新的消息; 
+  这样可以保证消息在多线程和分布式环境的并发安全性; 
+</code></pre><h3 id=命令commands>命令(Commands)</h3><p>命令用来描述更改程序状态的意图, 通常为CommandMessage接口的实现类;</p><p>命令总是有唯一的一个目标, 它不关心哪个组件处理该命令或者是该组件在哪里, 但是可能关心其输出, 所以通常命令消息通过 Command Bus 发送, 并且支持得到一个返回值;</p><h3 id=事件events>事件(Events)</h3><p>事件用来描述程序内部发生的事情, 通常的事件源为Aggregate, 在Axon中, 事件可以是所有的对象, 所以强烈建议将所有的事件都支持序列化;</p><p>当事件被派发的时候, 事件被包装成EventMessage, 实际的消息类型将会取决于事件来源</p><ol><li>来自Aggregate: DominEventMessage
+除了所有事件都有的唯一标识, 该事件还包含<ol><li>类型(type)</li><li>时间戳(timestamp)</li><li>sequence number: 发射源发送事件的序号;</li></ol></li><li>其他: EventMessage</li></ol><p>注意：</p><pre><code>尽管 DominEventMessage 包含一个指向 Aggregate 的引用, 你也应当在Event自身中包含此标识, DominEventMessage 中的标识 可以被EventStore拿来存储事件;
+</code></pre><p>事件被存储在EventMessage的payload字段中, 另外, 还可以存储 metadata。
+metadata 通常用来存储业务不关心的信息, 比如审计信息;</p><p>注意:</p><pre><code>通常metadata中不要包含 业务信息, 如果依赖了, 通常应该将这些消息放在Event中; 
+</code></pre><p>尽管并非强制, 但是通常 领域事件的最佳实践是不可修改, 所以最好将所有的字段生命为 final并且在构造方法中初始化这些字段, 当该事件类型比较复杂时使用 Builder 模式;</p><p>注意:</p><pre><code>尽管领域事件技术上用来表示状态变更, 你也应当通过事件来捕获状态变更意图。最佳实践: 
+抽象类记录状态变更, 实现类表示意图;
+比如抽象的 AddressChangedEvent, 和 其两个实现类： ContactMovedEvent 和 AddressCorrectedEvent, 某些监听器不关心意图, 就可以直接监听抽象类, 关心意图的监听器就可以关心具体的事件;
+</code></pre><h3 id=查询queries>查询(Queries)</h3><p>查询用来描述状态的请求信息, 可以有多个handlers, 当派发查询事件时,客户端需要标识出其想从一个或者多个可用的查询处理器中获取结果;</p><h2 id=解剖消息anatomy-of-a-message>解剖消息(Anatomy of a Message)</h2><p>Axon中, 所有的通信都是通过明确消息传递, 这些消息都会实现 Message 接口
+消息包含</p><ol><li>Payload: 标识消息的实际功能;</li><li>Meta Data: 描述消息的上下文;</li></ol><p>每个消息的子接口代表一种类型的消息, 并且定义额外的信息, 区别于Meta Data, 这些额外信息定义了正确处理该消息所需使用到的信息;</p><p>消息都是不可变得. 意味着在消息中添加Meta Data数据, 会触发创建一个新的附带额外信息的消息实例, 但是这两个消息实例仍然只代表同一个概念(conceptual message), 底层是因为每个消息都会有一个唯一的标识, 更改消息的元数据, 并不会更改该标识;</p><h3 id=元数据meta-data>元数据(Meta Data)</h3><p>元数据可以用来标识消息是如何生成的, 比如, Meta Data 可以包含生成该消息的其他消息的信息;</p><p>Axon 中, Meta Data 通常用来标识一个 String, Object 为泛型参数的Map, 所以你可以添加任意类型的值, 作为元数据的值, 但是依然建议使用基本类型和字符串。在进行结构修改的时候, 元数据不具有和payload相同的灵活性( 元数据不包含类型信息 ?)</p><p>和不同的Map&lt;String, Object>不同的是, MetaData 是不可以修改的, 修改方法将会创建或者是返回一个新的实例, 而不仅仅是修改已经存在的对象;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>MetaData metaData <span style=color:#f92672>=</span> MetaData<span style=color:#f92672>.</span><span style=color:#a6e22e>with</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;myKey&#34;</span><span style=color:#f92672>,</span> 42<span style=color:#f92672>)</span> <span style=color:#75715e>// 1
+</span><span style=color:#75715e></span>                            <span style=color:#f92672>.</span><span style=color:#a6e22e>and</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;otherKey&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;some value&#34;</span><span style=color:#f92672>);</span> <span style=color:#75715e>// 2
+</span></code></pre></div><ol><li>创建 MetaData 实例;</li><li>添加其他键值对, 这时候会返回新的实例;</li></ol><p>Messsage 中的MetaData 也是类似的;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>
+EventMessage eventMessage <span style=color:#f92672>=</span> 
+        GenericEventMessage<span style=color:#f92672>.</span><span style=color:#a6e22e>asEventMessage</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;myPayload&#34;</span><span style=color:#f92672>)</span> <span style=color:#75715e>// 1
+</span><span style=color:#75715e></span>                           <span style=color:#f92672>.</span><span style=color:#a6e22e>withMetaData</span><span style=color:#f92672>(</span>singletonMap<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;myKey&#34;</span><span style=color:#f92672>,</span> 42<span style=color:#f92672>))</span> <span style=color:#75715e>// 2
+</span><span style=color:#75715e></span>                           <span style=color:#f92672>.</span><span style=color:#a6e22e>andMetaData</span><span style=color:#f92672>(</span>singletonMap<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;otherKey&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;some value&#34;</span><span style=color:#f92672>));</span> <span style=color:#75715e>// 2
+</span></code></pre></div><ol><li>创建包含 消息, 比payload 有效负载区内容为 &ldquo;myPayload&rdquo;</li><li>withMetaData 使用给定的map替换原本MetaData中的信息</li><li>addMetaData 新增新的键值对, 如果已经存在相同的key, 其将会被替换;</li></ol><h3 id=消息相关的数据-message-specific-data>消息相关的数据 (Message-specific data)</h3><p>确定的消息将会包含额外的信息,</p><ol><li>EventMessage 包含时间戳, 标识产生该事件的时间，</li><li>QueryMessage 除了Payload和Meta data还包含期待返回的数据类型信息;</li></ol><h2 id=消息相关message-correlation>消息相关(Message Correlation)</h2><p>在消息系统中， 经常会将消息聚合在一起，或者是关联起来。
+Axon框架中的 一个 Command 消息，会产生一个或者多个Event消息，
+一个Query消息，会产生一个或者是多个QueryResponse 消息。
+通常，关联是通过指定消息的属性实现，一般被称为 关联标识（correlation identifier）</p><h3 id=关联数据提供器correlation-data-provider>关联数据提供器（Correlation Data Provider）</h3><p>Axon中使用MetaData 属性传输消息的元数据。 为了填充 被 Unit of work 产生的新消息的MetaData，通常会使用到 CorrelationDataProvider。</p><p>Axon 当前提供如下几种实现：</p><h4 id=messageoriginprovider>MessageOriginProvider</h4><p>这是默认的实现
+主要负责将correlationId 和 traceId 传输到另一个消息中</p><ol><li>correlationId 总是指向产生新消息的父消息的的标识；</li><li>traceId 总是为开启此次调用链的消息（根消息）的 traceId；</li></ol><p>当这两个字段都没有值时，两个字段都会被消息标识填充；
+比如，如果接受到一个Command消息，并产生一个Event消息
+那么Event消息的MetaData将会这样填充</p><ol><li>命令消息的标识为 correlationId</li><li>命令消息在MetaData中附带的traceId，或者是消息的唯一标识称为traceId；</li></ol><h4 id=simplecorrelationdataprovider>SimpleCorrelationDataProvider</h4><p>无条件复制指定的key列表到另外一个Message</p><p>比如</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Configuration</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>public</span> CorrelationDataProvider <span style=color:#a6e22e>customCorrelationDataProvider</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> SimpleCorrelationDataProvider<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;myId&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;myId2&#34;</span><span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h4 id=multicorrelationdataprovider>MultiCorrelationDataProvider</h4><p>组合多个providers的能力</p><p>比如</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Configuration</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>public</span> CorrelationDataProvider <span style=color:#a6e22e>customCorrelationDataProviders</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> MultiCorrelationDataProvider<span style=color:#f92672>&lt;</span>CommandMessage<span style=color:#f92672>&lt;?&gt;&gt;(</span>
+            Arrays<span style=color:#f92672>.</span><span style=color:#a6e22e>asList</span><span style=color:#f92672>(</span>
+                <span style=color:#66d9ef>new</span> SimpleCorrelationDataProvider<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;someKey&#34;</span><span style=color:#f92672>),</span>
+                <span style=color:#66d9ef>new</span> MessageOriginProvider<span style=color:#f92672>()</span>
+            <span style=color:#f92672>)</span>
+        <span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h4 id=实现自定义的关联提供器>实现自定义的关联提供器</h4><p>如果以上不能满足需求那么可以实现自定义的；</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>AuthCorrelationDataProvider</span> <span style=color:#66d9ef>implements</span> CorrelationDataProvider <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Function<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>,</span> String<span style=color:#f92672>&gt;</span> usernameProvider<span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>AuthCorrelationDataProvider</span><span style=color:#f92672>(</span>Function<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>,</span> String<span style=color:#f92672>&gt;</span> userProvider<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>usernameProvider</span> <span style=color:#f92672>=</span> userProvider<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> Map<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>,</span> <span style=color:#f92672>?&gt;</span> correlationDataFor<span style=color:#f92672>(</span>Message<span style=color:#f92672>&lt;?&gt;</span> message<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Map<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>,</span> Object<span style=color:#f92672>&gt;</span> correlationData <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;&gt;();</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>message <span style=color:#66d9ef>instanceof</span> CommandMessage<span style=color:#f92672>&lt;?&gt;)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>message<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetaData</span><span style=color:#f92672>().</span><span style=color:#a6e22e>containsKey</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;authorization&#34;</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+                String token <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>String<span style=color:#f92672>)</span> message<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetaData</span><span style=color:#f92672>().</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;authorization&#34;</span><span style=color:#f92672>);</span>
+                correlationData<span style=color:#f92672>.</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;username&#34;</span><span style=color:#f92672>,</span> usernameProvider<span style=color:#f92672>.</span><span style=color:#a6e22e>apply</span><span style=color:#f92672>(</span>token<span style=color:#f92672>));</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> correlationData<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>如上将会将用户的用户名填充到新的MetaData中;</p><h2 id=configuration>Configuration</h2><p>当默认的MessageOriginProvider不能满足使用，则需将自定义的提供者注册到程序中。</p><ol><li>如果使用到了Axon配置API，需要调用其Configuration#configureCorrelationDataProvider</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Configuration</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>configuring</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        Configurer configurer <span style=color:#f92672>=</span> 
+            DefaultConfigurer<span style=color:#f92672>.</span><span style=color:#a6e22e>defaultConfiguration</span><span style=color:#f92672>()</span>
+                             <span style=color:#f92672>.</span><span style=color:#a6e22e>configureCorrelationDataProviders</span><span style=color:#f92672>(</span>config <span style=color:#f92672>-&gt;</span> Arrays<span style=color:#f92672>.</span><span style=color:#a6e22e>asList</span><span style=color:#f92672>(</span>
+                                <span style=color:#66d9ef>new</span> SimpleCorrelationDataProvider<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;someKey&#34;</span><span style=color:#f92672>),</span>
+                                <span style=color:#66d9ef>new</span> MessageOriginProvider<span style=color:#f92672>()</span>
+                             <span style=color:#f92672>));</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>如果使用SpringBoot的自动配置功能,则只需要提供一个工厂方法，暴露出Spring Bean即可，
+下面demo演示注册了多个提供者的写法。</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#a6e22e>@Configuration</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>CorrelationDataProviderConfiguration</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#75715e>// Configuring a single CorrelationDataProvider will automatically override the default MessageOriginProvider
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>@Bean</span>
+    <span style=color:#66d9ef>public</span> CorrelationDataProvider <span style=color:#a6e22e>someKeyCorrelationProvider</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> SimpleCorrelationDataProvider<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;someKey&#34;</span><span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>    
+
+    <span style=color:#a6e22e>@Bean</span>
+    <span style=color:#66d9ef>public</span> CorrelationDataProvider <span style=color:#a6e22e>messageOriginProvider</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> MessageOriginProvider<span style=color:#f92672>();</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h2 id=消息拦截message-intercepting>消息拦截（Message Intercepting）</h2><p>两种不同类型的拦截器</p><ol><li>dispatch interceptors<ol><li>在消息被派发到消息处理器之前被调用，此时甚至不知道有没有消息处理器存在；</li></ol></li><li>handler interceptors<ol><li>在消息被消息处理器处理之前调用</li></ol></li></ol><h3 id=命令拦截器-command-interceptors>命令拦截器 （Command Interceptors）</h3><p>使用command bus的优点是，可以拦截所有的输入命令，并执行一些底层活动。
+比如日志或者是登录等这些业务无关的功能。</p><h4 id=命令派发拦截器-command-dispatch-interception->命令派发拦截器（ Command Dispatch Interception ）</h4><p>消息派发拦截器在命令被派发到command bus时被调用，</p><ol><li>它们拥有通过增加metadata修改命令消息的能力。</li><li>通过抛出异常的形式阻塞命令。</li><li>总是在派发线程被执行;</li></ol><p>比如，下面打印命令消息的拦截器</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyCommandDispatchInterceptor</span> <span style=color:#66d9ef>implements</span> MessageDispatchInterceptor<span style=color:#f92672>&lt;</span>CommandMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> Logger LOGGER <span style=color:#f92672>=</span> LoggerFactory<span style=color:#f92672>.</span><span style=color:#a6e22e>getLogger</span><span style=color:#f92672>(</span>MyCommandDispatchInterceptor<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> BiFunction<span style=color:#f92672>&lt;</span>Integer<span style=color:#f92672>,</span> CommandMessage<span style=color:#f92672>&lt;?&gt;,</span> CommandMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> handle<span style=color:#f92672>(</span>List<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> CommandMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> messages<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#f92672>(</span>index<span style=color:#f92672>,</span> command<span style=color:#f92672>)</span> <span style=color:#f92672>-&gt;</span> <span style=color:#f92672>{</span>
+            LOGGER<span style=color:#f92672>.</span><span style=color:#a6e22e>info</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Dispatching a command {}.&#34;</span><span style=color:#f92672>,</span> command<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>return</span> command<span style=color:#f92672>;</span>
+        <span style=color:#f92672>};</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>如下我如何将该拦截器注册到CommandBus</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>CommandBusConfiguration</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>public</span> CommandBus <span style=color:#a6e22e>configureCommandBus</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        CommandBus commandBus <span style=color:#f92672>=</span> SimpleCommandBus<span style=color:#f92672>.</span><span style=color:#a6e22e>builder</span><span style=color:#f92672>().</span><span style=color:#a6e22e>build</span><span style=color:#f92672>();</span>
+        commandBus<span style=color:#f92672>.</span><span style=color:#a6e22e>registerDispatchInterceptor</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> MyCommandDispatchInterceptor<span style=color:#f92672>());</span>
+        <span style=color:#66d9ef>return</span> commandBus<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h5 id=结构验证structural-validation>结构验证(Structural validation)</h5><p>其实如果命令消息并不包含所有必须的信息或者是格式不正确，那么我们处理它是没有意义的。
+所以，其越早被发现越好，最好在一个事务开始之前。
+因此需要一个拦截器去检查输入的所有命令。</p><p>这里成为结构性校验。</p><p>Axon支持 JS R303 Bean Validation. 因此你可以使用比如 @NotEmpty 和 @Pattern等这些注解。</p><ol><li>你需要在classpath中引入 JSR 303(比如 Hibernate-Validator)。</li><li>在Command bus 中配置 BeanValidationInterceptor, 其将会自动查找和配置你的验证器实现</li></ol><p>拦截器顺序技巧</p><pre><code>原则是尽量话费最少的资源在无效的命令上面, 所以验证拦截器应该仅仅放在LoggingInterceptor 或者 AuditingInterceptor 之后.
+</code></pre><p>BeanValidationInterceptor 也实现了MessageHandlerInterceptor接口, 所以也可以配置为handler拦截器；</p><h4 id=命令处理拦截器command-handler-interceptors>命令处理拦截器(Command Handler Interceptors)</h4><p>命令处理器拦截器</p><ol><li>在命令处理前后被执行</li><li>可以中断命令的执行，比如因为安全的原因；</li></ol><p>必须实现MessageHandlerInterceptor接口，该接口只有一个方法handle, 包含两个参数</p><ol><li><p>UnitOfWork:</p><ol><li>提供当前正在被处理的消息</li><li>提供在逻辑上优先结合的可能性;
+<a href=https://docs.axoniq.io/reference-guide/axon-framework/messaging-concepts/unit-of-work>拓展</a>
+<input disabled type=checkbox> ？？？</li></ol></li><li><p>InterceptorChain:
+用于继续推进派发处理;</p></li></ol><p>相对派发拦截器来说, 处理器拦截器是在命令被处理的上下文中被执行, 因此，这意味着他们可以根据正在处理的消息将相关性数据附加到工作单元。然后，此相关性数据将附加到在该工作单元的上下文中创建的消息中.</p><p>处理器拦截器也可以被用来管理事务。此时，我们可以注册 TransactionManagingInterceptor，然后配置TransactionManager，后者用来开启、提交、回滚底层的事务;</p><p>下面通过创建一个消息拦截器去验证如果MetaData中是否包含 userId 字段，并且其值为axonUser。
+如果没有改字段将会抛出异常，如果值不匹配我们也不会继续处理</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyCommandHandlerInterceptor</span> <span style=color:#66d9ef>implements</span> MessageHandlerInterceptor<span style=color:#f92672>&lt;</span>CommandMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> Object <span style=color:#a6e22e>handle</span><span style=color:#f92672>(</span>UnitOfWork<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> CommandMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> unitOfWork<span style=color:#f92672>,</span> InterceptorChain interceptorChain<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> Exception <span style=color:#f92672>{</span>
+        CommandMessage<span style=color:#f92672>&lt;?&gt;</span> command <span style=color:#f92672>=</span> unitOfWork<span style=color:#f92672>.</span><span style=color:#a6e22e>getMessage</span><span style=color:#f92672>();</span>
+        String userId <span style=color:#f92672>=</span> Optional<span style=color:#f92672>.</span><span style=color:#a6e22e>ofNullable</span><span style=color:#f92672>(</span>command<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetaData</span><span style=color:#f92672>().</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;userId&#34;</span><span style=color:#f92672>))</span>
+                                <span style=color:#f92672>.</span><span style=color:#a6e22e>map</span><span style=color:#f92672>(</span>uId <span style=color:#f92672>-&gt;</span> <span style=color:#f92672>(</span>String<span style=color:#f92672>)</span> uId<span style=color:#f92672>)</span>
+                                <span style=color:#f92672>.</span><span style=color:#a6e22e>orElseThrow</span><span style=color:#f92672>(</span>IllegalCommandException<span style=color:#f92672>::</span><span style=color:#66d9ef>new</span><span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#e6db74>&#34;axonUser&#34;</span><span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>userId<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> interceptorChain<span style=color:#f92672>.</span><span style=color:#a6e22e>proceed</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>下面将注册该处理器来节气到CommandBus:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>CommandBusConfiguration</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>public</span> CommandBus <span style=color:#a6e22e>configureCommandBus</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        CommandBus commandBus <span style=color:#f92672>=</span> SimpleCommandBus<span style=color:#f92672>.</span><span style=color:#a6e22e>builder</span><span style=color:#f92672>().</span><span style=color:#a6e22e>build</span><span style=color:#f92672>();</span>
+        commandBus<span style=color:#f92672>.</span><span style=color:#a6e22e>registerHandlerInterceptor</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> MyCommandHandlerInterceptor<span style=color:#f92672>());</span>
+        <span style=color:#66d9ef>return</span> commandBus<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+<span style=color:#f92672>}</span>
+</code></pre></div><h4 id=commandhandlerinterceptor-注解>@CommandHandlerInterceptor 注解</h4><p>框架支持将 Aggregate/Entity 中被 @CommandHandlerInterceptor 注解的方法添加为命令拦截器. 和正常的拦截器不同的该拦截器可以使用 当前 Aggregate的属性作为决策参数.</p><p>[ ] TODO</p><ul><li>The annotation can be put on entities within the Aggregate.</li><li>It is possible to intercept a command on Aggregate Root level, whilst the command handler is in a child entity.</li><li>Command execution can be prevented by firing an exception from an annotated command handler interceptor.</li><li>It is possible to define an InterceptorChain as a parameter of the command handler interceptor method and use it to control command execution.</li><li>By using the commandNamePattern attribute of the @CommandHandlerInterceptor annotation we can intercept all commands matching the provided regular expression.</li><li>Events can be applied from an annotated command handler interceptor.</li></ul><p>下面的例子中我们可以看到 一个被@CommandHandlerInterceptor注解的方法,
+在命令中的状态和Aggregate中的状态不一致的时候 会拒绝执行;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>GiftCard</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e>//..
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>private</span> String state<span style=color:#f92672>;</span>
+    <span style=color:#75715e>//..
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>@CommandHandlerInterceptor</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>intercept</span><span style=color:#f92672>(</span>RedeemCardCommand command<span style=color:#f92672>,</span> InterceptorChain interceptorChain<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>state</span><span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>command<span style=color:#f92672>.</span><span style=color:#a6e22e>getState</span><span style=color:#f92672>()))</span> <span style=color:#f92672>{</span>
+            interceptorChain<span style=color:#f92672>.</span><span style=color:#a6e22e>proceed</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>@CommandHandlerInterceptor 本质上是 @MessageHandlerInterceptor 的具体实现 <a href=https://docs.axoniq.io/reference-guide/axon-framework/messaging-concepts/message-intercepting#messagehandlerinterceptor>more</a></p><h2 id=事件拦截器event-interceptors>事件拦截器(Event Interceptors)</h2><p>和命令拦截器一样事件拦截器也可以通过派发拦截器和处理器拦截器在发布和执行前后被拦截</p><h3 id=事件拦截器event-dispatch-interceptors>事件拦截器（Event Dispatch Interceptors）</h3><p>任何被注册入EventBus的派发拦截器都会在事件被发布后执行, 它们可以通过增加metadata修改message.
+同样在发布事件的线程执行；</p><p>创建派发事件拦截器使得将发布的事件通过日志输出；</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>EventLoggingDispatchInterceptor</span>
+                <span style=color:#66d9ef>implements</span> MessageDispatchInterceptor<span style=color:#f92672>&lt;</span>EventMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> Logger logger <span style=color:#f92672>=</span>
+                LoggerFactory<span style=color:#f92672>.</span><span style=color:#a6e22e>getLogger</span><span style=color:#f92672>(</span>EventLoggingDispatchInterceptor<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> BiFunction<span style=color:#f92672>&lt;</span>Integer<span style=color:#f92672>,</span> EventMessage<span style=color:#f92672>&lt;?&gt;,</span> EventMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> handle<span style=color:#f92672>(</span>
+                List<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> EventMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> messages<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#f92672>(</span>index<span style=color:#f92672>,</span> event<span style=color:#f92672>)</span> <span style=color:#f92672>-&gt;</span> <span style=color:#f92672>{</span>
+            logger<span style=color:#f92672>.</span><span style=color:#a6e22e>info</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Publishing event: [{}].&#34;</span><span style=color:#f92672>,</span> event<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>return</span> event<span style=color:#f92672>;</span>
+        <span style=color:#f92672>};</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>下面将该拦截器注册到EventBus</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>EventBusConfiguration</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>public</span> EventBus <span style=color:#a6e22e>configureEventBus</span><span style=color:#f92672>(</span>EventStorageEngine eventStorageEngine<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// note that an EventStore is a more specific implementation of an EventBus
+</span><span style=color:#75715e></span>        EventBus eventBus <span style=color:#f92672>=</span> EmbeddedEventStore<span style=color:#f92672>.</span><span style=color:#a6e22e>builder</span><span style=color:#f92672>()</span>
+                                              <span style=color:#f92672>.</span><span style=color:#a6e22e>storageEngine</span><span style=color:#f92672>(</span>eventStorageEngine<span style=color:#f92672>)</span>
+                                              <span style=color:#f92672>.</span><span style=color:#a6e22e>build</span><span style=color:#f92672>();</span>
+        eventBus<span style=color:#f92672>.</span><span style=color:#a6e22e>registerDispatchInterceptor</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> EventLoggingDispatchInterceptor<span style=color:#f92672>());</span>
+        <span style=color:#66d9ef>return</span> eventBus<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=事件处理拦截器event-handler-interceptors>事件处理拦截器（Event Handler Interceptors）</h3><p>消息处理器可以在事件前后触发执行动作。也可以通过异常的性格是阻塞事件的执行，比如因为安全原因。</p><p>拦截器通常需要实现 MessageHandlerInterceptor 接口.
+这个接口只包含 handle() 一个方法，和两个参数 UnitOfWork 、InterceptorChain</p><pre><code>这里和命令拦截器相似, 省略...
+</code></pre><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyEventHandlerInterceptor</span>
+        <span style=color:#66d9ef>implements</span> MessageHandlerInterceptor<span style=color:#f92672>&lt;</span>EventMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> Object <span style=color:#a6e22e>handle</span><span style=color:#f92672>(</span>UnitOfWork<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> EventMessage<span style=color:#f92672>&lt;?&gt;&gt;</span> unitOfWork<span style=color:#f92672>,</span>
+                         InterceptorChain interceptorChain<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> Exception <span style=color:#f92672>{</span>
+        EventMessage<span style=color:#f92672>&lt;?&gt;</span> event <span style=color:#f92672>=</span> unitOfWork<span style=color:#f92672>.</span><span style=color:#a6e22e>getMessage</span><span style=color:#f92672>();</span>
+        String userId <span style=color:#f92672>=</span> Optional<span style=color:#f92672>.</span><span style=color:#a6e22e>ofNullable</span><span style=color:#f92672>(</span>event<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetaData</span><span style=color:#f92672>().</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;userId&#34;</span><span style=color:#f92672>))</span>
+                                <span style=color:#f92672>.</span><span style=color:#a6e22e>map</span><span style=color:#f92672>(</span>uId <span style=color:#f92672>-&gt;</span> <span style=color:#f92672>(</span>String<span style=color:#f92672>)</span> uId<span style=color:#f92672>)</span>
+                                <span style=color:#f92672>.</span><span style=color:#a6e22e>orElseThrow</span><span style=color:#f92672>(</span>IllegalEventException<span style=color:#f92672>::</span><span style=color:#66d9ef>new</span><span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#e6db74>&#34;axonUser&#34;</span><span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>userId<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> interceptorChain<span style=color:#f92672>.</span><span style=color:#a6e22e>proceed</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=查询拦截器query-interceptors>查询拦截器（Query Interceptors）</h3><h3 id=messagehandlerinterceptor>@MessageHandlerInterceptor</h3><h3 id=exceptionhandler>@ExceptionHandler</h3><p>仅仅当出现异常的结果时，才会被调用,</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>CardSummaryProjection</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#75715e>/*
+</span><span style=color:#75715e>     * Some @EventHandler and @QueryHandler annotated methods
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#a6e22e>@ExceptionHandler</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>handle</span><span style=color:#f92672>(</span>Exception exception<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// How you prefer to react to this generic exception,
+</span><span style=color:#75715e></span>        <span style=color:#75715e>//  for example by throwing a domain specific exception.
+</span><span style=color:#75715e></span>    <span style=color:#f92672>}</span>
+
+    <span style=color:#a6e22e>@ExceptionHandler</span><span style=color:#f92672>(</span>resultType <span style=color:#f92672>=</span> IllegalArgumentException<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>)</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>handle</span><span style=color:#f92672>(</span>IllegalArgumentException exception<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// How you prefer to react to the IllegalArgumentException,
+</span><span style=color:#75715e></span>        <span style=color:#75715e>//  for example by throwing a domain specific exception.
+</span><span style=color:#75715e></span>    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h2 id=unit-of-work>Unit of Work</h2><p><img src=evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p481 alt=0048c7246cd5547eae78bebddc944404.png></p><p>UnitOfWork 是Axon框架中的重要概念. 尽管大部分情况下我们不会直接操作它，如果把消息的处理看做是一个工作单元，那么工作单元的目的就是协调消息处理中涉及的多个行为。因此各个组件可以注册UnitOfWork的各种actions, 比如onPrepareCommit 或者是onCleanUp.</p><p>通常情况下我们不需要直接访问UnitOfWork, 通常情况下我们通过使用Axon框架提供的构建块(building blocks)使用之, 如果确实要使用的话，可以有如下几种方式</p><ol><li>handler method 方法参数: 如果该方法是注解方法，那么直接放类型为 UnitOfWork的类型的参数即可;</li><li>通过线程上下文CurrentUnitOfWork.get() 获取;</li></ol><p>需要获取UnitOfWork的原因有我们需要绑定(attach)一些可重用得到资源，使得在该消息处理的过程中可以随时获取，或者是当工作完成后需要清理之;</p><p>在这种情况下, unitOfWork.getOrComputeResource() 和 生命周期回调方法
+比如 OnRollback() afterCommit() 和 onCleanUp() 就可以允许我们注册资源和生命actions。</p><p>注意：</p><pre><code>UnitOfWork 可以理解为一种修改缓存，并不是事务的替代品。尽管所有的状态变更都是在其被提交的的时候被提交，它的提交也并不是原子的。最佳实践是一个命令尽量不要超过多个action，如果超过多个ation那么需要在UnitOfWork的commit阶段嵌入事务。后者我们可以通过 unitOfWork.OnCommit(..) 函数去注册事务提交函数，该函数会在UnitOfWork提交的时候被回调处理.
+</code></pre><p>在handler中可能会抛出异常，默认情况下未检查异常将会触发UnitOfWork回滚所有的变更。并期望最后消除所有副作用。</p><p>Axon提供一些如下一些回滚策略：</p><ol><li>RollbackConfigurationType.NEVER
+总是提交</li><li>RollbackConfigurationType.ANY_THROWABLE
+任何异常发生都会回滚</li><li>RollbackConfigurationType.UNCHECKED_EXCEPTIONS
+在errors或者是runtime异常回滚</li><li>RollbackConfigurationType.RUNTIME_EXCEPTION
+运行时异常回滚(error不会)</li></ol><p>当使用框架中的组件处理消息是，UnitOfWork将会自动管理生命周期。但是如果我们不使用它，需要自己处理：需要自行编程实现start和commit(或者是roll back)</p><p>大部分使用场景DefaultUnitOfWork将会提供你想要的所有功能，它通常处理一个单线程任务。如果想在UnitOfWork中执行一个任务可以这样操作</p><ol><li>UnitOfWork.execute(Runnable)</li><li>UnitOfWork.executeWithResult(Callable)</li></ol><p>上面都会创建一个新的DefaultUnitOfWork.</p><p>UnitOfWork会依次被启动 并在任务完成时被提交或者是任务失败时被回滚. 你可以选择手动启动，提交或者是回滚工作单元.</p><p>经典用法如下:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>UnitOfWork uow <span style=color:#f92672>=</span> DefaultUnitOfWork<span style=color:#f92672>.</span><span style=color:#a6e22e>startAndGet</span><span style=color:#f92672>(</span>message<span style=color:#f92672>);</span>
+<span style=color:#75715e>// then, either use the autocommit approach:
+</span><span style=color:#75715e></span>uow<span style=color:#f92672>.</span><span style=color:#a6e22e>executeWithResult</span><span style=color:#f92672>(()</span> <span style=color:#f92672>-&gt;</span> <span style=color:#f92672>...</span> logic here<span style=color:#f92672>);</span>
+
+<span style=color:#75715e>// or manually commit or rollback:
+</span><span style=color:#75715e></span><span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e>// business logic comes here
+</span><span style=color:#75715e></span>    uow<span style=color:#f92672>.</span><span style=color:#a6e22e>commit</span><span style=color:#f92672>();</span>
+<span style=color:#f92672>}</span> <span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>Exception e<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+    uow<span style=color:#f92672>.</span><span style=color:#a6e22e>rollback</span><span style=color:#f92672>(</span>e<span style=color:#f92672>);</span>
+    <span style=color:#75715e>// maybe rethrow...
+</span><span style=color:#75715e></span><span style=color:#f92672>}</span>
+</code></pre></div><p>Note:</p><p>UnitOfWork 运行总是围绕者消息</p><ol><li>开始于某个即将被处理的消息.</li><li>执行的结果</li></ol></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--next"><a class=pager__link href=/halley/axon/%E7%AE%80%E5%8D%95%E5%91%BD%E4%BB%A4%E6%80%BB%E7%BA%BF-simplecommandbus/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title>简单命令总线 SimpleCommandBus</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E9%A2%98%E7%9B%AE/>回溯题目</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E8%9E%BA%E6%97%8B%E7%9F%A9%E9%98%B5/>螺旋矩阵</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%86%E6%B2%BB%E9%A2%98%E7%9B%AE%E7%AF%87/>分治题目篇</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%89%91%E5%85%8B%E7%89%8C%E9%97%AE%E9%A2%98/>扑克牌问题</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%A0%B9%E6%8D%AE%E6%95%B0%E5%AD%97%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B8%8B1%E7%9A%84%E6%95%B0%E7%9B%AE%E6%8E%92%E5%BA%8F_1356/>根据数字二进制下1的数目排序_1356</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
