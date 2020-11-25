@@ -61,5 +61,5 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
     post = "<span class='alert'></span>"
     pre = "<i class='fa fa-road'></i>"
     url = "/axon/"
-    weight = -100
+    weight = 1
     pluralizelisttitles = false
