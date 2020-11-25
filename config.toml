@@ -1,5 +1,5 @@
 baseurl = "https://halley-eng.github.io/halley/"
-title = "月亮惹的祸"
+title = "月亮"
 languageCode = "zh_CN"
 paginate = "10" # Number of posts per page
 theme = "mainroad"

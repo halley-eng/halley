@@ -4,6 +4,7 @@ date: 2020-11-25T21:36:55+08:00
 draft: false
 ---
 
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/semaphore.jpg)
 
 ### 同步器Sync实现
 
