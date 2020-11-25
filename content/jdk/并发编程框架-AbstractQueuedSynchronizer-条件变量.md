@@ -5,7 +5,7 @@ draft: false
 ---
 
 
-![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/concurrent/aqs_variable.png)
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/concurrent/aqs_variable.jpg)
 
 ### wait 去竞争锁
 

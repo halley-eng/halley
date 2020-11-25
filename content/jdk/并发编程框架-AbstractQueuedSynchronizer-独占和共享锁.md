@@ -4,7 +4,7 @@ date: 2020-11-25T21:39:51+08:00
 draft: false
 ---
 
-![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/concurrent/aqs_lock.png)
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/concurrent/aqs_lock.jpg)
 
 ### 独占锁加锁(不响应超时和中断)
 
