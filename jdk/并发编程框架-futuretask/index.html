@@ -1,0 +1,220 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>并发编程框架 FutureTask - 月亮惹的祸</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="并发编程框架 FutureTask"><meta property="og:description" content="Future模式 Future代表异步执行结果. 用户可以
+ 调用get方法获取执行结果 调用cancel方法取消执行 调用get(long, TimeUnit) 支持超时的获取结果;  内存一致性保证: 异步计算 happen-before 另外一个线程的Future.get
+RunnableFuture实现 用于定义一种Future, 同时也是一个Runnable. 一旦改Runnable运行完成, 那么该Future就能得到结果;
+/** * A {@link Future} that is {@link Runnable}. Successful execution of * the {@code run} method causes completion of the {@code Future} * and allows access to its results. * @see FutureTask * @see Executor * @since 1.6 * @author Doug Lea * @param <V> The result type returned by this Future's {@code get} method */ public interface RunnableFuture<V> extends Runnable, Future<V> { /** * Sets this Future to the result of its computation * unless it has been cancelled."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-futuretask/"><meta property="article:published_time" content="2020-11-25T21:30:47+08:00"><meta property="article:modified_time" content="2020-11-25T21:30:47+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮惹的祸 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮惹的祸</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>并发编程框架 FutureTask</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-11-25T21:30:47+08:00>November 25, 2020</time></div></div></header><div class="content post__content clearfix"><h3 id=future模式>Future模式</h3><p>Future代表异步执行结果. 用户可以</p><ol><li>调用get方法获取执行结果</li><li>调用cancel方法取消执行</li><li>调用get(long, TimeUnit) 支持超时的获取结果;</li></ol><p>内存一致性保证:
+异步计算 happen-before 另外一个线程的Future.get</p><h3 id=runnablefuturev-实现>RunnableFuture 实现</h3><p>用于定义一种Future, 同时也是一个Runnable.
+一旦改Runnable运行完成, 那么该Future就能得到结果;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#75715e>/**
+</span><span style=color:#75715e> * A {@link Future} that is {@link Runnable}. Successful execution of
+</span><span style=color:#75715e> * the {@code run} method causes completion of the {@code Future}
+</span><span style=color:#75715e> * and allows access to its results.
+</span><span style=color:#75715e> * @see FutureTask
+</span><span style=color:#75715e> * @see Executor
+</span><span style=color:#75715e> * @since 1.6
+</span><span style=color:#75715e> * @author Doug Lea
+</span><span style=color:#75715e> * @param &lt;V&gt; The result type returned by this Future&#39;s {@code get} method
+</span><span style=color:#75715e> */</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>RunnableFuture</span><span style=color:#f92672>&lt;</span>V<span style=color:#f92672>&gt;</span> <span style=color:#66d9ef>extends</span> Runnable<span style=color:#f92672>,</span> Future<span style=color:#f92672>&lt;</span>V<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Sets this Future to the result of its computation
+</span><span style=color:#75715e>     * unless it has been cancelled.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>run</span><span style=color:#f92672>();</span>
+<span style=color:#f92672>}</span>
+
+</code></pre></div><h3 id=futuretask-实现>FutureTask 实现</h3><p>在FutureTask的使用场景中:</p><ol><li>任务的执行和任务的执行状况查看在不同的线程</li><li>不同的线程通过状态变量state, 保证并发安全, 达到协同工作的目的;</li><li>任何修改状态的操作, 都要检测前置状态是否正确, 并使用CAS修改之;</li></ol><h4 id=状态定义>状态定义</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * The run state of this task, initially NEW.  The run state
+</span><span style=color:#75715e>     * transitions to a terminal state only in methods set,
+</span><span style=color:#75715e>     * setException, and cancel.  During completion, state may take on
+</span><span style=color:#75715e>     * transient values of COMPLETING (while outcome is being set) or
+</span><span style=color:#75715e>     * INTERRUPTING (only while interrupting the runner to satisfy a
+</span><span style=color:#75715e>     * cancel(true)). Transitions from these intermediate to final
+</span><span style=color:#75715e>     * states use cheaper ordered/lazy writes because values are unique
+</span><span style=color:#75715e>     * and cannot be further modified.
+</span><span style=color:#75715e>     *
+</span><span style=color:#75715e>     * Possible state transitions:
+</span><span style=color:#75715e>     * NEW -&gt; COMPLETING -&gt; NORMAL
+</span><span style=color:#75715e>     * NEW -&gt; COMPLETING -&gt; EXCEPTIONAL
+</span><span style=color:#75715e>     * NEW -&gt; CANCELLED
+</span><span style=color:#75715e>     * NEW -&gt; INTERRUPTING -&gt; INTERRUPTED
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>volatile</span> <span style=color:#66d9ef>int</span> state<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> NEW          <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> COMPLETING   <span style=color:#f92672>=</span> 1<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> NORMAL       <span style=color:#f92672>=</span> 2<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> EXCEPTIONAL  <span style=color:#f92672>=</span> 3<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> CANCELLED    <span style=color:#f92672>=</span> 4<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> INTERRUPTING <span style=color:#f92672>=</span> 5<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> INTERRUPTED  <span style=color:#f92672>=</span> 6<span style=color:#f92672>;</span>
+</code></pre></div><h4 id=任务的执行>任务的执行</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>run</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 当前不是NEW或者给当前任务绑定当前线程执行失败;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>state <span style=color:#f92672>!=</span> NEW <span style=color:#f92672>||</span>
+            <span style=color:#f92672>!</span>UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>compareAndSwapObject</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> runnerOffset<span style=color:#f92672>,</span>
+                                         <span style=color:#66d9ef>null</span><span style=color:#f92672>,</span> Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>()))</span>
+            <span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 已经确保 执行依赖的状态当前为NEW, 并且给当前任务绑定当前线程执行中;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+            Callable<span style=color:#f92672>&lt;</span>V<span style=color:#f92672>&gt;</span> c <span style=color:#f92672>=</span> callable<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>c <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> state <span style=color:#f92672>==</span> NEW<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                V result<span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>boolean</span> ran<span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+                    <span style=color:#75715e>// 触发任务执行;
+</span><span style=color:#75715e></span>                    result <span style=color:#f92672>=</span> c<span style=color:#f92672>.</span><span style=color:#a6e22e>call</span><span style=color:#f92672>();</span>
+                    ran <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span> <span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>Throwable ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 设置异常执行结果
+</span><span style=color:#75715e></span>                    result <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                    ran <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+                    setException<span style=color:#f92672>(</span>ex<span style=color:#f92672>);</span>
+                <span style=color:#f92672>}</span>
+                <span style=color:#75715e>// 设置正常训醒结果
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ran<span style=color:#f92672>)</span>
+                    set<span style=color:#f92672>(</span>result<span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span> <span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// runner must be non-null until state is settled to
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// prevent concurrent calls to run()
+</span><span style=color:#75715e></span>            runner <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+            <span style=color:#75715e>// 设置中断执行结果;
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// state must be re-read after nulling runner to prevent
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// leaked interrupts
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>int</span> s <span style=color:#f92672>=</span> state<span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>&gt;=</span> INTERRUPTING<span style=color:#f92672>)</span> <span style=color:#75715e>//
+</span><span style=color:#75715e></span>                handlePossibleCancellationInterrupt<span style=color:#f92672>(</span>s<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><h4 id=设置正常运行结果>设置正常运行结果</h4><ol><li>状态从NEW推到COMPLETING</li><li>设置运行结果</li><li>状态从COMPLETING推到NORMAL</li><li>唤醒等待节点;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Sets the result of this future to the given value unless
+</span><span style=color:#75715e>     * this future has already been set or has been cancelled.
+</span><span style=color:#75715e>     *
+</span><span style=color:#75715e>     * &lt;p&gt;This method is invoked internally by the {@link #run} method
+</span><span style=color:#75715e>     * upon successful completion of the computation.
+</span><span style=color:#75715e>     *
+</span><span style=color:#75715e>     * @param v the value
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>set</span><span style=color:#f92672>(</span>V v<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>compareAndSwapInt</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> stateOffset<span style=color:#f92672>,</span> NEW<span style=color:#f92672>,</span> COMPLETING<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            outcome <span style=color:#f92672>=</span> v<span style=color:#f92672>;</span>
+            UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>putOrderedInt</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> stateOffset<span style=color:#f92672>,</span> NORMAL<span style=color:#f92672>);</span> <span style=color:#75715e>// final state
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// 唤醒等待节点;
+</span><span style=color:#75715e></span>            finishCompletion<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><p>唤醒方法实现如下：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Removes and signals all waiting threads, invokes done(), and
+</span><span style=color:#75715e>     * nulls out callable.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>finishCompletion</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// assert state &gt; COMPLETING;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>WaitNode q<span style=color:#f92672>;</span> <span style=color:#f92672>(</span>q <span style=color:#f92672>=</span> waiters<span style=color:#f92672>)</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 从当前线程中的字段中赋值为null, 保证只能当前线程去唤醒其他节点;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>compareAndSwapObject</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> waitersOffset<span style=color:#f92672>,</span> q<span style=color:#f92672>,</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 迭代链表并依次唤醒等待节点;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>for</span> <span style=color:#f92672>(;;)</span> <span style=color:#f92672>{</span>
+                    Thread t <span style=color:#f92672>=</span> q<span style=color:#f92672>.</span><span style=color:#a6e22e>thread</span><span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>t <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                        q<span style=color:#f92672>.</span><span style=color:#a6e22e>thread</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                        LockSupport<span style=color:#f92672>.</span><span style=color:#a6e22e>unpark</span><span style=color:#f92672>(</span>t<span style=color:#f92672>);</span>
+                    <span style=color:#f92672>}</span>
+                    WaitNode next <span style=color:#f92672>=</span> q<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>;</span>
+                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>next <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                        <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+                    q<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span> <span style=color:#75715e>// unlink to help gc
+</span><span style=color:#75715e></span>                    q <span style=color:#f92672>=</span> next<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+                <span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+
+        done<span style=color:#f92672>();</span>
+
+        callable <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>        <span style=color:#75715e>// to reduce footprint
+</span><span style=color:#75715e></span>    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=设置异常执行结果>设置异常执行结果</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setException</span><span style=color:#f92672>(</span>Throwable t<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>compareAndSwapInt</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> stateOffset<span style=color:#f92672>,</span> NEW<span style=color:#f92672>,</span> COMPLETING<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            outcome <span style=color:#f92672>=</span> t<span style=color:#f92672>;</span>
+            UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>putOrderedInt</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> stateOffset<span style=color:#f92672>,</span> EXCEPTIONAL<span style=color:#f92672>);</span> <span style=color:#75715e>// final state
+</span><span style=color:#75715e></span>            finishCompletion<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+    
+</code></pre></div><h4 id=查询执行结果>查询执行结果</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * @throws CancellationException {@inheritDoc}
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> V <span style=color:#a6e22e>get</span><span style=color:#f92672>()</span> <span style=color:#66d9ef>throws</span> InterruptedException<span style=color:#f92672>,</span> ExecutionException <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>int</span> s <span style=color:#f92672>=</span> state<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 如果未完成则等待;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>&lt;=</span> COMPLETING<span style=color:#f92672>)</span>
+            s <span style=color:#f92672>=</span> awaitDone<span style=color:#f92672>(</span><span style=color:#66d9ef>false</span><span style=color:#f92672>,</span> 0L<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 拿到执行结果;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>return</span> report<span style=color:#f92672>(</span>s<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>等待结果返回:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Awaits completion or aborts on interrupt or timeout.
+</span><span style=color:#75715e>     *
+</span><span style=color:#75715e>     * @param timed true if use timed waits
+</span><span style=color:#75715e>     * @param nanos time to wait, if timed
+</span><span style=color:#75715e>     * @return state upon completion
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>awaitDone</span><span style=color:#f92672>(</span><span style=color:#66d9ef>boolean</span> timed<span style=color:#f92672>,</span> <span style=color:#66d9ef>long</span> nanos<span style=color:#f92672>)</span>
+        <span style=color:#66d9ef>throws</span> InterruptedException <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>long</span> deadline <span style=color:#f92672>=</span> timed <span style=color:#f92672>?</span> System<span style=color:#f92672>.</span><span style=color:#a6e22e>nanoTime</span><span style=color:#f92672>()</span> <span style=color:#f92672>+</span> nanos <span style=color:#f92672>:</span> 0L<span style=color:#f92672>;</span>
+        WaitNode q <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>boolean</span> queued <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(;;)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 当前线程被中断, 则响应之;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>interrupted</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+                removeWaiter<span style=color:#f92672>(</span>q<span style=color:#f92672>);</span>
+                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> InterruptedException<span style=color:#f92672>();</span>
+            <span style=color:#f92672>}</span>
+
+            <span style=color:#66d9ef>int</span> s <span style=color:#f92672>=</span> state<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// 已经拿到结果, 则返回最新状态;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>&gt;</span> COMPLETING<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>q <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                    q<span style=color:#f92672>.</span><span style=color:#a6e22e>thread</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>return</span> s<span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>==</span> COMPLETING<span style=color:#f92672>)</span> <span style=color:#75715e>// cannot time out yet
+</span><span style=color:#75715e></span>                Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>yield</span><span style=color:#f92672>();</span>
+            <span style=color:#75715e>// 未创建则创建之;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>q <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
+                q <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> WaitNode<span style=color:#f92672>();</span>
+            <span style=color:#75715e>// 未加入队列则加入队列: 原子的将新节点加入到链表头部;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>queued<span style=color:#f92672>)</span>
+                queued <span style=color:#f92672>=</span> UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>compareAndSwapObject</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> waitersOffset<span style=color:#f92672>,</span>
+                                                      q<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span> <span style=color:#f92672>=</span> waiters<span style=color:#f92672>,</span> q<span style=color:#f92672>);</span>
+            <span style=color:#75715e>// 支持超时检测，则检测超时, 并超时阻塞;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>timed<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                nanos <span style=color:#f92672>=</span> deadline <span style=color:#f92672>-</span> System<span style=color:#f92672>.</span><span style=color:#a6e22e>nanoTime</span><span style=color:#f92672>();</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>nanos <span style=color:#f92672>&lt;=</span> 0L<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                    removeWaiter<span style=color:#f92672>(</span>q<span style=color:#f92672>);</span>
+                    <span style=color:#66d9ef>return</span> state<span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+                LockSupport<span style=color:#f92672>.</span><span style=color:#a6e22e>parkNanos</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> nanos<span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#75715e>// 不支持超时检测, 则无限期阻;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>else</span>
+                LockSupport<span style=color:#f92672>.</span><span style=color:#a6e22e>park</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>状态到终态后上面后返回结果, 并执行下面的方法:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>private</span> V <span style=color:#a6e22e>report</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> s<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> ExecutionException <span style=color:#f92672>{</span>
+        Object x <span style=color:#f92672>=</span> outcome<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 正常状态返回结果;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>==</span> NORMAL<span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#f92672>(</span>V<span style=color:#f92672>)</span>x<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 非正常终态抛出异常;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>&gt;=</span> CANCELLED<span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> CancellationException<span style=color:#f92672>();</span>
+        <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ExecutionException<span style=color:#f92672>((</span>Throwable<span style=color:#f92672>)</span>x<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+
+</code></pre></div><h3 id=总结>总结</h3><ol><li>认识FutureTask的7种状态</li><li>最终get方法的三种结果<ol><li>正常返回</li><li>CancellationException</li><li>ExecutionException</li></ol></li></ol></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/jdk/%E9%9B%86%E5%90%88%E4%B9%8Bconcurrentskiplistmap/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>集合之ConcurrentSkipListMap</p></a></div><div class="pager__item pager__item--next"><a class=pager__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-reentrantreadwritelock/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title>并发编程框架 ReentrantReadWriteLock</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-executorcompletionservice/>并发编程框架 ExecutorCompletionService</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-abstractqueuedsynchronizer-%E7%8B%AC%E5%8D%A0%E5%92%8C%E5%85%B1%E4%BA%AB%E9%94%81/>并发编程框架 AbstractQueuedSynchronizer 独占和共享锁</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-abstractqueuedsynchronizer-%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/>并发编程框架 AbstractQueuedSynchronizer 条件变量</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-countdown/>并发编程框架 CountDown</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-cyclicbarrier/>并发编程框架 CyclicBarrier</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮惹的祸.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>

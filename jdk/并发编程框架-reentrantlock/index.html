@@ -1,0 +1,172 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>并发编程框架 ReentrantLock - 月亮惹的祸</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="并发编程框架 ReentrantLock"><meta property="og:description" content="同步器 /** * Base of synchronization control for this lock. Subclassed * into fair and nonfair versions below. Uses AQS state to * represent the number of holds on the lock. */ abstract static class Sync extends AbstractQueuedSynchronizer { private static final long serialVersionUID = -5179523762034025860L; /** * 锁定操作 * * Performs {@link Lock#lock}. The main reason for subclassing * is to allow fast path for nonfair version. */ abstract void lock(); /** * 1."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-reentrantlock/"><meta property="article:published_time" content="2020-11-25T21:36:05+08:00"><meta property="article:modified_time" content="2020-11-25T21:36:05+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮惹的祸 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮惹的祸</div><div class=logo__tagline>时间过去总得留下些痕迹</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>并发编程框架 ReentrantLock</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-11-25T21:36:05+08:00>November 25, 2020</time></div></div></header><div class="content post__content clearfix"><h3 id=同步器>同步器</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Base of synchronization control for this lock. Subclassed
+</span><span style=color:#75715e>     * into fair and nonfair versions below. Uses AQS state to
+</span><span style=color:#75715e>     * represent the number of holds on the lock.
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Sync</span> <span style=color:#66d9ef>extends</span> AbstractQueuedSynchronizer <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>long</span> serialVersionUID <span style=color:#f92672>=</span> <span style=color:#f92672>-</span>5179523762034025860L<span style=color:#f92672>;</span>
+
+        <span style=color:#75715e>/**
+</span><span style=color:#75715e>         * 锁定操作
+</span><span style=color:#75715e>         *
+</span><span style=color:#75715e>         * Performs {@link Lock#lock}. The main reason for subclassing
+</span><span style=color:#75715e>         * is to allow fast path for nonfair version.
+</span><span style=color:#75715e>         */</span>
+        <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>lock</span><span style=color:#f92672>();</span>
+
+        <span style=color:#75715e>/**
+</span><span style=color:#75715e>         * 1. 锁空闲:  尝试原子方式将锁状态推到忙碌的状态, 并占用锁
+</span><span style=color:#75715e>         * 2. 锁忙碌:  检测锁的占用线程是否和当前线程一致;
+</span><span style=color:#75715e>         *
+</span><span style=color:#75715e>         * Performs non-fair tryLock.  tryAcquire is implemented in
+</span><span style=color:#75715e>         * subclasses, but both need nonfair try for trylock method.
+</span><span style=color:#75715e>         */</span>
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>nonfairTryAcquire</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> acquires<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>final</span> Thread current <span style=color:#f92672>=</span> Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>int</span> c <span style=color:#f92672>=</span> getState<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>c <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>   <span style=color:#75715e>// 当前锁是空闲状态
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>compareAndSetState<span style=color:#f92672>(</span>0<span style=color:#f92672>,</span> acquires<span style=color:#f92672>))</span> <span style=color:#f92672>{</span> <span style=color:#75715e>// 尝试占用锁, 乐观锁的方式获得锁      state是锁实现核心的数据结构, 所有对锁的申请和释放都需要原子的操作该值;
+</span><span style=color:#75715e></span>                    setExclusiveOwnerThread<span style=color:#f92672>(</span>current<span style=color:#f92672>);</span>          <span style=color:#75715e>// 将当前线程设置成独占状态;
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>   <span style=color:#75715e>// 锁忙碌的情况下
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>current <span style=color:#f92672>==</span> getExclusiveOwnerThread<span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>int</span> nextc <span style=color:#f92672>=</span> c <span style=color:#f92672>+</span> acquires<span style=color:#f92672>;</span>   <span style=color:#75715e>// 增加当前线程锁的次数
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>nextc <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span> <span style=color:#75715e>// overflow  超过整数的范围
+</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> Error<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Maximum lock count exceeded&#34;</span><span style=color:#f92672>);</span>
+                setState<span style=color:#f92672>(</span>nextc<span style=color:#f92672>);</span>    <span style=color:#75715e>// 当前线程已经获得了锁, 可以随意改变当前的锁定状态, 不存在线程安全的问题,  因为当前过程只有锁的持有线程才能够调用;
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>    <span style=color:#75715e>// 成功获得了锁;
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>tryRelease</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> releases<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>int</span> c <span style=color:#f92672>=</span> getState<span style=color:#f92672>()</span> <span style=color:#f92672>-</span> releases<span style=color:#f92672>;</span> <span style=color:#75715e>// 剩余锁定次数
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>()</span> <span style=color:#f92672>!=</span> getExclusiveOwnerThread<span style=color:#f92672>())</span> <span style=color:#75715e>// 如果不是在锁绑定的线程里面执行此方法 将会抛出异常
+</span><span style=color:#75715e></span>                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalMonitorStateException<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>boolean</span> free <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>c <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>       <span style=color:#75715e>// 当且仅仅当锁的申请次数正好等于本次释放次数时 才能将锁释放;
+</span><span style=color:#75715e></span>                free <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>    <span style=color:#75715e>// 代表是否成功将锁释放;
+</span><span style=color:#75715e></span>                setExclusiveOwnerThread<span style=color:#f92672>(</span><span style=color:#66d9ef>null</span><span style=color:#f92672>);</span> <span style=color:#75715e>// 将当前线程从锁中解绑
+</span><span style=color:#75715e></span>            <span style=color:#f92672>}</span>
+            setState<span style=color:#f92672>(</span>c<span style=color:#f92672>);</span>        <span style=color:#75715e>// 设定剩余锁定次数
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>return</span> free<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>isHeldExclusively</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// While we must in general read state before owner,
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// we don&#39;t need to do so to check if current thread is owner
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>return</span> getExclusiveOwnerThread<span style=color:#f92672>()</span> <span style=color:#f92672>==</span> Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>final</span> ConditionObject <span style=color:#a6e22e>newCondition</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> ConditionObject<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#75715e>// Methods relayed from outer class
+</span><span style=color:#75715e></span>
+        <span style=color:#66d9ef>final</span> Thread <span style=color:#a6e22e>getOwner</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> getState<span style=color:#f92672>()</span> <span style=color:#f92672>==</span> 0 <span style=color:#f92672>?</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>:</span> getExclusiveOwnerThread<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>getHoldCount</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> isHeldExclusively<span style=color:#f92672>()</span> <span style=color:#f92672>?</span> getState<span style=color:#f92672>()</span> <span style=color:#f92672>:</span> 0<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>isLocked</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> getState<span style=color:#f92672>()</span> <span style=color:#f92672>!=</span> 0<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#75715e>/**
+</span><span style=color:#75715e>         * Reconstitutes the instance from a stream (that is, deserializes it).
+</span><span style=color:#75715e>         */</span>
+        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>readObject</span><span style=color:#f92672>(</span>java<span style=color:#f92672>.</span><span style=color:#a6e22e>io</span><span style=color:#f92672>.</span><span style=color:#a6e22e>ObjectInputStream</span> s<span style=color:#f92672>)</span>
+            <span style=color:#66d9ef>throws</span> java<span style=color:#f92672>.</span><span style=color:#a6e22e>io</span><span style=color:#f92672>.</span><span style=color:#a6e22e>IOException</span><span style=color:#f92672>,</span> ClassNotFoundException <span style=color:#f92672>{</span>
+            s<span style=color:#f92672>.</span><span style=color:#a6e22e>defaultReadObject</span><span style=color:#f92672>();</span>
+            setState<span style=color:#f92672>(</span>0<span style=color:#f92672>);</span> <span style=color:#75715e>// reset to unlocked state
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=非公平锁>非公平锁</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * 非公平锁
+</span><span style=color:#75715e>     * 首先会通过乐观锁的方式去竞争锁, 竞争失败才去排队
+</span><span style=color:#75715e>     * Sync object for non-fair locks
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>NonfairSync</span> <span style=color:#66d9ef>extends</span> Sync <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>long</span> serialVersionUID <span style=color:#f92672>=</span> 7316153563782823691L<span style=color:#f92672>;</span>
+
+        <span style=color:#75715e>/**
+</span><span style=color:#75715e>         * Performs lock.  Try immediate barge, backing up to normal
+</span><span style=color:#75715e>         * acquire on failure.
+</span><span style=color:#75715e>         */</span>
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>lock</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 首先尝试使用乐观锁 以原子更新的方式获得锁
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>compareAndSetState<span style=color:#f92672>(</span>0<span style=color:#f92672>,</span> 1<span style=color:#f92672>))</span>   <span style=color:#75715e>// 通过乐观锁的方式去竞争锁
+</span><span style=color:#75715e></span>                <span style=color:#75715e>// 独占锁;
+</span><span style=color:#75715e></span>                setExclusiveOwnerThread<span style=color:#f92672>(</span>Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>());</span>
+            <span style=color:#66d9ef>else</span>
+                acquire<span style=color:#f92672>(</span>1<span style=color:#f92672>);</span>                           <span style=color:#75715e>// 竞争不到才去排队;
+</span><span style=color:#75715e></span>            <span style=color:#75715e>/**
+</span><span style=color:#75715e>             * 获取锁的流程
+</span><span style=color:#75715e>             * 1. {@link ReentrantLock} cas 直接获取锁
+</span><span style=color:#75715e>             * 2. 转发给AQS
+</span><span style=color:#75715e>             *    {@link AbstractQueuedSynchronizer#acquire(int)}
+</span><span style=color:#75715e>             *    2.1 tryAcquire:尝试通过非公平竞争的方式获取锁;  最终使用 {@link NonfairSync#tryAcquire(int)}
+</span><span style=color:#75715e>             *      如果竞争不到加入到等待队列中;
+</span><span style=color:#75715e>             *    2.2 addWaiter
+</span><span style=color:#75715e>             *      在当前线程尝试修改前缀的状态, 让其在释放锁后 通知当前线程;
+</span><span style=color:#75715e>             *
+</span><span style=color:#75715e>             *
+</span><span style=color:#75715e>             * {@link NonfairSync#tryAcquire(int)}
+</span><span style=color:#75715e>             *      {@link Sync#nonfairTryAcquire(int)}  尝试非公平的方式获取锁
+</span><span style=color:#75715e>             *
+</span><span style=color:#75715e>             * {@link AbstractQueuedSynchronizer#addWaiter(java.util.concurrent.locks.AbstractQueuedSynchronizer.Node)}
+</span><span style=color:#75715e>             */</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>tryAcquire</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> acquires<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> nonfairTryAcquire<span style=color:#f92672>(</span>acquires<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h4 id=公平锁>公平锁</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * 公平锁
+</span><span style=color:#75715e>     * 直接去排队;
+</span><span style=color:#75715e>     * Sync object for fair locks
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>FairSync</span> <span style=color:#66d9ef>extends</span> Sync <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>long</span> serialVersionUID <span style=color:#f92672>=</span> <span style=color:#f92672>-</span>3000897897090466540L<span style=color:#f92672>;</span>
+
+        <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>lock</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+            acquire<span style=color:#f92672>(</span>1<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#75715e>/**
+</span><span style=color:#75715e>         * Fair version of tryAcquire.  Don&#39;t grant access unless
+</span><span style=color:#75715e>         * recursive call or no waiters or is first.
+</span><span style=color:#75715e>         */</span>
+        <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>tryAcquire</span><span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> acquires<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>final</span> Thread current <span style=color:#f92672>=</span> Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>int</span> c <span style=color:#f92672>=</span> getState<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>c <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>hasQueuedPredecessors<span style=color:#f92672>()</span> <span style=color:#f92672>&amp;&amp;</span>
+                    compareAndSetState<span style=color:#f92672>(</span>0<span style=color:#f92672>,</span> acquires<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+                    setExclusiveOwnerThread<span style=color:#f92672>(</span>current<span style=color:#f92672>);</span>
+                    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+                <span style=color:#f92672>}</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>current <span style=color:#f92672>==</span> getExclusiveOwnerThread<span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+                <span style=color:#66d9ef>int</span> nextc <span style=color:#f92672>=</span> c <span style=color:#f92672>+</span> acquires<span style=color:#f92672>;</span>
+                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>nextc <span style=color:#f92672>&lt;</span> 0<span style=color:#f92672>)</span>
+                    <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> Error<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Maximum lock count exceeded&#34;</span><span style=color:#f92672>);</span>
+                setState<span style=color:#f92672>(</span>nextc<span style=color:#f92672>);</span>
+                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h3 id=总结>总结</h3><p>ReentrantLock 是 AQS的具体实现</p><p>两种情况能够拿到锁(nonfairTryAcquire 返回true)</p><ol><li>当前state == 0, cas 为 1；</li><li>当前state !=0 但是独占线程为当前线程, cas 当前状态为 oldState + 1;</li></ol><p>一种情况能够成功释放锁(tryRelease 返回true)</p><ol><li>释放信号量后state为0;</li></ol></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-reentrantreadwritelock/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>并发编程框架 ReentrantReadWriteLock</p></a></div><div class="pager__item pager__item--next"><a class=pager__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-semaphore/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title>并发编程框架 Semaphore</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-executorcompletionservice/>并发编程框架 ExecutorCompletionService</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-abstractqueuedsynchronizer-%E7%8B%AC%E5%8D%A0%E5%92%8C%E5%85%B1%E4%BA%AB%E9%94%81/>并发编程框架 AbstractQueuedSynchronizer 独占和共享锁</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-abstractqueuedsynchronizer-%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/>并发编程框架 AbstractQueuedSynchronizer 条件变量</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-countdown/>并发编程框架 CountDown</a></li><li class=widget__item><a class=widget__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-cyclicbarrier/>并发编程框架 CyclicBarrier</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮惹的祸.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
