@@ -8,8 +8,7 @@ draft: false
 集群命令总线用于消息在多个节点之间的转发, SpringCloud扩展实现使用一致性hash算法, 有效的将消息的压力负载到多个节点上面;
 
 
-
-![a4482d0161d81344879ce2a5181ee69a.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p491)
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/axon/2_1.jpg)
 
 集群命令总线相对于简单命令总线多了路由器和连接器;
 
@@ -59,8 +58,7 @@ draft: false
 
 ### SpringCloud 路由器 (SpringCloudCommandRouter) -- 找节点
     
- ![5fbe58a9cfc505b0c961b0b7208d25b0.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p493)
-
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/axon/2_2.jpg
 
 节点路由是路由键根据路由规则去路由表匹配出节点的过程.
 所以我们先说明下如何构建一致性hash路由表;
@@ -144,8 +142,7 @@ draft: false
 
 如上实际执行过程中
 1. 通过路由策略拿到路由键
-    ![f8320195776a74e92ae804bad329e5b8.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p494)
-    
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/axon/2_3.jpg)
 2. 根据路由键去一致性hash表(ConsistentHash)，获取实际的下一步地址; 
         
     1. 有序map中查询大于当前key hash值的节点列表;
@@ -175,8 +172,7 @@ draft: false
 
 ### SpringCloud 连接器  -- 发送数据包
 
-![35d5bf6425c774ec8e82a7cd0dbd9fa0.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p499)
-
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/axon/2_4.jpg)
 
 由Builder可知该链接器依赖外部资源如下
 ```JAVA
@@ -280,14 +276,12 @@ RestTemplate#exchange
 
 #### 发送
 
-![d404ae01ed3bbd7681b9161a8250679f.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p500)
-
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/axon/2_5.jpg)
 
 
 #### 回复
 
-![7937d1b7f6c8dac2bc286f98b4e0dde0.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p501)
-
+![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/axon/2_6.jpg)
 
 
 ### 总结
