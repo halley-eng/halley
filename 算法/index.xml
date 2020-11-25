@@ -42,7 +42,15 @@ int maxSubArray(int[] nums) { int maxHere = 0, maxSoFar = Integer.MIN_VALUE; for
 输入: [[0,1,0,0], [1,1,1,0], [0,1,0,0], [1,1,0,0]]
 输出: 16
 解释: 它的周长是下面图片中的 16 个黄色的边：
-题解 迭代法: 反向思考 class Solution { public int islandPerimeter(int[][] grid) { //重点关注前面遍历过得方格，如果之前有相邻方格，就-2; if (grid == null || grid.length == 0) { return 0; } int rsp = 0; for (int i = 0; i &amp;lt; grid.length; i++) { for (int j = 0; j &amp;lt; grid[i].</description></item><item><title>长按键入 925</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</link><pubDate>Wed, 21 Oct 2020 21:30:49 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</guid><description>你的朋友正在使用键盘输入他的名字 name。偶尔，在键入字符 c 时，按键可能会被长按，而字符可能被输入 1 次或多次。
+题解 迭代法: 反向思考 class Solution { public int islandPerimeter(int[][] grid) { //重点关注前面遍历过得方格，如果之前有相邻方格，就-2; if (grid == null || grid.length == 0) { return 0; } int rsp = 0; for (int i = 0; i &amp;lt; grid.length; i++) { for (int j = 0; j &amp;lt; grid[i].</description></item><item><title>颜色分类 75</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%A2%9C%E8%89%B2%E5%88%86%E7%B1%BB-75/</link><pubDate>Sun, 25 Oct 2020 22:37:33 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%A2%9C%E8%89%B2%E5%88%86%E7%B1%BB-75/</guid><description>75. 颜色分类 颜色分类 给定一个包含红色、白色和蓝色，一共 n 个元素的数组，原地对它们进行排序，使得相同颜色的元素相邻，并按照红色、白色、蓝色顺序排列。 此题中，我们使用整数 0、 1 和 2 分别表示红色、白色和蓝色。
+注意: 不能使用代码库中的排序函数来解决这道题。
+示例:
+输入: [2,0,2,1,1,0] 输出: [0,0,1,1,2,2] 进阶：
+一个直观的解决方案是使用计数排序的两趟扫描算法。 首先，迭代计算出0、1 和 2 元素的个数，然后按照0、1、2的排序，重写当前数组。 你能想出一个仅使用常数空间的一趟扫描算法吗？
+双指针法 思路是: 使用两个指针left, right, 和另外一个指针 i 扫描为分类区域; 其中
+left 定义最左面放置数字“0”的区间的右边界; right定义最右面放置数字“2”的区间的左边界; 循环过程中通过迭代i,将0和2交换到左右区间, 直到 i &amp;gt; right得到期望的结果。
+我们先给出源码, 然后通过循环不变式证明while循环的正确性;
+private static void sortColor(int[] color) { // left : 下一个0 将要放置的位置; [-oo , left) // right: 下一个2 将要放置的位置; (right, +oo] // i : 待分类的元素位置; [left, i) 存放数据 1 ( 且left &amp;lt; i有效, 否则表示为检测到1) // [i, right] 为未分类区间; // 当未分类区间为空时候终止, 即 i &amp;gt; right, 最后一个未分类元素为 i == right; int i = 0, left = 0, right = color.</description></item><item><title>长按键入 925</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</link><pubDate>Wed, 21 Oct 2020 21:30:49 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%95%BF%E6%8C%89%E9%94%AE%E5%85%A5-925/</guid><description>你的朋友正在使用键盘输入他的名字 name。偶尔，在键入字符 c 时，按键可能会被长按，而字符可能被输入 1 次或多次。
 你将会检查键盘输入的字符 typed。如果它对应的可能是你的朋友的名字（其中一些字符可能被长按），那么就返回 True。
 示例 1：
 输入：name = &amp;ldquo;alex&amp;rdquo;, typed = &amp;ldquo;aaleex&amp;rdquo; 输出：true 解释：&amp;lsquo;alex&amp;rsquo; 中的 &amp;lsquo;a&amp;rsquo; 和 &amp;lsquo;e&amp;rsquo; 被长按。 示例 2：
@@ -126,12 +134,4 @@ struct Node { int val; Node *left; Node *right; Node *next; } 填充它的每个
 示例 1：
 输入：[&amp;ldquo;h&amp;rdquo;,&amp;ldquo;e&amp;rdquo;,&amp;ldquo;l&amp;rdquo;,&amp;ldquo;l&amp;rdquo;,&amp;ldquo;o&amp;rdquo;] 输出：[&amp;ldquo;o&amp;rdquo;,&amp;ldquo;l&amp;rdquo;,&amp;ldquo;l&amp;rdquo;,&amp;ldquo;e&amp;rdquo;,&amp;ldquo;h&amp;rdquo;] 示例 2：
 输入：[&amp;ldquo;H&amp;rdquo;,&amp;ldquo;a&amp;rdquo;,&amp;ldquo;n&amp;rdquo;,&amp;ldquo;n&amp;rdquo;,&amp;ldquo;a&amp;rdquo;,&amp;ldquo;h&amp;rdquo;] 输出：[&amp;ldquo;h&amp;rdquo;,&amp;ldquo;a&amp;rdquo;,&amp;ldquo;n&amp;rdquo;,&amp;ldquo;n&amp;rdquo;,&amp;ldquo;a&amp;rdquo;,&amp;ldquo;H&amp;rdquo;]
-题解 class Solution { public void reverseString(char[] s) { // 重复子过程: 从区间 [0, len - 1] 两端取出两个元素, 交换之, 并收敛双指针; int l = 0, r = s.length - 1; while(l &amp;lt; r) { char tmp = s[l]; s[l] = s[r]; s[r] = tmp; l++; r--; } } } 说明循环总会结束 while 循环中总会 l++, r&amp;ndash;, 总会压缩解空间, 所以一定会结束, 不会死循环;</description></item><item><title>颜色分类 75</title><link>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%A2%9C%E8%89%B2%E5%88%86%E7%B1%BB-75/</link><pubDate>Wed, 07 Oct 2020 10:37:33 +0800</pubDate><guid>https://halley-eng.github.io/halley/%E7%AE%97%E6%B3%95/%E9%A2%9C%E8%89%B2%E5%88%86%E7%B1%BB-75/</guid><description>75. 颜色分类 颜色分类 给定一个包含红色、白色和蓝色，一共 n 个元素的数组，原地对它们进行排序，使得相同颜色的元素相邻，并按照红色、白色、蓝色顺序排列。 此题中，我们使用整数 0、 1 和 2 分别表示红色、白色和蓝色。
-注意: 不能使用代码库中的排序函数来解决这道题。
-示例:
-输入: [2,0,2,1,1,0] 输出: [0,0,1,1,2,2] 进阶：
-一个直观的解决方案是使用计数排序的两趟扫描算法。 首先，迭代计算出0、1 和 2 元素的个数，然后按照0、1、2的排序，重写当前数组。 你能想出一个仅使用常数空间的一趟扫描算法吗？
-双指针法 思路是: 使用两个指针left, right, 和另外一个指针 i 扫描为分类区域; 其中
-left 定义最左面放置数字“0”的区间的右边界; right定义最右面放置数字“2”的区间的左边界; 循环过程中通过迭代i,将0和2交换到左右区间, 直到 i &amp;gt; right得到期望的结果。
-我们先给出源码, 然后通过循环不变式证明while循环的正确性;
-private static void sortColor(int[] color) { // left : 下一个0 将要放置的位置; [-oo , left) // right: 下一个2 将要放置的位置; (right, +oo] // i : 待分类的元素位置; [left, i) 存放数据 1 ( 且left &amp;lt; i有效, 否则表示为检测到1) // [i, right] 为未分类区间; // 当未分类区间为空时候终止, 即 i &amp;gt; right, 最后一个未分类元素为 i == right; int i = 0, left = 0, right = color.</description></item></channel></rss>
+题解 class Solution { public void reverseString(char[] s) { // 重复子过程: 从区间 [0, len - 1] 两端取出两个元素, 交换之, 并收敛双指针; int l = 0, r = s.length - 1; while(l &amp;lt; r) { char tmp = s[l]; s[l] = s[r]; s[r] = tmp; l++; r--; } } } 说明循环总会结束 while 循环中总会 l++, r&amp;ndash;, 总会压缩解空间, 所以一定会结束, 不会死循环;</description></item></channel></rss>
