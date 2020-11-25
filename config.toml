@@ -55,3 +55,11 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
     url = "/jdk/"
     weight = -100
     pluralizelisttitles = false
+ [[menu.main]]
+    name = "Axon"
+    title = "Axon框架解析"
+    post = "<span class='alert'></span>"
+    pre = "<i class='fa fa-road'></i>"
+    url = "/axon/"
+    weight = -100
+    pluralizelisttitles = false
