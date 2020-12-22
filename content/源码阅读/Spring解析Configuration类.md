@@ -1,5 +1,8 @@
-
-
+---
+title: "Spring解析Configuration类"
+date: 2020-12-22T21:39:16+08:00
+draft: false
+---
 ### 解析所有配置类
 
 ConfigurationClassParser#parse(Set<BeanDefinitionHolder>)

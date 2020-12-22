@@ -1,5 +1,8 @@
-
-
+---
+title: "注解EnableTransactionManagement自动导入事务管理器"
+date: 2020-12-22T21:39:16+08:00
+draft: false
+---
 
 事务注解的解析流程
 
@@ -10,8 +13,6 @@
     selectImports(AnnotationMetadata importingClassMetadata)方法
 5. AdviceModeImportSelector 解析出通知模式后 调用selector实现类 的 
     selectImports(AdviceMode adviceMode)
-
-
 
 第四部源码如下: 
 

@@ -1,6 +1,8 @@
-
-
-
+---
+title: "SpringFramework之AutowiredAnnotationBeanPostProcessor"
+date: 2020-12-22T21:39:16+08:00
+draft: false
+---
 ## 支持注入的注解类型
 
 从如下构造方法可知其支持的给两种注解类型
