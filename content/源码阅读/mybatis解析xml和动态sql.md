@@ -2,6 +2,7 @@
 title: "mybatis解析xml和动态sql"
 date: 2020-12-22T21:39:16+08:00
 draft: false
+tags: ["mybatis"]
 ---
 #### mybatis 如何解析xml文件
 

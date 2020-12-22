@@ -2,6 +2,7 @@
 title: "SpringFramework之AutowiredAnnotationBeanPostProcessor"
 date: 2020-12-22T21:39:16+08:00
 draft: false
+tags: ["spring"]
 ---
 ## 支持注入的注解类型
 

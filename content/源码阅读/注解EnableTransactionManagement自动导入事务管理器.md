@@ -2,6 +2,7 @@
 title: "注解EnableTransactionManagement自动导入事务管理器"
 date: 2020-12-22T21:39:16+08:00
 draft: false
+tags: ["spring"]
 ---
 
 事务注解的解析流程

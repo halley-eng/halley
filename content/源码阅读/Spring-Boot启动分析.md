@@ -2,6 +2,7 @@
 title: "Spring-Boot启动分析"
 date: 2020-12-22T21:39:16+08:00
 draft: false
+tags: ["spring-boot"]
 ---
 
 以常见的SpringBoot 工程启动类举例

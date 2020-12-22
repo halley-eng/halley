@@ -2,6 +2,7 @@
 title: "Configuration注解之ConfigurationClassPostProcessor"
 date: 2020-12-22T21:39:16+08:00
 draft: false
+tags: ["spring"]
 ---
 
 ![](https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086516575111.jpg)
