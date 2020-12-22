@@ -1,0 +1,192 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>- 月亮</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content><meta property="og:description" content="事务注解的解析流程
+ ConfigurationClassPostProcessor 解析配置类 发现注解类型 EnableTransactionManagement 根据注解找到其对应的 Selector 实现 TransactionManagementConfigurationSelector 解析器调用 selector 实现父类 AdviceModeImportSelector 的 selectImports(AnnotationMetadata importingClassMetadata)方法 AdviceModeImportSelector 解析出通知模式后 调用selector实现类 的 selectImports(AdviceMode adviceMode)  第四部源码如下:
+根据通知模式模式(AspectJ/Proxy)路由不同的配置类; AdviceModeImportSelector#selectImports(AnnotationMetadata)
+@Override public final String[] selectImports(AnnotationMetadata importingClassMetadata) { // 1. 查询当前类作为别人的父类是, 子类给的泛型参数是什么, 它是当前类要处理的注解类型; 	Class<?> annoType = GenericTypeResolver.resolveTypeArgument(getClass(), AdviceModeImportSelector.class); // 2. 从源配置类中查询出来, 注解参数实际对象; 	AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(importingClassMetadata, annoType); if (attributes == null) { throw new IllegalArgumentException(String.format( &#34;@%s is not present on importing class '%s' as expected&#34;, annoType."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/%E6%B3%A8%E8%A7%A3enabletransactionmanagement%E8%87%AA%E5%8A%A8%E5%AF%BC%E5%85%A5%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E5%99%A8/"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮</div><div class=logo__tagline>每天进步一点点</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/axon/><i class="fa fa-road"></i><span class=menu__text>Axon</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/><i class="fa fa-road"></i><span class=menu__text>源码阅读</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title></h1></header><div class="content post__content clearfix"><p>事务注解的解析流程</p><ol><li>ConfigurationClassPostProcessor 解析配置类</li><li>发现注解类型 EnableTransactionManagement</li><li>根据注解找到其对应的 Selector 实现 TransactionManagementConfigurationSelector</li><li>解析器调用 selector 实现父类 AdviceModeImportSelector 的
+selectImports(AnnotationMetadata importingClassMetadata)方法</li><li>AdviceModeImportSelector 解析出通知模式后 调用selector实现类 的
+selectImports(AdviceMode adviceMode)</li></ol><p>第四部源码如下:</p><p>根据通知模式模式(AspectJ/Proxy)路由不同的配置类;
+AdviceModeImportSelector#selectImports(AnnotationMetadata)</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> String<span style=color:#f92672>[]</span> <span style=color:#a6e22e>selectImports</span><span style=color:#f92672>(</span>AnnotationMetadata importingClassMetadata<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 查询当前类作为别人的父类是, 子类给的泛型参数是什么, 它是当前类要处理的注解类型;
+</span><span style=color:#75715e></span>		Class<span style=color:#f92672>&lt;?&gt;</span> annoType <span style=color:#f92672>=</span> GenericTypeResolver<span style=color:#f92672>.</span><span style=color:#a6e22e>resolveTypeArgument</span><span style=color:#f92672>(</span>getClass<span style=color:#f92672>(),</span> AdviceModeImportSelector<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 2. 从源配置类中查询出来, 注解参数实际对象;
+</span><span style=color:#75715e></span>		AnnotationAttributes attributes <span style=color:#f92672>=</span> AnnotationConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>attributesFor</span><span style=color:#f92672>(</span>importingClassMetadata<span style=color:#f92672>,</span> annoType<span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>attributes <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span>String<span style=color:#f92672>.</span><span style=color:#a6e22e>format</span><span style=color:#f92672>(</span>
+				<span style=color:#e6db74>&#34;@%s is not present on importing class &#39;%s&#39; as expected&#34;</span><span style=color:#f92672>,</span>
+				annoType<span style=color:#f92672>.</span><span style=color:#a6e22e>getSimpleName</span><span style=color:#f92672>(),</span> importingClassMetadata<span style=color:#f92672>.</span><span style=color:#a6e22e>getClassName</span><span style=color:#f92672>()));</span>
+		<span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 3. 获取通知类型  代理/Aspect
+</span><span style=color:#75715e></span>		AdviceMode adviceMode <span style=color:#f92672>=</span> attributes<span style=color:#f92672>.</span><span style=color:#a6e22e>getEnum</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>getAdviceModeAttributeName</span><span style=color:#f92672>());</span>
+        <span style=color:#75715e>// 4. 从实现类中查询出不同通知类型下 应该导入的配置类
+</span><span style=color:#75715e></span>		String<span style=color:#f92672>[]</span> imports <span style=color:#f92672>=</span> selectImports<span style=color:#f92672>(</span>adviceMode<span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>imports <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> IllegalArgumentException<span style=color:#f92672>(</span>String<span style=color:#f92672>.</span><span style=color:#a6e22e>format</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Unknown AdviceMode: &#39;%s&#39;&#34;</span><span style=color:#f92672>,</span> adviceMode<span style=color:#f92672>));</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#66d9ef>return</span> imports<span style=color:#f92672>;</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><p>第一步实现原理如下</p><h3 id=查找父类型引用>查找父类型引用</h3><p>org.springframework.core.ResolvableType#as</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#66d9ef>public</span> ResolvableType <span style=color:#a6e22e>as</span><span style=color:#f92672>(</span>Class<span style=color:#f92672>&lt;?&gt;</span> type<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span> <span style=color:#f92672>==</span> NONE<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>return</span> NONE<span style=color:#f92672>;</span>
+		<span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 1. 当前类型就是匹配的类型，则返回
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ObjectUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>nullSafeEquals</span><span style=color:#f92672>(</span>resolve<span style=color:#f92672>(),</span> type<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>;</span>
+		<span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 2. 递归查询当前类型的接口;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>ResolvableType interfaceType <span style=color:#f92672>:</span> getInterfaces<span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+			ResolvableType interfaceAsType <span style=color:#f92672>=</span> interfaceType<span style=color:#f92672>.</span><span style=color:#a6e22e>as</span><span style=color:#f92672>(</span>type<span style=color:#f92672>);</span>
+			<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>interfaceAsType <span style=color:#f92672>!=</span> NONE<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>return</span> interfaceAsType<span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 3. 递归检测当前类型的父类;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>return</span> getSuperType<span style=color:#f92672>().</span><span style=color:#a6e22e>as</span><span style=color:#f92672>(</span>type<span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=事务配置导入>事务配置导入</h3><p>事务配置选择器通过实现 AdviceModeImportSelector 抽象类, 使得</p><ol><li>当通知类型为PROXY时，导入配置类型为 AutoProxyRegistrar 和 ProxyTransactionManagementConfiguration</li><li>当通知类型为ASPECTJ时，导入配置类型为 AspectJTransactionManagementConfiguration</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>TransactionManagementConfigurationSelector</span> <span style=color:#66d9ef>extends</span> AdviceModeImportSelector<span style=color:#f92672>&lt;</span>EnableTransactionManagement<span style=color:#f92672>&gt;</span> <span style=color:#f92672>{</span>
+
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * {@inheritDoc}
+</span><span style=color:#75715e>	 * @return {@link ProxyTransactionManagementConfiguration} or
+</span><span style=color:#75715e>	 * {@code AspectJTransactionManagementConfiguration} for {@code PROXY} and
+</span><span style=color:#75715e>	 * {@code ASPECTJ} values of {@link EnableTransactionManagement#mode()}, respectively
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>protected</span> String<span style=color:#f92672>[]</span> <span style=color:#a6e22e>selectImports</span><span style=color:#f92672>(</span>AdviceMode adviceMode<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>switch</span> <span style=color:#f92672>(</span>adviceMode<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>case</span> PROXY<span style=color:#f92672>:</span>
+				<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> String<span style=color:#f92672>[]</span> <span style=color:#f92672>{</span>AutoProxyRegistrar<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>(),</span> ProxyTransactionManagementConfiguration<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>()};</span>
+			<span style=color:#66d9ef>case</span> ASPECTJ<span style=color:#f92672>:</span>
+				<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> String<span style=color:#f92672>[]</span> <span style=color:#f92672>{</span>TransactionManagementConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME</span><span style=color:#f92672>};</span>
+			<span style=color:#66d9ef>default</span><span style=color:#f92672>:</span>
+				<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+		<span style=color:#f92672>}</span>
+	<span style=color:#f92672>}</span>
+
+<span style=color:#f92672>}</span>
+</code></pre></div><h4 id=autoproxyregistrar>AutoProxyRegistrar</h4><p>在正确配置下可以为IOC容器注入 InfrastructureAdvisorAutoProxyCreator
+使得容器可以在 AbstractAutoProxyCreator#postProcessBeforeInstantiation 钩子处
+为每一个实例化后的对象 尝试创建 一个代理类</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>AutoProxyRegistrar</span> <span style=color:#66d9ef>implements</span> ImportBeanDefinitionRegistrar <span style=color:#f92672>{</span>
+
+	<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Log logger <span style=color:#f92672>=</span> LogFactory<span style=color:#f92672>.</span><span style=color:#a6e22e>getLog</span><span style=color:#f92672>(</span>getClass<span style=color:#f92672>());</span>
+
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>registerBeanDefinitions</span><span style=color:#f92672>(</span>AnnotationMetadata importingClassMetadata<span style=color:#f92672>,</span> BeanDefinitionRegistry registry<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+		<span style=color:#75715e>// 1. 遍历导入配置类的所有注解;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>boolean</span> candidateFound <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
+		Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> annTypes <span style=color:#f92672>=</span> importingClassMetadata<span style=color:#f92672>.</span><span style=color:#a6e22e>getAnnotationTypes</span><span style=color:#f92672>();</span>
+		<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>String annType <span style=color:#f92672>:</span> annTypes<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			AnnotationAttributes candidate <span style=color:#f92672>=</span> AnnotationConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>attributesFor</span><span style=color:#f92672>(</span>importingClassMetadata<span style=color:#f92672>,</span> annType<span style=color:#f92672>);</span>
+			<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>candidate <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>continue</span><span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#75715e>// 1.1 筛选代理配置
+</span><span style=color:#75715e></span>			Object mode <span style=color:#f92672>=</span> candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;mode&#34;</span><span style=color:#f92672>);</span>
+			Object proxyTargetClass <span style=color:#f92672>=</span> candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;proxyTargetClass&#34;</span><span style=color:#f92672>);</span>
+			<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>mode <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> proxyTargetClass <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> AdviceMode<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span> <span style=color:#f92672>==</span> mode<span style=color:#f92672>.</span><span style=color:#a6e22e>getClass</span><span style=color:#f92672>()</span> <span style=color:#f92672>&amp;&amp;</span>
+					Boolean<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span> <span style=color:#f92672>==</span> proxyTargetClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getClass</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+				candidateFound <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
+				<span style=color:#75715e>// 1.1.1 如果通知模式是代理;
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>mode <span style=color:#f92672>==</span> AdviceMode<span style=color:#f92672>.</span><span style=color:#a6e22e>PROXY</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+					<span style=color:#75715e>//  1.1.1.1 注册自动代理创建器 InfrastructureAdvisorAutoProxyCreator
+</span><span style=color:#75715e></span>					AopConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>registerAutoProxyCreatorIfNecessary</span><span style=color:#f92672>(</span>registry<span style=color:#f92672>);</span>
+					<span style=color:#75715e>//  1.1.1.2 如果代理目标类, 则使用CGLIB方式创建;
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>Boolean<span style=color:#f92672>)</span> proxyTargetClass<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+						AopConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>forceAutoProxyCreatorToUseClassProxying</span><span style=color:#f92672>(</span>registry<span style=color:#f92672>);</span>
+						<span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
+					<span style=color:#f92672>}</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 2. 找不到代理配置 则打印日志;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>candidateFound <span style=color:#f92672>&amp;&amp;</span> logger<span style=color:#f92672>.</span><span style=color:#a6e22e>isInfoEnabled</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+			String name <span style=color:#f92672>=</span> getClass<span style=color:#f92672>().</span><span style=color:#a6e22e>getSimpleName</span><span style=color:#f92672>();</span>
+			logger<span style=color:#f92672>.</span><span style=color:#a6e22e>info</span><span style=color:#f92672>(</span>String<span style=color:#f92672>.</span><span style=color:#a6e22e>format</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;%s was imported but no annotations were found &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;having both &#39;mode&#39; and &#39;proxyTargetClass&#39; attributes of type &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;AdviceMode and boolean respectively. This means that auto proxy &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;creator registration and configuration may not have occurred as &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;intended, and components may not be proxied as expected. Check to &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;ensure that %s has been @Import&#39;ed on the same class where these &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;annotations are declared; otherwise remove the import of %s &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;altogether.&#34;</span><span style=color:#f92672>,</span> name<span style=color:#f92672>,</span> name<span style=color:#f92672>,</span> name<span style=color:#f92672>));</span>
+		<span style=color:#f92672>}</span>
+	<span style=color:#f92672>}</span>
+
+<span style=color:#f92672>}</span>
+
+</code></pre></div><h4 id=proxytransactionmanagementconfiguration>ProxyTransactionManagementConfiguration</h4><p>这里定义了 ROLE_INFRASTRUCTURE 角色的切点、通知和Advisor
+并且此 Advisor 可以被 InfrastructureAdvisorAutoProxyCreator 在每个bean创建时扫描到;</p><p>由 AnnotationTransactionAttributeSource 可知其创建了支持三种解析起匹配切点</p><ol><li>SpringTransactionAnnotationParser</li><li>JtaTransactionAnnotationParser</li><li>Ejb3TransactionAnnotationParser</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#75715e>/**
+</span><span style=color:#75715e> * {@code @Configuration} class that registers the Spring infrastructure beans
+</span><span style=color:#75715e> * necessary to enable proxy-based annotation-driven transaction management.
+</span><span style=color:#75715e> *
+</span><span style=color:#75715e> * @author Chris Beams
+</span><span style=color:#75715e> * @since 3.1
+</span><span style=color:#75715e> * @see EnableTransactionManagement
+</span><span style=color:#75715e> * @see TransactionManagementConfigurationSelector
+</span><span style=color:#75715e> */</span>
+<span style=color:#a6e22e>@Configuration</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ProxyTransactionManagementConfiguration</span> <span style=color:#66d9ef>extends</span> AbstractTransactionManagementConfiguration <span style=color:#f92672>{</span>
+
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * 带切点匹配器的通知对象 定义程序运行时的切面;
+</span><span style=color:#75715e>	 *
+</span><span style=color:#75715e>	 * 比如如下类
+</span><span style=color:#75715e>	 * {@link InfrastructureAdvisorAutoProxyCreator}
+</span><span style=color:#75715e>	 * 将会在每个bean实例话后, 去寻找该方法可以匹配的通知(拦截器);
+</span><span style=color:#75715e>	 *   {@link AbstractAutoProxyCreator#postProcessAfterInitialization(java.lang.Object, java.lang.String)}
+</span><span style=color:#75715e>	 *
+</span><span style=color:#75715e>	 * 现在这里如果发现接收到的方法中包含了事务相关的注解, 将会返回通知对象, 之后代理创建器会创建代理，
+</span><span style=color:#75715e>	 * 代理在执行的过程中, 会调用拦截器;
+</span><span style=color:#75715e>	 *
+</span><span style=color:#75715e>	 * {@link TransactionInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)}
+</span><span style=color:#75715e>	 *     {@link TransactionAspectSupport#invokeWithinTransaction(java.lang.reflect.Method, java.lang.Class, org.springframework.transaction.interceptor.TransactionAspectSupport.InvocationCallback)}
+</span><span style=color:#75715e>	 *
+</span><span style=color:#75715e>	 *
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#a6e22e>@Bean</span><span style=color:#f92672>(</span>name <span style=color:#f92672>=</span> TransactionManagementConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>TRANSACTION_ADVISOR_BEAN_NAME</span><span style=color:#f92672>)</span>
+	<span style=color:#a6e22e>@Role</span><span style=color:#f92672>(</span>BeanDefinition<span style=color:#f92672>.</span><span style=color:#a6e22e>ROLE_INFRASTRUCTURE</span><span style=color:#f92672>)</span>
+	<span style=color:#66d9ef>public</span> BeanFactoryTransactionAttributeSourceAdvisor <span style=color:#a6e22e>transactionAdvisor</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+		BeanFactoryTransactionAttributeSourceAdvisor advisor <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BeanFactoryTransactionAttributeSourceAdvisor<span style=color:#f92672>();</span>
+		advisor<span style=color:#f92672>.</span><span style=color:#a6e22e>setTransactionAttributeSource</span><span style=color:#f92672>(</span>transactionAttributeSource<span style=color:#f92672>());</span>
+		advisor<span style=color:#f92672>.</span><span style=color:#a6e22e>setAdvice</span><span style=color:#f92672>(</span>transactionInterceptor<span style=color:#f92672>());</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>enableTx</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			advisor<span style=color:#f92672>.</span><span style=color:#a6e22e>setOrder</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>enableTx</span><span style=color:#f92672>.&lt;</span>Integer<span style=color:#f92672>&gt;</span>getNumber<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;order&#34;</span><span style=color:#f92672>));</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#66d9ef>return</span> advisor<span style=color:#f92672>;</span>
+	<span style=color:#f92672>}</span>
+
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * 定义AOP事务的切点;
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#a6e22e>@Bean</span>
+	<span style=color:#a6e22e>@Role</span><span style=color:#f92672>(</span>BeanDefinition<span style=color:#f92672>.</span><span style=color:#a6e22e>ROLE_INFRASTRUCTURE</span><span style=color:#f92672>)</span>
+	<span style=color:#66d9ef>public</span> TransactionAttributeSource <span style=color:#a6e22e>transactionAttributeSource</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> AnnotationTransactionAttributeSource<span style=color:#f92672>();</span>
+	<span style=color:#f92672>}</span>
+
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * 定义AOP事务的通知(拦截器)
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#a6e22e>@Bean</span>
+	<span style=color:#a6e22e>@Role</span><span style=color:#f92672>(</span>BeanDefinition<span style=color:#f92672>.</span><span style=color:#a6e22e>ROLE_INFRASTRUCTURE</span><span style=color:#f92672>)</span>
+	<span style=color:#66d9ef>public</span> TransactionInterceptor <span style=color:#a6e22e>transactionInterceptor</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+		TransactionInterceptor interceptor <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> TransactionInterceptor<span style=color:#f92672>();</span>
+		interceptor<span style=color:#f92672>.</span><span style=color:#a6e22e>setTransactionAttributeSource</span><span style=color:#f92672>(</span>transactionAttributeSource<span style=color:#f92672>());</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>txManager</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			interceptor<span style=color:#f92672>.</span><span style=color:#a6e22e>setTransactionManager</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>txManager</span><span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#66d9ef>return</span> interceptor<span style=color:#f92672>;</span>
+	<span style=color:#f92672>}</span>
+
+<span style=color:#f92672>}</span>
+
+
+</code></pre></div><h3 id=总结>总结</h3><p>Spring通过 EnableTransactionManagement 使得程序支持AOP功能</p><ol><li>通过 InfrastructureAdvisorAutoProxyCreator 和 BeanFactoryTransactionAttributeSourceAdvisor 可以支持为 @Transaction 注解创建事务代理</li><li>事务的通知对象通过TransactionInterceptor提供;</li></ol></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--next"><a class=pager__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/spring%E8%A7%A3%E6%9E%90configuration%E7%B1%BB/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title></p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E9%A2%98%E7%9B%AE/>回溯题目</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E8%9E%BA%E6%97%8B%E7%9F%A9%E9%98%B5/>螺旋矩阵</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%86%E6%B2%BB%E9%A2%98%E7%9B%AE%E7%AF%87/>分治题目篇</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%89%91%E5%85%8B%E7%89%8C%E9%97%AE%E9%A2%98/>扑克牌问题</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%A0%B9%E6%8D%AE%E6%95%B0%E5%AD%97%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B8%8B1%E7%9A%84%E6%95%B0%E7%9B%AE%E6%8E%92%E5%BA%8F_1356/>根据数字二进制下1的数目排序_1356</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>

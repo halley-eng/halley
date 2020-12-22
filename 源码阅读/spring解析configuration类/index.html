@@ -1,0 +1,228 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>- 月亮</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content><meta property="og:description" content="解析所有配置类 ConfigurationClassParser#parse(Set)
+public void parse(Set<BeanDefinitionHolder> configCandidates) { // 1. 扫描所有配置类; 	for (BeanDefinitionHolder holder : configCandidates) { BeanDefinition bd = holder.getBeanDefinition(); try { // 1.1 带注解的解析; 	if (bd instanceof AnnotatedBeanDefinition) { parse(((AnnotatedBeanDefinition) bd).getMetadata(), holder.getBeanName()); } // 1.2 	else if (bd instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) bd).hasBeanClass()) { parse(((AbstractBeanDefinition) bd).getBeanClass(), holder.getBeanName()); } // 1.3 	else { parse(bd.getBeanClassName(), holder.getBeanName()); } } catch (BeanDefinitionStoreException ex) { throw ex; } catch (Throwable ex) { throw new BeanDefinitionStoreException( &#34;Failed to parse configuration class [&#34; + bd."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/spring%E8%A7%A3%E6%9E%90configuration%E7%B1%BB/"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮</div><div class=logo__tagline>每天进步一点点</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/axon/><i class="fa fa-road"></i><span class=menu__text>Axon</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/><i class="fa fa-road"></i><span class=menu__text>源码阅读</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title></h1></header><div class="content post__content clearfix"><h3 id=解析所有配置类>解析所有配置类</h3><p>ConfigurationClassParser#parse(Set)</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>parse</span><span style=color:#f92672>(</span>Set<span style=color:#f92672>&lt;</span>BeanDefinitionHolder<span style=color:#f92672>&gt;</span> configCandidates<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+		<span style=color:#75715e>// 1. 扫描所有配置类;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>BeanDefinitionHolder holder <span style=color:#f92672>:</span> configCandidates<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			BeanDefinition bd <span style=color:#f92672>=</span> holder<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanDefinition</span><span style=color:#f92672>();</span>
+			<span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+				<span style=color:#75715e>// 1.1 带注解的解析;
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>bd <span style=color:#66d9ef>instanceof</span> AnnotatedBeanDefinition<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+					parse<span style=color:#f92672>(((</span>AnnotatedBeanDefinition<span style=color:#f92672>)</span> bd<span style=color:#f92672>).</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>(),</span> holder<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanName</span><span style=color:#f92672>());</span>
+				<span style=color:#f92672>}</span>
+				<span style=color:#75715e>// 1.2
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>bd <span style=color:#66d9ef>instanceof</span> AbstractBeanDefinition <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>((</span>AbstractBeanDefinition<span style=color:#f92672>)</span> bd<span style=color:#f92672>).</span><span style=color:#a6e22e>hasBeanClass</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+					parse<span style=color:#f92672>(((</span>AbstractBeanDefinition<span style=color:#f92672>)</span> bd<span style=color:#f92672>).</span><span style=color:#a6e22e>getBeanClass</span><span style=color:#f92672>(),</span> holder<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanName</span><span style=color:#f92672>());</span>
+				<span style=color:#f92672>}</span>
+				<span style=color:#75715e>// 1.3
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+					parse<span style=color:#f92672>(</span>bd<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanClassName</span><span style=color:#f92672>(),</span> holder<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanName</span><span style=color:#f92672>());</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>BeanDefinitionStoreException ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>throw</span> ex<span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>Throwable ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> BeanDefinitionStoreException<span style=color:#f92672>(</span>
+						<span style=color:#e6db74>&#34;Failed to parse configuration class [&#34;</span> <span style=color:#f92672>+</span> bd<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanClassName</span><span style=color:#f92672>()</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;]&#34;</span><span style=color:#f92672>,</span> ex<span style=color:#f92672>);</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 2. 解析条件配置类;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>deferredImportSelectorHandler</span><span style=color:#f92672>.</span><span style=color:#a6e22e>process</span><span style=color:#f92672>();</span>
+	<span style=color:#f92672>}</span>
+    
+    
+</code></pre></div><h3 id=封装原始类型为-configurationclass>封装原始类型为 configurationClass</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>parse</span><span style=color:#f92672>(</span><span style=color:#a6e22e>@Nullable</span> String className<span style=color:#f92672>,</span> String beanName<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> IOException <span style=color:#f92672>{</span>
+		Assert<span style=color:#f92672>.</span><span style=color:#a6e22e>notNull</span><span style=color:#f92672>(</span>className<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;No bean class name for configuration class bean definition&#34;</span><span style=color:#f92672>);</span>
+		MetadataReader reader <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>metadataReaderFactory</span><span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadataReader</span><span style=color:#f92672>(</span>className<span style=color:#f92672>);</span>
+		processConfigurationClass<span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> ConfigurationClass<span style=color:#f92672>(</span>reader<span style=color:#f92672>,</span> beanName<span style=color:#f92672>));</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=递归解析之>递归解析之</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+	<span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>processConfigurationClass</span><span style=color:#f92672>(</span>ConfigurationClass configClass<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> IOException <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>conditionEvaluator</span><span style=color:#f92672>.</span><span style=color:#a6e22e>shouldSkip</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>(),</span> ConfigurationPhase<span style=color:#f92672>.</span><span style=color:#a6e22e>PARSE_CONFIGURATION</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
+		<span style=color:#f92672>}</span>
+
+		ConfigurationClass existingClass <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>configurationClasses</span><span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>existingClass <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>configClass<span style=color:#f92672>.</span><span style=color:#a6e22e>isImported</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>existingClass<span style=color:#f92672>.</span><span style=color:#a6e22e>isImported</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+					existingClass<span style=color:#f92672>.</span><span style=color:#a6e22e>mergeImportedBy</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>);</span>
+				<span style=color:#f92672>}</span>
+				<span style=color:#75715e>// Otherwise ignore new imported config class; existing non-imported class overrides it.
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+				<span style=color:#75715e>// Explicit bean definition found, probably replacing an import.
+</span><span style=color:#75715e></span>				<span style=color:#75715e>// Let&#39;s remove the old one and go with the new one.
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>configurationClasses</span><span style=color:#f92672>.</span><span style=color:#a6e22e>remove</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>);</span>
+				<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>knownSuperclasses</span><span style=color:#f92672>.</span><span style=color:#a6e22e>values</span><span style=color:#f92672>().</span><span style=color:#a6e22e>removeIf</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>::</span>equals<span style=color:#f92672>);</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 递归解析配置类及其父类, 因为java是单继承的所有这样没问题;
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Recursively process the configuration class and its superclass hierarchy.
+</span><span style=color:#75715e></span>		SourceClass sourceClass <span style=color:#f92672>=</span> asSourceClass<span style=color:#f92672>(</span>configClass<span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>do</span> <span style=color:#f92672>{</span>
+			sourceClass <span style=color:#f92672>=</span> doProcessConfigurationClass<span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> sourceClass<span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#66d9ef>while</span> <span style=color:#f92672>(</span>sourceClass <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+
+		<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>configurationClasses</span><span style=color:#f92672>.</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> configClass<span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=实际解析过程如下>实际解析过程如下:</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#a6e22e>@Nullable</span>
+	<span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> SourceClass <span style=color:#a6e22e>doProcessConfigurationClass</span><span style=color:#f92672>(</span>ConfigurationClass configClass<span style=color:#f92672>,</span> SourceClass sourceClass<span style=color:#f92672>)</span>
+			<span style=color:#66d9ef>throws</span> IOException <span style=color:#f92672>{</span>
+
+		<span style=color:#75715e>// 1. 配置 component
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>configClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>().</span><span style=color:#a6e22e>isAnnotated</span><span style=color:#f92672>(</span>Component<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>()))</span> <span style=color:#f92672>{</span>
+			<span style=color:#75715e>// Recursively process any member (nested) classes first
+</span><span style=color:#75715e></span>			processMemberClasses<span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> sourceClass<span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#75715e>// 2. 配置 @PropertySource
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Process any @PropertySource annotations
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>AnnotationAttributes propertySource <span style=color:#f92672>:</span> AnnotationConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>attributesForRepeatable</span><span style=color:#f92672>(</span>
+				sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>(),</span> PropertySources<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>,</span>
+				org<span style=color:#f92672>.</span><span style=color:#a6e22e>springframework</span><span style=color:#f92672>.</span><span style=color:#a6e22e>context</span><span style=color:#f92672>.</span><span style=color:#a6e22e>annotation</span><span style=color:#f92672>.</span><span style=color:#a6e22e>PropertySource</span><span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>environment</span> <span style=color:#66d9ef>instanceof</span> ConfigurableEnvironment<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				processPropertySource<span style=color:#f92672>(</span>propertySource<span style=color:#f92672>);</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+				logger<span style=color:#f92672>.</span><span style=color:#a6e22e>info</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Ignoring @PropertySource annotation on [&#34;</span> <span style=color:#f92672>+</span> sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getClassName</span><span style=color:#f92672>()</span> <span style=color:#f92672>+</span>
+						<span style=color:#e6db74>&#34;]. Reason: Environment must implement ConfigurableEnvironment&#34;</span><span style=color:#f92672>);</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 3. 处理 @ComponentScan
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Process any @ComponentScan annotations
+</span><span style=color:#75715e></span>		Set<span style=color:#f92672>&lt;</span>AnnotationAttributes<span style=color:#f92672>&gt;</span> componentScans <span style=color:#f92672>=</span> AnnotationConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>attributesForRepeatable</span><span style=color:#f92672>(</span>
+				sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>(),</span> ComponentScans<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>,</span> ComponentScan<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>componentScans<span style=color:#f92672>.</span><span style=color:#a6e22e>isEmpty</span><span style=color:#f92672>()</span> <span style=color:#f92672>&amp;&amp;</span>
+				<span style=color:#f92672>!</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>conditionEvaluator</span><span style=color:#f92672>.</span><span style=color:#a6e22e>shouldSkip</span><span style=color:#f92672>(</span>sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>(),</span> ConfigurationPhase<span style=color:#f92672>.</span><span style=color:#a6e22e>REGISTER_BEAN</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>AnnotationAttributes componentScan <span style=color:#f92672>:</span> componentScans<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#75715e>// The config class is annotated with @ComponentScan -&gt; perform the scan immediately
+</span><span style=color:#75715e></span>				Set<span style=color:#f92672>&lt;</span>BeanDefinitionHolder<span style=color:#f92672>&gt;</span> scannedBeanDefinitions <span style=color:#f92672>=</span>
+						<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>componentScanParser</span><span style=color:#f92672>.</span><span style=color:#a6e22e>parse</span><span style=color:#f92672>(</span>componentScan<span style=color:#f92672>,</span> sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getClassName</span><span style=color:#f92672>());</span>
+				<span style=color:#75715e>// Check the set of scanned definitions for any further config classes and parse recursively if needed
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>BeanDefinitionHolder holder <span style=color:#f92672>:</span> scannedBeanDefinitions<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+					BeanDefinition bdCand <span style=color:#f92672>=</span> holder<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanDefinition</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getOriginatingBeanDefinition</span><span style=color:#f92672>();</span>
+					<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>bdCand <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+						bdCand <span style=color:#f92672>=</span> holder<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanDefinition</span><span style=color:#f92672>();</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ConfigurationClassUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>checkConfigurationClassCandidate</span><span style=color:#f92672>(</span>bdCand<span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>metadataReaderFactory</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+						parse<span style=color:#f92672>(</span>bdCand<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanClassName</span><span style=color:#f92672>(),</span> holder<span style=color:#f92672>.</span><span style=color:#a6e22e>getBeanName</span><span style=color:#f92672>());</span>
+					<span style=color:#f92672>}</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 4. 处理 @Import 内部会处理 将条件配置 写入到 deferredImportSelectorHandler
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Process any @Import annotations
+</span><span style=color:#75715e></span>		processImports<span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> sourceClass<span style=color:#f92672>,</span> getImports<span style=color:#f92672>(</span>sourceClass<span style=color:#f92672>),</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+
+		<span style=color:#75715e>// 5. 处理 @ImportResource
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Process any @ImportResource annotations
+</span><span style=color:#75715e></span>		AnnotationAttributes importResource <span style=color:#f92672>=</span>
+				AnnotationConfigUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>attributesFor</span><span style=color:#f92672>(</span>sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>(),</span> ImportResource<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>importResource <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			String<span style=color:#f92672>[]</span> resources <span style=color:#f92672>=</span> importResource<span style=color:#f92672>.</span><span style=color:#a6e22e>getStringArray</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;locations&#34;</span><span style=color:#f92672>);</span>
+			Class<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> BeanDefinitionReader<span style=color:#f92672>&gt;</span> readerClass <span style=color:#f92672>=</span> importResource<span style=color:#f92672>.</span><span style=color:#a6e22e>getClass</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;reader&#34;</span><span style=color:#f92672>);</span>
+			<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>String resource <span style=color:#f92672>:</span> resources<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				String resolvedResource <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>environment</span><span style=color:#f92672>.</span><span style=color:#a6e22e>resolveRequiredPlaceholders</span><span style=color:#f92672>(</span>resource<span style=color:#f92672>);</span>
+				configClass<span style=color:#f92672>.</span><span style=color:#a6e22e>addImportedResource</span><span style=color:#f92672>(</span>resolvedResource<span style=color:#f92672>,</span> readerClass<span style=color:#f92672>);</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#75715e>// 6. 解析 @Bean 方法;
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Process individual @Bean methods
+</span><span style=color:#75715e></span>		Set<span style=color:#f92672>&lt;</span>MethodMetadata<span style=color:#f92672>&gt;</span> beanMethods <span style=color:#f92672>=</span> retrieveBeanMethodMetadata<span style=color:#f92672>(</span>sourceClass<span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>MethodMetadata methodMetadata <span style=color:#f92672>:</span> beanMethods<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			configClass<span style=color:#f92672>.</span><span style=color:#a6e22e>addBeanMethod</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> BeanMethod<span style=color:#f92672>(</span>methodMetadata<span style=color:#f92672>,</span> configClass<span style=color:#f92672>));</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#75715e>// 7. 解析接口;
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Process default methods on interfaces
+</span><span style=color:#75715e></span>		processInterfaces<span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> sourceClass<span style=color:#f92672>);</span>
+
+		<span style=color:#75715e>// 8. 处理超类;
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// Process superclass, if any
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>().</span><span style=color:#a6e22e>hasSuperClass</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+			String superclass <span style=color:#f92672>=</span> sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getSuperClassName</span><span style=color:#f92672>();</span>
+			<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>superclass <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>!</span>superclass<span style=color:#f92672>.</span><span style=color:#a6e22e>startsWith</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;java&#34;</span><span style=color:#f92672>)</span> <span style=color:#f92672>&amp;&amp;</span>
+					<span style=color:#f92672>!</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>knownSuperclasses</span><span style=color:#f92672>.</span><span style=color:#a6e22e>containsKey</span><span style=color:#f92672>(</span>superclass<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>knownSuperclasses</span><span style=color:#f92672>.</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span>superclass<span style=color:#f92672>,</span> configClass<span style=color:#f92672>);</span>
+				<span style=color:#75715e>// Superclass found, return its annotation metadata and recurse
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>return</span> sourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getSuperClass</span><span style=color:#f92672>();</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#75715e>// No superclass -&gt; processing is complete
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=条件配置>条件配置</h3><p>其中处理 Import 注解时, 将 DeferredImportSelector 类型的选择器 写入了 deferredImportSelectorHandler，为后期 SpringBoot 自动化配置,提供入口</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>processImports</span><span style=color:#f92672>(</span>ConfigurationClass configClass<span style=color:#f92672>,</span> SourceClass currentSourceClass<span style=color:#f92672>,</span>
+			Collection<span style=color:#f92672>&lt;</span>SourceClass<span style=color:#f92672>&gt;</span> importCandidates<span style=color:#f92672>,</span> <span style=color:#66d9ef>boolean</span> checkForCircularImports<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>importCandidates<span style=color:#f92672>.</span><span style=color:#a6e22e>isEmpty</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>checkForCircularImports <span style=color:#f92672>&amp;&amp;</span> isChainedImportOnStack<span style=color:#f92672>(</span>configClass<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>problemReporter</span><span style=color:#f92672>.</span><span style=color:#a6e22e>error</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> CircularImportProblem<span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>importStack</span><span style=color:#f92672>));</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>importStack</span><span style=color:#f92672>.</span><span style=color:#a6e22e>push</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>);</span>
+			<span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>SourceClass candidate <span style=color:#f92672>:</span> importCandidates<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+					<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>isAssignable</span><span style=color:#f92672>(</span>ImportSelector<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+						<span style=color:#75715e>// Candidate class is an ImportSelector -&gt; delegate to it to determine imports
+</span><span style=color:#75715e></span>						Class<span style=color:#f92672>&lt;?&gt;</span> candidateClass <span style=color:#f92672>=</span> candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>loadClass</span><span style=color:#f92672>();</span>
+						ImportSelector selector <span style=color:#f92672>=</span> BeanUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>instantiateClass</span><span style=color:#f92672>(</span>candidateClass<span style=color:#f92672>,</span> ImportSelector<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+						ParserStrategyUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>invokeAwareMethods</span><span style=color:#f92672>(</span>
+								selector<span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>environment</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>resourceLoader</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>registry</span><span style=color:#f92672>);</span>
+						<span style=color:#75715e>// 如果是条件配置则走这里；
+</span><span style=color:#75715e></span>						<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>selector <span style=color:#66d9ef>instanceof</span> DeferredImportSelector<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+							<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>deferredImportSelectorHandler</span><span style=color:#f92672>.</span><span style=color:#a6e22e>handle</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> <span style=color:#f92672>(</span>DeferredImportSelector<span style=color:#f92672>)</span> selector<span style=color:#f92672>);</span>
+						<span style=color:#f92672>}</span>
+						<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+							String<span style=color:#f92672>[]</span> importClassNames <span style=color:#f92672>=</span> selector<span style=color:#f92672>.</span><span style=color:#a6e22e>selectImports</span><span style=color:#f92672>(</span>currentSourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>());</span>
+							Collection<span style=color:#f92672>&lt;</span>SourceClass<span style=color:#f92672>&gt;</span> importSourceClasses <span style=color:#f92672>=</span> asSourceClasses<span style=color:#f92672>(</span>importClassNames<span style=color:#f92672>);</span>
+							processImports<span style=color:#f92672>(</span>configClass<span style=color:#f92672>,</span> currentSourceClass<span style=color:#f92672>,</span> importSourceClasses<span style=color:#f92672>,</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>);</span>
+						<span style=color:#f92672>}</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>isAssignable</span><span style=color:#f92672>(</span>ImportBeanDefinitionRegistrar<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+						<span style=color:#75715e>// Candidate class is an ImportBeanDefinitionRegistrar -&gt;
+</span><span style=color:#75715e></span>						<span style=color:#75715e>// delegate to it to register additional bean definitions
+</span><span style=color:#75715e></span>						Class<span style=color:#f92672>&lt;?&gt;</span> candidateClass <span style=color:#f92672>=</span> candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>loadClass</span><span style=color:#f92672>();</span>
+						ImportBeanDefinitionRegistrar registrar <span style=color:#f92672>=</span>
+								BeanUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>instantiateClass</span><span style=color:#f92672>(</span>candidateClass<span style=color:#f92672>,</span> ImportBeanDefinitionRegistrar<span style=color:#f92672>.</span><span style=color:#a6e22e>class</span><span style=color:#f92672>);</span>
+						ParserStrategyUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>invokeAwareMethods</span><span style=color:#f92672>(</span>
+								registrar<span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>environment</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>resourceLoader</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>registry</span><span style=color:#f92672>);</span>
+						configClass<span style=color:#f92672>.</span><span style=color:#a6e22e>addImportBeanDefinitionRegistrar</span><span style=color:#f92672>(</span>registrar<span style=color:#f92672>,</span> currentSourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>());</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+						<span style=color:#75715e>// Candidate class not an ImportSelector or ImportBeanDefinitionRegistrar -&gt;
+</span><span style=color:#75715e></span>						<span style=color:#75715e>// process it as an @Configuration class
+</span><span style=color:#75715e></span>						<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>importStack</span><span style=color:#f92672>.</span><span style=color:#a6e22e>registerImport</span><span style=color:#f92672>(</span>
+								currentSourceClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>(),</span> candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getClassName</span><span style=color:#f92672>());</span>
+						processConfigurationClass<span style=color:#f92672>(</span>candidate<span style=color:#f92672>.</span><span style=color:#a6e22e>asConfigClass</span><span style=color:#f92672>(</span>configClass<span style=color:#f92672>));</span>
+					<span style=color:#f92672>}</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>BeanDefinitionStoreException ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>throw</span> ex<span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>Throwable ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> BeanDefinitionStoreException<span style=color:#f92672>(</span>
+						<span style=color:#e6db74>&#34;Failed to process import candidates for configuration class [&#34;</span> <span style=color:#f92672>+</span>
+						configClass<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetadata</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getClassName</span><span style=color:#f92672>()</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;]&#34;</span><span style=color:#f92672>,</span> ex<span style=color:#f92672>);</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>importStack</span><span style=color:#f92672>.</span><span style=color:#a6e22e>pop</span><span style=color:#f92672>();</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=总结>总结</h3><p>配置类的解析支持</p><ol><li>解析父类</li><li>通过注解解析相关import的资源</li><li>通过 DeferredImportSelector 接口提供导入资源</li></ol></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/%E6%B3%A8%E8%A7%A3enabletransactionmanagement%E8%87%AA%E5%8A%A8%E5%AF%BC%E5%85%A5%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E5%99%A8/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title></p></a></div><div class="pager__item pager__item--next"><a class=pager__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/spring%E6%B3%A8%E8%A7%A3%E8%A7%A3%E6%9E%90/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title></p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E9%A2%98%E7%9B%AE/>回溯题目</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E8%9E%BA%E6%97%8B%E7%9F%A9%E9%98%B5/>螺旋矩阵</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%86%E6%B2%BB%E9%A2%98%E7%9B%AE%E7%AF%87/>分治题目篇</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%89%91%E5%85%8B%E7%89%8C%E9%97%AE%E9%A2%98/>扑克牌问题</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%A0%B9%E6%8D%AE%E6%95%B0%E5%AD%97%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B8%8B1%E7%9A%84%E6%95%B0%E7%9B%AE%E6%8E%92%E5%BA%8F_1356/>根据数字二进制下1的数目排序_1356</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>

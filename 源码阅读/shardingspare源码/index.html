@@ -1,0 +1,575 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>- 月亮</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content><meta property="og:description" content="shardingsphere源码解析 使用方法 导入包
+<dependency> <groupId>org.apache.shardingsphere</groupId> <artifactId>shardingsphere-jdbc-core</artifactId> <version>${shardingsphere.version}</version> </dependency> 配置路由规则 比如两库两表
+// Configure actual data sources Map<String, DataSource> dataSourceMap = new HashMap<>(); // Configure the first data source BasicDataSource dataSource1 = new BasicDataSource(); dataSource1.setDriverClassName(&#34;com.mysql.jdbc.Driver&#34;); dataSource1.setUrl(&#34;jdbc:mysql://localhost:3306/ds0&#34;); dataSource1.setUsername(&#34;root&#34;); dataSource1.setPassword(&#34;&#34;); dataSourceMap.put(&#34;ds0&#34;, dataSource1); // Configure the second data source BasicDataSource dataSource2 = new BasicDataSource(); dataSource2.setDriverClassName(&#34;com.mysql.jdbc.Driver&#34;); dataSource2.setUrl(&#34;jdbc:mysql://localhost:3306/ds1&#34;); dataSource2.setUsername(&#34;root&#34;); dataSource2.setPassword(&#34;&#34;); dataSourceMap.put(&#34;ds1&#34;, dataSource2); // Configure order table rule ShardingTableRuleConfiguration orderTableRuleConfig = new ShardingTableRuleConfiguration(&#34;t_order&#34;, &#34;ds${0..1}.t_order${0..1}&#34;); // Configure database sharding strategy orderTableRuleConfig."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/shardingspare%E6%BA%90%E7%A0%81/"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮</div><div class=logo__tagline>每天进步一点点</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/axon/><i class="fa fa-road"></i><span class=menu__text>Axon</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/><i class="fa fa-road"></i><span class=menu__text>源码阅读</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title></h1></header><div class="content post__content clearfix"><h1 id=shardingsphere源码解析>shardingsphere源码解析</h1><h1 id=使用方法>使用方法</h1><p>导入包</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#f92672>&lt;</span>dependency<span style=color:#f92672>&gt;</span>
+    <span style=color:#f92672>&lt;</span>groupId<span style=color:#f92672>&gt;</span>org<span style=color:#f92672>.</span><span style=color:#a6e22e>apache</span><span style=color:#f92672>.</span><span style=color:#a6e22e>shardingsphere</span><span style=color:#f92672>&lt;/</span>groupId<span style=color:#f92672>&gt;</span>
+    <span style=color:#f92672>&lt;</span>artifactId<span style=color:#f92672>&gt;</span>shardingsphere<span style=color:#f92672>-</span>jdbc<span style=color:#f92672>-</span>core<span style=color:#f92672>&lt;/</span>artifactId<span style=color:#f92672>&gt;</span>
+    <span style=color:#f92672>&lt;</span>version<span style=color:#f92672>&gt;</span>$<span style=color:#f92672>{</span>shardingsphere<span style=color:#f92672>.</span><span style=color:#a6e22e>version</span><span style=color:#f92672>}&lt;/</span>version<span style=color:#f92672>&gt;</span>
+<span style=color:#f92672>&lt;/</span>dependency<span style=color:#f92672>&gt;</span>
+</code></pre></div><p>配置路由规则 比如两库两表</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+<span style=color:#75715e>// Configure actual data sources
+</span><span style=color:#75715e></span>Map<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>,</span> DataSource<span style=color:#f92672>&gt;</span> dataSourceMap <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;&gt;();</span>
+
+<span style=color:#75715e>// Configure the first data source
+</span><span style=color:#75715e></span>BasicDataSource dataSource1 <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BasicDataSource<span style=color:#f92672>();</span>
+dataSource1<span style=color:#f92672>.</span><span style=color:#a6e22e>setDriverClassName</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;com.mysql.jdbc.Driver&#34;</span><span style=color:#f92672>);</span>
+dataSource1<span style=color:#f92672>.</span><span style=color:#a6e22e>setUrl</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;jdbc:mysql://localhost:3306/ds0&#34;</span><span style=color:#f92672>);</span>
+dataSource1<span style=color:#f92672>.</span><span style=color:#a6e22e>setUsername</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;root&#34;</span><span style=color:#f92672>);</span>
+dataSource1<span style=color:#f92672>.</span><span style=color:#a6e22e>setPassword</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;&#34;</span><span style=color:#f92672>);</span>
+dataSourceMap<span style=color:#f92672>.</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;ds0&#34;</span><span style=color:#f92672>,</span> dataSource1<span style=color:#f92672>);</span>
+
+<span style=color:#75715e>// Configure the second data source
+</span><span style=color:#75715e></span>BasicDataSource dataSource2 <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BasicDataSource<span style=color:#f92672>();</span>
+dataSource2<span style=color:#f92672>.</span><span style=color:#a6e22e>setDriverClassName</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;com.mysql.jdbc.Driver&#34;</span><span style=color:#f92672>);</span>
+dataSource2<span style=color:#f92672>.</span><span style=color:#a6e22e>setUrl</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;jdbc:mysql://localhost:3306/ds1&#34;</span><span style=color:#f92672>);</span>
+dataSource2<span style=color:#f92672>.</span><span style=color:#a6e22e>setUsername</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;root&#34;</span><span style=color:#f92672>);</span>
+dataSource2<span style=color:#f92672>.</span><span style=color:#a6e22e>setPassword</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;&#34;</span><span style=color:#f92672>);</span>
+dataSourceMap<span style=color:#f92672>.</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;ds1&#34;</span><span style=color:#f92672>,</span> dataSource2<span style=color:#f92672>);</span>
+
+<span style=color:#75715e>// Configure order table rule
+</span><span style=color:#75715e></span>ShardingTableRuleConfiguration orderTableRuleConfig <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ShardingTableRuleConfiguration<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;t_order&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;ds${0..1}.t_order${0..1}&#34;</span><span style=color:#f92672>);</span>
+
+<span style=color:#75715e>// Configure database sharding strategy
+</span><span style=color:#75715e></span>orderTableRuleConfig<span style=color:#f92672>.</span><span style=color:#a6e22e>setDatabaseShardingStrategy</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> StandardShardingStrategyConfiguration<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;user_id&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;dbShardingAlgorithm&#34;</span><span style=color:#f92672>));</span>
+
+<span style=color:#75715e>// Configure table sharding strategy
+</span><span style=color:#75715e></span>orderTableRuleConfig<span style=color:#f92672>.</span><span style=color:#a6e22e>setTableShardingStrategy</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> StandardShardingStrategyConfiguration<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;order_id&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;tableShardingAlgorithm&#34;</span><span style=color:#f92672>));</span>
+
+<span style=color:#75715e>// Omit t_order_item table rule configuration ...
+</span><span style=color:#75715e>// ...
+</span><span style=color:#75715e></span>    
+<span style=color:#75715e>// Configure sharding rule
+</span><span style=color:#75715e></span>ShardingRuleConfiguration shardingRuleConfig <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ShardingRuleConfiguration<span style=color:#f92672>();</span>
+shardingRuleConfig<span style=color:#f92672>.</span><span style=color:#a6e22e>getTables</span><span style=color:#f92672>().</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>orderTableRuleConfig<span style=color:#f92672>);</span>
+
+<span style=color:#75715e>// Configure database sharding algorithm
+</span><span style=color:#75715e></span>Properties dbShardingAlgorithmrProps <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Properties<span style=color:#f92672>();</span>
+dbShardingAlgorithmrProps<span style=color:#f92672>.</span><span style=color:#a6e22e>setProperty</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;algorithm-expression&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;ds${user_id % 2}&#34;</span><span style=color:#f92672>);</span>
+shardingRuleConfig<span style=color:#f92672>.</span><span style=color:#a6e22e>getShardingAlgorithms</span><span style=color:#f92672>().</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;dbShardingAlgorithm&#34;</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>new</span> ShardingSphereAlgorithmConfiguration<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;INLINE&#34;</span><span style=color:#f92672>,</span> dbShardingAlgorithmrProps<span style=color:#f92672>));</span>
+
+<span style=color:#75715e>// Configure table sharding algorithm
+</span><span style=color:#75715e></span>Properties tableShardingAlgorithmrProps <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Properties<span style=color:#f92672>();</span>
+tableShardingAlgorithmrProps<span style=color:#f92672>.</span><span style=color:#a6e22e>setProperty</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;algorithm-expression&#34;</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;t_order${order_id % 2}&#34;</span><span style=color:#f92672>);</span>
+shardingRuleConfig<span style=color:#f92672>.</span><span style=color:#a6e22e>getShardingAlgorithms</span><span style=color:#f92672>().</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;tableShardingAlgorithm&#34;</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>new</span> ShardingSphereAlgorithmConfiguration<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;INLINE&#34;</span><span style=color:#f92672>,</span> tableShardingAlgorithmrProps<span style=color:#f92672>));</span>
+
+<span style=color:#75715e>// Create ShardingSphereDataSource
+</span><span style=color:#75715e></span>DataSource dataSource <span style=color:#f92672>=</span> ShardingSphereDataSourceFactory<span style=color:#f92672>.</span><span style=color:#a6e22e>createDataSource</span><span style=color:#f92672>(</span>dataSourceMap<span style=color:#f92672>,</span> Collections<span style=color:#f92672>.</span><span style=color:#a6e22e>singleton</span><span style=color:#f92672>(</span>shardingRuleConfig<span style=color:#f92672>),</span> <span style=color:#66d9ef>new</span> Properties<span style=color:#f92672>());</span>
+</code></pre></div><p>使用 ShardingSphereDataSource</p><p>ShardingSphereDataSourceFactory 负责 创建 ShardingSphereDataSource , 后者实现了标准的JDBC DataSource 接口.
+可以做到不影响 本地 JDBC和ORM框架的使用 比如JPA或者是Mybatis</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>DataSource dataSource <span style=color:#f92672>=</span> ShardingSphereDataSourceFactory<span style=color:#f92672>.</span><span style=color:#a6e22e>createDataSource</span><span style=color:#f92672>(</span>dataSourceMap<span style=color:#f92672>,</span> Collections<span style=color:#f92672>.</span><span style=color:#a6e22e>singleton</span><span style=color:#f92672>(</span>shardingRuleConfig<span style=color:#f92672>),</span> <span style=color:#66d9ef>new</span> Properties<span style=color:#f92672>());</span>
+String sql <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;SELECT i.* FROM t_order o JOIN t_order_item i ON o.order_id=i.order_id WHERE o.user_id=? AND o.order_id=?&#34;</span><span style=color:#f92672>;</span>
+<span style=color:#66d9ef>try</span> <span style=color:#f92672>(</span>
+        Connection conn <span style=color:#f92672>=</span> dataSource<span style=color:#f92672>.</span><span style=color:#a6e22e>getConnection</span><span style=color:#f92672>();</span>
+        PreparedStatement ps <span style=color:#f92672>=</span> conn<span style=color:#f92672>.</span><span style=color:#a6e22e>prepareStatement</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+    ps<span style=color:#f92672>.</span><span style=color:#a6e22e>setInt</span><span style=color:#f92672>(</span>1<span style=color:#f92672>,</span> 10<span style=color:#f92672>);</span>
+    ps<span style=color:#f92672>.</span><span style=color:#a6e22e>setInt</span><span style=color:#f92672>(</span>2<span style=color:#f92672>,</span> 1000<span style=color:#f92672>);</span>
+    <span style=color:#66d9ef>try</span> <span style=color:#f92672>(</span>ResultSet rs <span style=color:#f92672>=</span> ps<span style=color:#f92672>.</span><span style=color:#a6e22e>executeQuery</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>while</span><span style=color:#f92672>(</span>rs<span style=color:#f92672>.</span><span style=color:#a6e22e>next</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// ...
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><h1 id=源码解析>源码解析</h1><p>核心模块如下
+<img src=https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086501659080.jpg alt></p><h2 id=支持分片路由的数据源shardingdatasource>支持分片路由的数据源ShardingDataSource</h2><p><img src=https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086501734429.jpg alt></p><p>DataSource 很简单只有 getConnection 相关的两个方法</p><p>所以核心路由算法根据下面的实现可知主要在 ShardingConnection</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>  <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> ShardingConnection <span style=color:#a6e22e>getConnection</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> ShardingConnection<span style=color:#f92672>(</span>getDataSourceMap<span style=color:#f92672>(),</span> shardingContext<span style=color:#f92672>,</span> getShardingTransactionManagerEngine<span style=color:#f92672>(),</span> TransactionTypeHolder<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>());</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>而连接后创建支持路由的Statement</p><p><img src=https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086501858229.jpg alt></p><p>比如 ShardingPreparedStatement 就是支持路由的 PreparedStatement</p><p>对于该 statement 的所有set 方法都会在 AbstractShardingPreparedStatementAdapter 进行缓存</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    
+    <span style=color:#75715e>// 缓存参数设置;
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setParameter</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> parameterIndex<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> Object value<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>parameters<span style=color:#f92672>.</span><span style=color:#a6e22e>size</span><span style=color:#f92672>()</span> <span style=color:#f92672>==</span> parameterIndex <span style=color:#f92672>-</span> 1<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            parameters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>value<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> parameters<span style=color:#f92672>.</span><span style=color:#a6e22e>size</span><span style=color:#f92672>();</span> i <span style=color:#f92672>&lt;=</span> parameterIndex <span style=color:#f92672>-</span> 1<span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+            parameters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        parameters<span style=color:#f92672>.</span><span style=color:#a6e22e>set</span><span style=color:#f92672>(</span>parameterIndex <span style=color:#f92672>-</span> 1<span style=color:#f92672>,</span> value<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#75715e>// 重放参数设置;
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>replaySetParameter</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> PreparedStatement preparedStatement<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        setParameterMethodInvocations<span style=color:#f92672>.</span><span style=color:#a6e22e>clear</span><span style=color:#f92672>();</span>
+        addParameters<span style=color:#f92672>(</span>parameters<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>SetParameterMethodInvocation each <span style=color:#f92672>:</span> setParameterMethodInvocations<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            each<span style=color:#f92672>.</span><span style=color:#a6e22e>invoke</span><span style=color:#f92672>(</span>preparedStatement<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+   
+</code></pre></div><p>在执行阶段在进行路由、设置变量、结果合并</p><p>ShardingPreparedStatement#executeQuery</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>// 返回ResultSet的查询操作 
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> ResultSet <span style=color:#a6e22e>executeQuery</span><span style=color:#f92672>()</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+        ResultSet result<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+            clearPrevious<span style=color:#f92672>();</span>
+            <span style=color:#75715e>//1. 分片路由
+</span><span style=color:#75715e></span>            shard<span style=color:#f92672>();</span>
+            <span style=color:#75715e>//2. 初始化线程池 重放statement
+</span><span style=color:#75715e></span>            initPreparedStatementExecutor<span style=color:#f92672>();</span>
+            <span style=color:#75715e>//3. 合并结果;
+</span><span style=color:#75715e></span>            MergeEngine mergeEngine <span style=color:#f92672>=</span> MergeEngineFactory<span style=color:#f92672>.</span><span style=color:#a6e22e>newInstance</span><span style=color:#f92672>(</span>connection<span style=color:#f92672>.</span><span style=color:#a6e22e>getShardingContext</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getDatabaseType</span><span style=color:#f92672>(),</span> 
+                    connection<span style=color:#f92672>.</span><span style=color:#a6e22e>getShardingContext</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getShardingRule</span><span style=color:#f92672>(),</span> routeResult<span style=color:#f92672>,</span> connection<span style=color:#f92672>.</span><span style=color:#a6e22e>getShardingContext</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getMetaData</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getTable</span><span style=color:#f92672>(),</span> preparedStatementExecutor<span style=color:#f92672>.</span><span style=color:#a6e22e>executeQuery</span><span style=color:#f92672>());</span>
+            <span style=color:#75715e>//4.合并结果集
+</span><span style=color:#75715e></span>            result <span style=color:#f92672>=</span> getResultSet<span style=color:#f92672>(</span>mergeEngine<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span> <span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
+            clearBatch<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+        currentResultSet <span style=color:#f92672>=</span> result<span style=color:#f92672>;</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#75715e>// 任何 DML: INSERT, UPDATE or DELET 或者 没有返回的 DDL
+</span><span style=color:#75715e></span>     <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>executeUpdate</span><span style=color:#f92672>()</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+            clearPrevious<span style=color:#f92672>();</span>
+            shard<span style=color:#f92672>();</span>
+            initPreparedStatementExecutor<span style=color:#f92672>();</span>
+            <span style=color:#66d9ef>return</span> preparedStatementExecutor<span style=color:#f92672>.</span><span style=color:#a6e22e>executeUpdate</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span> <span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
+            clearBatch<span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span> 
+</code></pre></div><h3 id=分片路由>分片路由</h3><p>ShardingPreparedStatement#shard</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>   <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>shard</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        routeResult <span style=color:#f92672>=</span> shardingEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>shard</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> getParameters<span style=color:#f92672>());</span>
+    <span style=color:#f92672>}</span>   
+</code></pre></div><p>路由算法实现</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#a6e22e>@RequiredArgsConstructor</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BaseShardingEngine</span> <span style=color:#f92672>{</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> ShardingRule shardingRule<span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> ShardingProperties shardingProperties<span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> ShardingMetaData metaData<span style=color:#f92672>;</span>
+
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> SPIRoutingHook routingHook <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SPIRoutingHook<span style=color:#f92672>();</span>
+
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Shard.
+</span><span style=color:#75715e>     *
+</span><span style=color:#75715e>     * @param sql SQL
+</span><span style=color:#75715e>     * @param parameters parameters of SQL
+</span><span style=color:#75715e>     * @return SQL route result
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> SQLRouteResult <span style=color:#a6e22e>shard</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 拷贝参数
+</span><span style=color:#75715e></span>        List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> clonedParameters <span style=color:#f92672>=</span> cloneParameters<span style=color:#f92672>(</span>parameters<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 2. 执行路由
+</span><span style=color:#75715e></span>        SQLRouteResult result <span style=color:#f92672>=</span> executeRoute<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> clonedParameters<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 3. 根据路由
+</span><span style=color:#75715e></span>        result<span style=color:#f92672>.</span><span style=color:#a6e22e>getRouteUnits</span><span style=color:#f92672>().</span><span style=color:#a6e22e>addAll</span><span style=color:#f92672>(</span>HintManager<span style=color:#f92672>.</span><span style=color:#a6e22e>isDatabaseShardingOnly</span><span style=color:#f92672>()</span> <span style=color:#f92672>?</span>
+            convert<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> clonedParameters<span style=color:#f92672>,</span> result<span style=color:#f92672>)</span> <span style=color:#f92672>:</span>  <span style=color:#75715e>// 只根据数据库路由, 给每个数据源关联sql和参数
+</span><span style=color:#75715e></span>            rewriteAndConvert<span style=color:#f92672>(</span>clonedParameters<span style=color:#f92672>,</span> result<span style=color:#f92672>)</span>  <span style=color:#75715e>// 其他路由.
+</span><span style=color:#75715e></span>        <span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 4. 如果配置了打印sql, 则打印之;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>shardingProperties<span style=color:#f92672>.</span><span style=color:#a6e22e>getValue</span><span style=color:#f92672>(</span>ShardingPropertiesConstant<span style=color:#f92672>.</span><span style=color:#a6e22e>SQL_SHOW</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>boolean</span> showSimple <span style=color:#f92672>=</span> shardingProperties<span style=color:#f92672>.</span><span style=color:#a6e22e>getValue</span><span style=color:#f92672>(</span>ShardingPropertiesConstant<span style=color:#f92672>.</span><span style=color:#a6e22e>SQL_SIMPLE</span><span style=color:#f92672>);</span>
+            SQLLogger<span style=color:#f92672>.</span><span style=color:#a6e22e>logSQL</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> showSimple<span style=color:#f92672>,</span> result<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatement</span><span style=color:#f92672>(),</span> result<span style=color:#f92672>.</span><span style=color:#a6e22e>getRouteUnits</span><span style=color:#f92672>());</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>abstract</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>cloneParameters</span><span style=color:#f92672>(</span>List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>);</span>
+
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     *  对于{@link PreparedQueryShardingEngine} 路由到 {@link org.apache.shardingsphere.core.route.PreparedStatementRoutingEngine}
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>abstract</span> SQLRouteResult <span style=color:#a6e22e>route</span><span style=color:#f92672>(</span>String sql<span style=color:#f92672>,</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>);</span>
+    
+    <span style=color:#75715e>// 上面第2步 将会执行该函数
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>private</span> SQLRouteResult <span style=color:#a6e22e>executeRoute</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> clonedParameters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 开始路由钩子
+</span><span style=color:#75715e></span>        routingHook<span style=color:#f92672>.</span><span style=color:#a6e22e>start</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 2. 执行路由
+</span><span style=color:#75715e></span>            SQLRouteResult result <span style=color:#f92672>=</span> route<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> clonedParameters<span style=color:#f92672>);</span>
+            <span style=color:#75715e>// 3. 路由成功钩子
+</span><span style=color:#75715e></span>            routingHook<span style=color:#f92672>.</span><span style=color:#a6e22e>finishSuccess</span><span style=color:#f92672>(</span>result<span style=color:#f92672>,</span> metaData<span style=color:#f92672>.</span><span style=color:#a6e22e>getTable</span><span style=color:#f92672>());</span>
+            <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// CHECKSTYLE:OFF
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span> <span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> Exception ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 路由失败钩子;
+</span><span style=color:#75715e></span>            <span style=color:#75715e>// CHECKSTYLE:ON
+</span><span style=color:#75715e></span>            routingHook<span style=color:#f92672>.</span><span style=color:#a6e22e>finishFailure</span><span style=color:#f92672>(</span>ex<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>throw</span> ex<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * 只根据数据库路由, 给每个数据源关联sql和参数
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>private</span> Collection<span style=color:#f92672>&lt;</span>RouteUnit<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>convert</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> SQLRouteResult sqlRouteResult<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Collection<span style=color:#f92672>&lt;</span>RouteUnit<span style=color:#f92672>&gt;</span> result <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LinkedHashSet<span style=color:#f92672>&lt;&gt;();</span>
+        <span style=color:#75715e>// 对于每个数据源, 在关联本次的sql和参数
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>RoutingUnit each <span style=color:#f92672>:</span> sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getRoutingResult</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getRoutingUnits</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            result<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> RouteUnit<span style=color:#f92672>(</span>each<span style=color:#f92672>.</span><span style=color:#a6e22e>getDataSourceName</span><span style=color:#f92672>(),</span> <span style=color:#66d9ef>new</span> SQLUnit<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> parameters<span style=color:#f92672>)));</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+    <span style=color:#75715e>// 重写数据库和表
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>private</span> Collection<span style=color:#f92672>&lt;</span>RouteUnit<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>rewriteAndConvert</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> SQLRouteResult sqlRouteResult<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 重写引擎
+</span><span style=color:#75715e></span>        SQLRewriteEngine rewriteEngine <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SQLRewriteEngine<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>,</span> sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatement</span><span style=color:#f92672>(),</span> parameters<span style=color:#f92672>,</span> sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getRoutingResult</span><span style=color:#f92672>().</span><span style=color:#a6e22e>isSingleRouting</span><span style=color:#f92672>());</span>
+        <span style=color:#75715e>// 2. 路由参数重写器
+</span><span style=color:#75715e></span>        ShardingParameterRewriter shardingParameterRewriter <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ShardingParameterRewriter<span style=color:#f92672>(</span>sqlRouteResult<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 3. 重写器;
+</span><span style=color:#75715e></span>        Collection<span style=color:#f92672>&lt;</span>SQLRewriter<span style=color:#f92672>&gt;</span> sqlRewriters <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LinkedList<span style=color:#f92672>&lt;&gt;();</span>
+        <span style=color:#75715e>// 3.1 路由重写器
+</span><span style=color:#75715e></span>        sqlRewriters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> ShardingSQLRewriter<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>,</span> sqlRouteResult<span style=color:#f92672>,</span> sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getOptimizeResult</span><span style=color:#f92672>()));</span>
+        <span style=color:#75715e>// 3.2 加密重写器
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatement</span><span style=color:#f92672>()</span> <span style=color:#66d9ef>instanceof</span> DMLStatement<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            sqlRewriters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> EncryptSQLRewriter<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>getEncryptRule</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getEncryptorEngine</span><span style=color:#f92672>(),</span> <span style=color:#f92672>(</span>DMLStatement<span style=color:#f92672>)</span> sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatement</span><span style=color:#f92672>(),</span> sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getOptimizeResult</span><span style=color:#f92672>()));</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 4. 初始化重写引擎
+</span><span style=color:#75715e></span>        rewriteEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>init</span><span style=color:#f92672>(</span>Collections<span style=color:#f92672>.&lt;</span>ParameterRewriter<span style=color:#f92672>&gt;</span>singletonList<span style=color:#f92672>(</span>shardingParameterRewriter<span style=color:#f92672>),</span> sqlRewriters<span style=color:#f92672>);</span>
+        Collection<span style=color:#f92672>&lt;</span>RouteUnit<span style=color:#f92672>&gt;</span> result <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LinkedHashSet<span style=color:#f92672>&lt;&gt;();</span>
+        <span style=color:#75715e>// 5. 对于之前每个路由结果, 关联数据源和重写后的sql
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>RoutingUnit each <span style=color:#f92672>:</span> sqlRouteResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getRoutingResult</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getRoutingUnits</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            result<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> RouteUnit<span style=color:#f92672>(</span>each<span style=color:#f92672>.</span><span style=color:#a6e22e>getDataSourceName</span><span style=color:#f92672>(),</span> rewriteEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>generateSQL</span><span style=color:#f92672>(</span>each<span style=color:#f92672>)));</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+
+</code></pre></div><p>如上</p><ol><li>执行路由算得到路由结果 RouteResult</li><li>使用重写引擎重写sql</li></ol><h4 id=执行路由算法>执行路由算法</h4><p>对于 PreparedQueryShardingEngine 路由算法 实现为PreparedStatementRoutingEngine</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>PreparedQueryShardingEngine</span> <span style=color:#66d9ef>extends</span> BaseShardingEngine <span style=color:#f92672>{</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> PreparedStatementRoutingEngine routingEngine<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>PreparedQueryShardingEngine</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ShardingRule shardingRule<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ShardingProperties shardingProperties<span style=color:#f92672>,</span>
+                                       <span style=color:#66d9ef>final</span> ShardingMetaData metaData<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> DatabaseType databaseType<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ParsingResultCache cache<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>super</span><span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>,</span> shardingProperties<span style=color:#f92672>,</span> metaData<span style=color:#f92672>);</span>
+        routingEngine <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> PreparedStatementRoutingEngine<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> shardingRule<span style=color:#f92672>,</span> metaData<span style=color:#f92672>,</span> databaseType<span style=color:#f92672>,</span> cache<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>protected</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>cloneParameters</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> ArrayList<span style=color:#f92672>&lt;&gt;(</span>parameters<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    
+    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>protected</span> SQLRouteResult <span style=color:#a6e22e>route</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 路由引擎执行;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>return</span> routingEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>route</span><span style=color:#f92672>(</span>parameters<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+
+</code></pre></div><p><img src=https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086502194429.jpg alt></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>PreparedStatementRoutingEngine</span> <span style=color:#f92672>{</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> String logicSQL<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> ShardingRouter shardingRouter<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> ShardingMasterSlaveRouter masterSlaveRouter<span style=color:#f92672>;</span>
+    <span style=color:#66d9ef>private</span> SQLStatement sqlStatement<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>PreparedStatementRoutingEngine</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String logicSQL<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ShardingRule shardingRule<span style=color:#f92672>,</span>
+                                          <span style=color:#66d9ef>final</span> ShardingMetaData shardingMetaData<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> DatabaseType databaseType<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ParsingResultCache parsingResultCache<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>logicSQL</span> <span style=color:#f92672>=</span> logicSQL<span style=color:#f92672>;</span>
+        <span style=color:#75715e>// 1. 仅数据库路由 ? DatabaseHintSQLRouter : ParsingSQLRouter;
+</span><span style=color:#75715e></span>        shardingRouter <span style=color:#f92672>=</span> ShardingRouterFactory<span style=color:#f92672>.</span><span style=color:#a6e22e>newInstance</span><span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>,</span> shardingMetaData<span style=color:#f92672>,</span> databaseType<span style=color:#f92672>,</span> parsingResultCache<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 2. 主从路由
+</span><span style=color:#75715e></span>        masterSlaveRouter <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ShardingMasterSlaveRouter<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>getMasterSlaveRules</span><span style=color:#f92672>());</span>
+    <span style=color:#f92672>}</span>
+    
+    <span style=color:#66d9ef>public</span> SQLRouteResult <span style=color:#a6e22e>route</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 解析sql;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>null</span> <span style=color:#f92672>==</span> sqlStatement<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            sqlStatement <span style=color:#f92672>=</span> shardingRouter<span style=color:#f92672>.</span><span style=color:#a6e22e>parse</span><span style=color:#f92672>(</span>logicSQL<span style=color:#f92672>,</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 2. 路由
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>return</span> masterSlaveRouter<span style=color:#f92672>.</span><span style=color:#a6e22e>route</span><span style=color:#f92672>(</span>shardingRouter<span style=color:#f92672>.</span><span style=color:#a6e22e>route</span><span style=color:#f92672>(</span>sqlStatement<span style=color:#f92672>,</span> parameters<span style=color:#f92672>));</span>
+    <span style=color:#f92672>}</span>
+ <span style=color:#f92672>}</span>   
+</code></pre></div><p>PreparedStatementRoutingEngine 将会</p><ol><li>通过 ShardingRouter 解析 statement</li><li>再通过 ShardingMasterSlaveRouter 路由</li></ol><h5 id=preparedstatementroutingengine-解析出-statement>PreparedStatementRoutingEngine 解析出 statement</h5><p>首先会调用 ParsingSQLRouter#parse</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> SQLStatement <span style=color:#a6e22e>parse</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String logicSQL<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> useCache<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        parsingHook<span style=color:#f92672>.</span><span style=color:#a6e22e>start</span><span style=color:#f92672>(</span>logicSQL<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 分片路由解析器
+</span><span style=color:#75715e></span>            SQLStatement result <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ShardingSQLParseEntry<span style=color:#f92672>(</span>databaseType<span style=color:#f92672>,</span> shardingRule<span style=color:#f92672>,</span> shardingMetaData<span style=color:#f92672>.</span><span style=color:#a6e22e>getTable</span><span style=color:#f92672>(),</span> parsingResultCache<span style=color:#f92672>).</span><span style=color:#a6e22e>parse</span><span style=color:#f92672>(</span>logicSQL<span style=color:#f92672>,</span> useCache<span style=color:#f92672>);</span>
+            parsingHook<span style=color:#f92672>.</span><span style=color:#a6e22e>finishSuccess</span><span style=color:#f92672>(</span>result<span style=color:#f92672>,</span> shardingMetaData<span style=color:#f92672>.</span><span style=color:#a6e22e>getTable</span><span style=color:#f92672>());</span>
+            <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+            <span style=color:#75715e>// CHECKSTYLE:OFF
+</span><span style=color:#75715e></span>        <span style=color:#f92672>}</span> <span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> Exception ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// CHECKSTYLE:ON
+</span><span style=color:#75715e></span>            parsingHook<span style=color:#f92672>.</span><span style=color:#a6e22e>finishFailure</span><span style=color:#f92672>(</span>ex<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>throw</span> ex<span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>ShardingSQLParseEntry 的基类实现 SQLParseEntry#parse , 支持缓存</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> SQLStatement <span style=color:#a6e22e>parse</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>boolean</span> useCache<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Optional<span style=color:#f92672>&lt;</span>SQLStatement<span style=color:#f92672>&gt;</span> cachedSQLStatement <span style=color:#f92672>=</span> getSQLStatementFromCache<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> useCache<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>cachedSQLStatement<span style=color:#f92672>.</span><span style=color:#a6e22e>isPresent</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> cachedSQLStatement<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// sql 解析引擎去解析
+</span><span style=color:#75715e></span>        SQLStatement result <span style=color:#f92672>=</span> getSQLParseEngine<span style=color:#f92672>(</span>sql<span style=color:#f92672>).</span><span style=color:#a6e22e>parse</span><span style=color:#f92672>();</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>useCache<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            parsingResultCache<span style=color:#f92672>.</span><span style=color:#a6e22e>put</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> result<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>实际的解析引擎</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>protected</span> SQLParseEngine <span style=color:#a6e22e>getSQLParseEngine</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> SQLParseEngine<span style=color:#f92672>(</span>ShardingParseRuleRegistry<span style=color:#f92672>.</span><span style=color:#a6e22e>getInstance</span><span style=color:#f92672>(),</span> databaseType<span style=color:#f92672>,</span> sql<span style=color:#f92672>,</span> shardingRule<span style=color:#f92672>,</span> shardingTableMetaData<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>解析引擎实现</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>SQLParseEngine</span> <span style=color:#f92672>{</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> SQLParserEngine parserEngine<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> SQLSegmentsExtractorEngine extractorEngine<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> SQLStatementFillerEngine fillerEngine<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> SQLStatementOptimizerEngine optimizerEngine<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>SQLParseEngine</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> ParseRuleRegistry parseRuleRegistry<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> DatabaseType databaseType<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> BaseRule rule<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ShardingTableMetaData shardingTableMetaData<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        DatabaseType trunkDatabaseType <span style=color:#f92672>=</span> DatabaseTypes<span style=color:#f92672>.</span><span style=color:#a6e22e>getTrunkDatabaseType</span><span style=color:#f92672>(</span>databaseType<span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>());</span>
+        parserEngine <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SQLParserEngine<span style=color:#f92672>(</span>parseRuleRegistry<span style=color:#f92672>,</span> trunkDatabaseType<span style=color:#f92672>,</span> sql<span style=color:#f92672>);</span>
+        extractorEngine <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SQLSegmentsExtractorEngine<span style=color:#f92672>();</span>
+        fillerEngine <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SQLStatementFillerEngine<span style=color:#f92672>(</span>parseRuleRegistry<span style=color:#f92672>,</span> trunkDatabaseType<span style=color:#f92672>,</span> sql<span style=color:#f92672>,</span> rule<span style=color:#f92672>,</span> shardingTableMetaData<span style=color:#f92672>);</span>
+        optimizerEngine <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SQLStatementOptimizerEngine<span style=color:#f92672>(</span>rule<span style=color:#f92672>,</span> shardingTableMetaData<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Parse SQL.
+</span><span style=color:#75715e>     *
+</span><span style=color:#75715e>     * @return SQL statement
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> SQLStatement <span style=color:#a6e22e>parse</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 对sql解析得到语法树
+</span><span style=color:#75715e></span>        SQLAST ast <span style=color:#f92672>=</span> parserEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>parse</span><span style=color:#f92672>();</span>
+        <span style=color:#75715e>// 2. 参数索引;
+</span><span style=color:#75715e></span>        Map<span style=color:#f92672>&lt;</span>ParserRuleContext<span style=color:#f92672>,</span> Integer<span style=color:#f92672>&gt;</span> parameterMarkerIndexes <span style=color:#f92672>=</span> ast<span style=color:#f92672>.</span><span style=color:#a6e22e>getParameterMarkerIndexes</span><span style=color:#f92672>();</span> <span style=color:#75715e>//
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// 3. 解析出每个片段;
+</span><span style=color:#75715e></span>        Collection<span style=color:#f92672>&lt;</span>SQLSegment<span style=color:#f92672>&gt;</span> sqlSegments <span style=color:#f92672>=</span> extractorEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>extract</span><span style=color:#f92672>(</span>ast<span style=color:#f92672>,</span> parameterMarkerIndexes<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 4. 每个片段进行填充后得到该 SQLStatement
+</span><span style=color:#75715e></span>        SQLStatement result <span style=color:#f92672>=</span> fillerEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>fill</span><span style=color:#f92672>(</span>sqlSegments<span style=color:#f92672>,</span> parameterMarkerIndexes<span style=color:#f92672>.</span><span style=color:#a6e22e>size</span><span style=color:#f92672>(),</span> ast<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatementRule</span><span style=color:#f92672>());</span>
+        <span style=color:#75715e>// 5. 优化该 statement
+</span><span style=color:#75715e></span>        optimizerEngine<span style=color:#f92672>.</span><span style=color:#a6e22e>optimize</span><span style=color:#f92672>(</span>ast<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatementRule</span><span style=color:#f92672>(),</span> result<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+
+</code></pre></div><p>第三步填充算法如下:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>SQLStatementFillerEngine</span> <span style=color:#f92672>{</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> ParseRuleRegistry parseRuleRegistry<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> DatabaseType databaseType<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> BaseRule rule<span style=color:#f92672>;</span>
+    
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> ShardingTableMetaData shardingTableMetaData<span style=color:#f92672>;</span>
+    
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Fill SQL statement.
+</span><span style=color:#75715e>     *
+</span><span style=color:#75715e>     * @param sqlSegments SQL segments
+</span><span style=color:#75715e>     * @param parameterMarkerCount parameter marker count
+</span><span style=color:#75715e>     * @param rule SQL statement rule
+</span><span style=color:#75715e>     * @return SQL statement
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#a6e22e>@SneakyThrows</span>
+    <span style=color:#66d9ef>public</span> SQLStatement <span style=color:#a6e22e>fill</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> Collection<span style=color:#f92672>&lt;</span>SQLSegment<span style=color:#f92672>&gt;</span> sqlSegments<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> parameterMarkerCount<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> SQLStatementRule rule<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 根据规则拿到最终聚合的 SQLStatement
+</span><span style=color:#75715e></span>        SQLStatement result <span style=color:#f92672>=</span> rule<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatementClass</span><span style=color:#f92672>().</span><span style=color:#a6e22e>newInstance</span><span style=color:#f92672>();</span>
+        result<span style=color:#f92672>.</span><span style=color:#a6e22e>setLogicSQL</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>);</span>
+        result<span style=color:#f92672>.</span><span style=color:#a6e22e>setParametersCount</span><span style=color:#f92672>(</span>parameterMarkerCount<span style=color:#f92672>);</span>
+        result<span style=color:#f92672>.</span><span style=color:#a6e22e>getSQLSegments</span><span style=color:#f92672>().</span><span style=color:#a6e22e>addAll</span><span style=color:#f92672>(</span>sqlSegments<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 2. 迭代填充每一个 segment, 去填充到 statement(result)
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>SQLSegment each <span style=color:#f92672>:</span> sqlSegments<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 2.1 每个片段找填充器;
+</span><span style=color:#75715e></span>            Optional<span style=color:#f92672>&lt;</span>SQLSegmentFiller<span style=color:#f92672>&gt;</span> filler <span style=color:#f92672>=</span> parseRuleRegistry<span style=color:#f92672>.</span><span style=color:#a6e22e>findSQLSegmentFiller</span><span style=color:#f92672>(</span>databaseType<span style=color:#f92672>,</span> each<span style=color:#f92672>.</span><span style=color:#a6e22e>getClass</span><span style=color:#f92672>());</span>
+            <span style=color:#75715e>// 2.2 填充该statement;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>filler<span style=color:#f92672>.</span><span style=color:#a6e22e>isPresent</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+                <span style=color:#75715e>// 2.2.1
+</span><span style=color:#75715e></span>                doFill<span style=color:#f92672>(</span>each<span style=color:#f92672>,</span> result<span style=color:#f92672>,</span> filler<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>());</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+
+    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     *  根据填充器和规则类型 设置 填充器;
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#a6e22e>@SuppressWarnings</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;unchecked&#34;</span><span style=color:#f92672>)</span>
+    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>doFill</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> SQLSegment sqlSegment<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> SQLStatement sqlStatement<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> SQLSegmentFiller filler<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1.  根据填充器和规则类型 设置 填充器
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// 1.1 路由规则
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>filler <span style=color:#66d9ef>instanceof</span> ShardingRuleAware <span style=color:#f92672>&amp;&amp;</span> rule <span style=color:#66d9ef>instanceof</span> ShardingRule<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#f92672>((</span>ShardingRuleAware<span style=color:#f92672>)</span> filler<span style=color:#f92672>).</span><span style=color:#a6e22e>setShardingRule</span><span style=color:#f92672>((</span>ShardingRule<span style=color:#f92672>)</span> rule<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 1.2 加密规则;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>filler <span style=color:#66d9ef>instanceof</span> EncryptRuleAware <span style=color:#f92672>&amp;&amp;</span> rule <span style=color:#66d9ef>instanceof</span> EncryptRule<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#f92672>((</span>EncryptRuleAware<span style=color:#f92672>)</span> filler<span style=color:#f92672>).</span><span style=color:#a6e22e>setEncryptRule</span><span style=color:#f92672>((</span>EncryptRule<span style=color:#f92672>)</span> rule<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 1.3 路由表元数据;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>filler <span style=color:#66d9ef>instanceof</span> ShardingTableMetaDataAware<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#f92672>((</span>ShardingTableMetaDataAware<span style=color:#f92672>)</span> filler<span style=color:#f92672>).</span><span style=color:#a6e22e>setShardingTableMetaData</span><span style=color:#f92672>(</span>shardingTableMetaData<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 2. 让填充器去填充 statement
+</span><span style=color:#75715e></span>        filler<span style=color:#f92672>.</span><span style=color:#a6e22e>fill</span><span style=color:#f92672>(</span>sqlSegment<span style=color:#f92672>,</span> sqlStatement<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+
+</code></pre></div><p>填充器有如下实现:
+<img src=https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086502519213.jpg alt>
+<img src=https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086502572751.jpg alt></p><h5 id=preparedstatementroutingengine-根据sqlstatement-用-parsingsqlrouter-路由>PreparedStatementRoutingEngine 根据SQLStatement, 用 ParsingSQLRouter 路由</h5><p>对于解析出来的 statemet
+在进行路由 ParsingSQLRouter#route</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#a6e22e>@Override</span>
+    <span style=color:#66d9ef>public</span> RoutingResult <span style=color:#a6e22e>route</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>isDMLForModify<span style=color:#f92672>(</span>sqlStatement<span style=color:#f92672>)</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>!</span>sqlStatement<span style=color:#f92672>.</span><span style=color:#a6e22e>getTables</span><span style=color:#f92672>().</span><span style=color:#a6e22e>isSingleTable</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> SQLParsingException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Cannot support Multiple-Table for &#39;%s&#39;.&#34;</span><span style=color:#f92672>,</span> sqlStatement<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> generateRoutingResult<span style=color:#f92672>(</span>  <span style=color:#75715e>// 3. 封装路由结果;
+</span><span style=color:#75715e></span>                    getDataNodes<span style=color:#f92672>(</span>      <span style=color:#75715e>// 2. 执行路由, 拿到数字节点;
+</span><span style=color:#75715e></span>                        shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>getTableRule</span><span style=color:#f92672>(</span>logicTableName<span style=color:#f92672>)</span>   <span style=color:#75715e>// 1. 根据逻辑表名拿到 TableRule
+</span><span style=color:#75715e></span>                    <span style=color:#f92672>)</span>
+        <span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>ShardingRule#getTableRule 获取可用表名</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> TableRule <span style=color:#a6e22e>getTableRule</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String logicTableName<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 根据逻辑表名查询到 TableRule
+</span><span style=color:#75715e></span>        Optional<span style=color:#f92672>&lt;</span>TableRule<span style=color:#f92672>&gt;</span> tableRule <span style=color:#f92672>=</span> findTableRule<span style=color:#f92672>(</span>logicTableName<span style=color:#f92672>);</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>tableRule<span style=color:#f92672>.</span><span style=color:#a6e22e>isPresent</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> tableRule<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>();</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 广播表 绑定所有数据源
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>isBroadcastTable<span style=color:#f92672>(</span>logicTableName<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> TableRule<span style=color:#f92672>(</span>shardingDataSourceNames<span style=color:#f92672>.</span><span style=color:#a6e22e>getDataSourceNames</span><span style=color:#f92672>(),</span> logicTableName<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>//
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>Strings<span style=color:#f92672>.</span><span style=color:#a6e22e>isNullOrEmpty</span><span style=color:#f92672>(</span>shardingDataSourceNames<span style=color:#f92672>.</span><span style=color:#a6e22e>getDefaultDataSourceName</span><span style=color:#f92672>()))</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> TableRule<span style=color:#f92672>(</span>shardingDataSourceNames<span style=color:#f92672>.</span><span style=color:#a6e22e>getDefaultDataSourceName</span><span style=color:#f92672>(),</span> logicTableName<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> ShardingConfigurationException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Cannot find table rule and default data source with logic table: &#39;%s&#39;&#34;</span><span style=color:#f92672>,</span> logicTableName<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    
+</code></pre></div><p>路由到DataNode</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>private</span> Collection<span style=color:#f92672>&lt;</span>DataNode<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getDataNodes</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> TableRule tableRule<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>isRoutingByHint</span><span style=color:#f92672>(</span>tableRule<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> routeByHint<span style=color:#f92672>(</span>tableRule<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>// 条件路由
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>isRoutingByShardingConditions<span style=color:#f92672>(</span>tableRule<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+            <span style=color:#66d9ef>return</span> routeByShardingConditions<span style=color:#f92672>(</span>tableRule<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> routeByMixedConditions<span style=color:#f92672>(</span>tableRule<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><p>条件路由详情:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>private</span> Collection<span style=color:#f92672>&lt;</span>DataNode<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>routeByShardingConditions</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> TableRule tableRule<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#66d9ef>return</span> optimizeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getRouteConditions</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getRouteConditions</span><span style=color:#f92672>().</span><span style=color:#a6e22e>isEmpty</span><span style=color:#f92672>()</span> <span style=color:#f92672>?</span>
+                route<span style=color:#f92672>(</span>tableRule<span style=color:#f92672>,</span> Collections<span style=color:#f92672>.&lt;</span>RouteValue<span style=color:#f92672>&gt;</span>emptyList<span style=color:#f92672>(),</span> Collections<span style=color:#f92672>.&lt;</span>RouteValue<span style=color:#f92672>&gt;</span>emptyList<span style=color:#f92672>())</span>
+                <span style=color:#f92672>:</span> routeByShardingConditionsWithCondition<span style=color:#f92672>(</span>tableRule<span style=color:#f92672>);</span>
+    <span style=color:#f92672>}</span>
+    
+    <span style=color:#66d9ef>private</span> Collection<span style=color:#f92672>&lt;</span>DataNode<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>routeByShardingConditionsWithCondition</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> TableRule tableRule<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        Collection<span style=color:#f92672>&lt;</span>DataNode<span style=color:#f92672>&gt;</span> result <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LinkedList<span style=color:#f92672>&lt;&gt;();</span>
+        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>RouteCondition each <span style=color:#f92672>:</span> optimizeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getRouteConditions</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getRouteConditions</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            Collection<span style=color:#f92672>&lt;</span>DataNode<span style=color:#f92672>&gt;</span> dataNodes <span style=color:#f92672>=</span> route<span style=color:#f92672>(</span>tableRule<span style=color:#f92672>,</span>
+                    <span style=color:#75715e>// 根据数据库规则中的列 能够匹配 rule里面的哪些 RouteValue
+</span><span style=color:#75715e></span>                    getShardingValuesFromShardingConditions<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>getDatabaseShardingStrategy</span><span style=color:#f92672>(</span>tableRule<span style=color:#f92672>).</span><span style=color:#a6e22e>getShardingColumns</span><span style=color:#f92672>(),</span> each<span style=color:#f92672>),</span>
+                    <span style=color:#75715e>// 根据表结构规则中的列 能够匹配 rule里面的哪些 RouteValue
+</span><span style=color:#75715e></span>                    getShardingValuesFromShardingConditions<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>getTableShardingStrategy</span><span style=color:#f92672>(</span>tableRule<span style=color:#f92672>).</span><span style=color:#a6e22e>getShardingColumns</span><span style=color:#f92672>(),</span> each<span style=color:#f92672>));</span>
+            reviseInsertOptimizeResult<span style=color:#f92672>(</span>each<span style=color:#f92672>,</span> dataNodes<span style=color:#f92672>);</span>
+            result<span style=color:#f92672>.</span><span style=color:#a6e22e>addAll</span><span style=color:#f92672>(</span>dataNodes<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+    
+</code></pre></div><p>应用路由算法
+StandardRoutingEngine#getShardingValuesFromShardingConditions</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    
+    <span style=color:#66d9ef>private</span> List<span style=color:#f92672>&lt;</span>RouteValue<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getShardingValuesFromShardingConditions</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> Collection<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> shardingColumns<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> RouteCondition routeCondition<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        List<span style=color:#f92672>&lt;</span>RouteValue<span style=color:#f92672>&gt;</span> result <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ArrayList<span style=color:#f92672>&lt;&gt;(</span>shardingColumns<span style=color:#f92672>.</span><span style=color:#a6e22e>size</span><span style=color:#f92672>());</span>
+        <span style=color:#75715e>// 迭代每个规则中的路由变量, 并匹配路由列;
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>RouteValue each <span style=color:#f92672>:</span> routeCondition<span style=color:#f92672>.</span><span style=color:#a6e22e>getRouteValues</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 逻辑表对应的物理表;
+</span><span style=color:#75715e></span>            Optional<span style=color:#f92672>&lt;</span>BindingTableRule<span style=color:#f92672>&gt;</span> bindingTableRule <span style=color:#f92672>=</span> shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>findBindingTableRule</span><span style=color:#f92672>(</span>logicTableName<span style=color:#f92672>);</span>
+            <span style=color:#75715e>// 物理表包含该逻辑表名;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>((</span>logicTableName<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span>each<span style=color:#f92672>.</span><span style=color:#a6e22e>getTableName</span><span style=color:#f92672>())</span> <span style=color:#f92672>||</span> <span style=color:#75715e>// 逻辑表就是物理表
+</span><span style=color:#75715e></span>                    <span style=color:#75715e>// 任意一个物理表的逻辑表对得上 并且 分片列对得上;
+</span><span style=color:#75715e></span>                    bindingTableRule<span style=color:#f92672>.</span><span style=color:#a6e22e>isPresent</span><span style=color:#f92672>()</span> <span style=color:#f92672>&amp;&amp;</span> bindingTableRule<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>().</span><span style=color:#a6e22e>hasLogicTable</span><span style=color:#f92672>(</span>logicTableName<span style=color:#f92672>))</span> <span style=color:#f92672>&amp;&amp;</span> shardingColumns<span style=color:#f92672>.</span><span style=color:#a6e22e>contains</span><span style=color:#f92672>(</span>each<span style=color:#f92672>.</span><span style=color:#a6e22e>getColumnName</span><span style=color:#f92672>()))</span> <span style=color:#f92672>{</span>
+                result<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>each<span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+    
+</code></pre></div><h4 id=重写sql>重写sql</h4><p>对于如下demo</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>   
+    <span style=color:#a6e22e>@Test</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>assertRewriteForTableName</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+        List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ArrayList<span style=color:#f92672>&lt;&gt;(</span>2<span style=color:#f92672>);</span>
+        parameters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>1<span style=color:#f92672>);</span>
+        parameters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;x&#34;</span><span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 待重写的分词
+</span><span style=color:#75715e></span>        selectStatement<span style=color:#f92672>.</span><span style=color:#a6e22e>getSQLSegments</span><span style=color:#f92672>().</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> TableSegment<span style=color:#f92672>(</span>7<span style=color:#f92672>,</span> 13<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;table_x&#34;</span><span style=color:#f92672>));</span>
+        selectStatement<span style=color:#f92672>.</span><span style=color:#a6e22e>getSQLSegments</span><span style=color:#f92672>().</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> TableSegment<span style=color:#f92672>(</span>31<span style=color:#f92672>,</span> 37<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;table_x&#34;</span><span style=color:#f92672>));</span>
+        selectStatement<span style=color:#f92672>.</span><span style=color:#a6e22e>getSQLSegments</span><span style=color:#f92672>().</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> TableSegment<span style=color:#f92672>(</span>47<span style=color:#f92672>,</span> 53<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;table_x&#34;</span><span style=color:#f92672>));</span>
+        <span style=color:#75715e>// 路由结果重写参数, parameters
+</span><span style=color:#75715e></span>        routeResult <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SQLRouteResult<span style=color:#f92672>(</span>selectStatement<span style=color:#f92672>);</span>
+        routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>setRoutingResult</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> RoutingResult<span style=color:#f92672>());</span>
+        routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>setOptimizeResult</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> OptimizeResult<span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> RouteConditions<span style=color:#f92672>(</span>Collections<span style=color:#f92672>.&lt;</span>RouteCondition<span style=color:#f92672>&gt;</span>emptyList<span style=color:#f92672>())));</span>
+        <span style=color:#75715e>// 原始sql;
+</span><span style=color:#75715e></span>        selectStatement<span style=color:#f92672>.</span><span style=color:#a6e22e>setLogicSQL</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;SELECT table_x.id, x.name FROM table_x x WHERE table_x.id=? AND x.name=?&#34;</span><span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 创建引擎;
+</span><span style=color:#75715e></span>        SQLRewriteEngine rewriteEngine <span style=color:#f92672>=</span> createSQLRewriteEngine<span style=color:#f92672>(</span>parameters<span style=color:#f92672>);</span>
+        assertThat<span style=color:#f92672>(</span>getSQLBuilder<span style=color:#f92672>(</span>rewriteEngine<span style=color:#f92672>).</span><span style=color:#a6e22e>toSQL</span><span style=color:#f92672>(</span><span style=color:#66d9ef>null</span><span style=color:#f92672>,</span> tableTokens<span style=color:#f92672>),</span> is<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;SELECT table_1.id, x.name FROM table_1 x WHERE table_1.id=? AND x.name=?&#34;</span><span style=color:#f92672>));</span>
+    <span style=color:#f92672>}</span>
+    
+</code></pre></div><p>创建引擎</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java> 
+    <span style=color:#66d9ef>private</span> SQLRewriteEngine <span style=color:#a6e22e>createSQLRewriteEngine</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> List<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;</span> parameters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 1. 重写引擎 引用到 shardingRule 的重写规则， 根据 statement 中的 segments 生成 tokens
+</span><span style=color:#75715e></span>        SQLRewriteEngine result <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> SQLRewriteEngine<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>,</span> routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatement</span><span style=color:#f92672>(),</span> parameters<span style=color:#f92672>,</span> routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getRoutingResult</span><span style=color:#f92672>().</span><span style=color:#a6e22e>isSingleRouting</span><span style=color:#f92672>());</span>
+        Collection<span style=color:#f92672>&lt;</span>SQLRewriter<span style=color:#f92672>&gt;</span> sqlRewriters <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> LinkedList<span style=color:#f92672>&lt;&gt;();</span>
+        <span style=color:#75715e>// 2. 路由重写器;
+</span><span style=color:#75715e></span>        sqlRewriters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> ShardingSQLRewriter<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>,</span> routeResult<span style=color:#f92672>,</span> routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getOptimizeResult</span><span style=color:#f92672>()));</span>
+        <span style=color:#75715e>// 3. 加密重写器
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatement</span><span style=color:#f92672>()</span> <span style=color:#66d9ef>instanceof</span> DMLStatement<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            sqlRewriters<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> EncryptSQLRewriter<span style=color:#f92672>(</span>shardingRule<span style=color:#f92672>.</span><span style=color:#a6e22e>getEncryptRule</span><span style=color:#f92672>().</span><span style=color:#a6e22e>getEncryptorEngine</span><span style=color:#f92672>(),</span> <span style=color:#f92672>(</span>DMLStatement<span style=color:#f92672>)</span> routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getSqlStatement</span><span style=color:#f92672>(),</span> routeResult<span style=color:#f92672>.</span><span style=color:#a6e22e>getOptimizeResult</span><span style=color:#f92672>()));</span>
+        <span style=color:#f92672>}</span>
+
+        <span style=color:#75715e>// 4. 根据路由规则重写参数和tokens
+</span><span style=color:#75715e></span>        result<span style=color:#f92672>.</span><span style=color:#a6e22e>init</span><span style=color:#f92672>(</span>Collections<span style=color:#f92672>.&lt;</span>ParameterRewriter<span style=color:#f92672>&gt;</span>singletonList<span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> ShardingParameterRewriter<span style=color:#f92672>(</span>routeResult<span style=color:#f92672>)),</span> sqlRewriters<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 返回结果
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+    <span style=color:#f92672>}</span>
+<span style=color:#f92672>}</span>
+</code></pre></div><p>SQLRewriteEngine#init 实现将参数重写器和sql重写器应用，并写入sqlBuilder,最后可以通过 SQLBuilder#toSQL 输出</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</span><span style=color:#75715e>     * Initialize SQL rewrite engine.
+</span><span style=color:#75715e>     * 
+</span><span style=color:#75715e>     * @param parameterRewriters parameter rewriters
+</span><span style=color:#75715e>     * @param sqlRewriters SQL rewriters
+</span><span style=color:#75715e>     */</span>
+    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>init</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> Collection<span style=color:#f92672>&lt;</span>ParameterRewriter<span style=color:#f92672>&gt;</span> parameterRewriters<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> Collection<span style=color:#f92672>&lt;</span>SQLRewriter<span style=color:#f92672>&gt;</span> sqlRewriters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        <span style=color:#75715e>//  重写参数
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>ParameterRewriter each <span style=color:#f92672>:</span> parameterRewriters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            each<span style=color:#f92672>.</span><span style=color:#a6e22e>rewrite</span><span style=color:#f92672>(</span>parameterBuilder<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>sqlTokens<span style=color:#f92672>.</span><span style=color:#a6e22e>isEmpty</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+            baseSQLRewriter<span style=color:#f92672>.</span><span style=color:#a6e22e>appendWholeSQL</span><span style=color:#f92672>(</span>sqlBuilder<span style=color:#f92672>);</span>
+            <span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#75715e>//
+</span><span style=color:#75715e></span>        baseSQLRewriter<span style=color:#f92672>.</span><span style=color:#a6e22e>appendInitialLiteral</span><span style=color:#f92672>(</span>sqlBuilder<span style=color:#f92672>);</span>
+        <span style=color:#75715e>// 迭代所有的tokens
+</span><span style=color:#75715e></span>        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>SQLToken each <span style=color:#f92672>:</span> sqlTokens<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 交给每个重写器重写, 结果会通过 sqlBuilder 输出;
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>SQLRewriter sqlRewriter <span style=color:#f92672>:</span> sqlRewriters<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                sqlRewriter<span style=color:#f92672>.</span><span style=color:#a6e22e>rewrite</span><span style=color:#f92672>(</span>sqlBuilder<span style=color:#f92672>,</span> parameterBuilder<span style=color:#f92672>,</span> each<span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span>
+            <span style=color:#75715e>// 生成列名
+</span><span style=color:#75715e></span>            baseSQLRewriter<span style=color:#f92672>.</span><span style=color:#a6e22e>rewrite</span><span style=color:#f92672>(</span>sqlBuilder<span style=color:#f92672>,</span> parameterBuilder<span style=color:#f92672>,</span> each<span style=color:#f92672>);</span>
+        <span style=color:#f92672>}</span>
+    <span style=color:#f92672>}</span>
+    
+</code></pre></div><p>SQLBuilder#toSQL 实现如下:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> String <span style=color:#a6e22e>toSQL</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> RoutingUnit routingUnit<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> Map<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>,</span> String<span style=color:#f92672>&gt;</span> logicAndActualTables<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+        StringBuilder result <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> StringBuilder<span style=color:#f92672>();</span>
+        <span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span>Object each <span style=color:#f92672>:</span> segments<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+            <span style=color:#75715e>// 重写表名
+</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>each <span style=color:#66d9ef>instanceof</span> Alterable<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+                result<span style=color:#f92672>.</span><span style=color:#a6e22e>append</span><span style=color:#f92672>(((</span>Alterable<span style=color:#f92672>)</span> each<span style=color:#f92672>).</span><span style=color:#a6e22e>toString</span><span style=color:#f92672>(</span>routingUnit<span style=color:#f92672>,</span> logicAndActualTables<span style=color:#f92672>));</span>
+            <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+                result<span style=color:#f92672>.</span><span style=color:#a6e22e>append</span><span style=color:#f92672>(</span>each<span style=color:#f92672>);</span>
+            <span style=color:#f92672>}</span>
+        <span style=color:#f92672>}</span>
+        <span style=color:#66d9ef>return</span> result<span style=color:#f92672>.</span><span style=color:#a6e22e>toString</span><span style=color:#f92672>();</span>
+    <span style=color:#f92672>}</span>
+</code></pre></div><h1 id=相关概念>相关概念</h1><h2 id=bindingtablerule>BindingTableRule</h2><p>代表相关表具有相同的分片规则, 相关表join分配到单库而不用笛卡尔积</p><p><a href=https://shardingsphere.apache.org/document/legacy/4.x/document/en/features/sharding/principle/route/#standard-route>standard-route</a></p><p><img src=https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086502722203.jpg alt></p><h1 id=相关连接>相关连接</h1><p><a href=https://shardingsphere.apache.org/document/current/en/user-manual/shardingsphere-jdbc/usage/sharding/java-api/>shardingsphere java-api</a></p><p><a href=https://shardingsphere.apache.org/document/legacy/4.x/document/en/overview/>shardingsphere 4.x</a></p><p><a href=https://shardingsphere.apache.org/document/current/en/overview/>shardingsphere 5.x</a></p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/springframework%E4%B9%8Bautowiredannotationbeanpostprocessor/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title></p></a></div><div class="pager__item pager__item--next"><a class=pager__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/mybatis%E8%A7%A3%E6%9E%90xml%E5%92%8C%E5%8A%A8%E6%80%81sql/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title></p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E9%A2%98%E7%9B%AE/>回溯题目</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E8%9E%BA%E6%97%8B%E7%9F%A9%E9%98%B5/>螺旋矩阵</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%86%E6%B2%BB%E9%A2%98%E7%9B%AE%E7%AF%87/>分治题目篇</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%89%91%E5%85%8B%E7%89%8C%E9%97%AE%E9%A2%98/>扑克牌问题</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%A0%B9%E6%8D%AE%E6%95%B0%E5%AD%97%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B8%8B1%E7%9A%84%E6%95%B0%E7%9B%AE%E6%8E%92%E5%BA%8F_1356/>根据数字二进制下1的数目排序_1356</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>

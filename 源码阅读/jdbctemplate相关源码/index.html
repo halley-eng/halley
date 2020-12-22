@@ -1,0 +1,370 @@
+<!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>- 月亮</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content><meta property="og:description" content="JdbcTemplate 相关源码 数据行映射到对象 BeanPropertyRowMapper#mapRow /** * Extract the values for all columns in the current row. * <p>Utilizes public setters and result set meta-data. * @see java.sql.ResultSetMetaData */ @Override public T mapRow(ResultSet rs, int rowNumber) throws SQLException { // 1. 构建并初始化BeanWrapper 	BeanWrapperImpl bw = new BeanWrapperImpl(); initBeanWrapper(bw); // 2. 构建实例; 	T mappedObject = constructMappedInstance(rs, bw); // 3. 封装到 Spring 的BeanWrapper 	bw.setBeanInstance(mappedObject); // 4. 循环解析每一列到BeanWrapper; 	ResultSetMetaData rsmd = rs."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/jdbctemplate%E7%9B%B8%E5%85%B3%E6%BA%90%E7%A0%81/"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮</div><div class=logo__tagline>每天进步一点点</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
+<span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/axon/><i class="fa fa-road"></i><span class=menu__text>Axon</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/><i class="fa fa-road"></i><span class=menu__text>源码阅读</span>
+<span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title></h1></header><div class="content post__content clearfix"><h1 id=jdbctemplate-相关源码>JdbcTemplate 相关源码</h1><h3 id=数据行映射到对象-beanpropertyrowmappermaprow>数据行映射到对象 BeanPropertyRowMapper#mapRow</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * Extract the values for all columns in the current row.
+</span><span style=color:#75715e>	 * &lt;p&gt;Utilizes public setters and result set meta-data.
+</span><span style=color:#75715e>	 * @see java.sql.ResultSetMetaData
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> T <span style=color:#a6e22e>mapRow</span><span style=color:#f92672>(</span>ResultSet rs<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> rowNumber<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+		<span style=color:#75715e>// 1. 构建并初始化BeanWrapper
+</span><span style=color:#75715e></span>		BeanWrapperImpl bw <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BeanWrapperImpl<span style=color:#f92672>();</span>
+		initBeanWrapper<span style=color:#f92672>(</span>bw<span style=color:#f92672>);</span>
+
+		<span style=color:#75715e>// 2. 构建实例;
+</span><span style=color:#75715e></span>		T mappedObject <span style=color:#f92672>=</span> constructMappedInstance<span style=color:#f92672>(</span>rs<span style=color:#f92672>,</span> bw<span style=color:#f92672>);</span>
+		<span style=color:#75715e>// 3. 封装到 Spring 的BeanWrapper
+</span><span style=color:#75715e></span>		bw<span style=color:#f92672>.</span><span style=color:#a6e22e>setBeanInstance</span><span style=color:#f92672>(</span>mappedObject<span style=color:#f92672>);</span>
+
+		<span style=color:#75715e>// 4. 循环解析每一列到BeanWrapper;
+</span><span style=color:#75715e></span>		ResultSetMetaData rsmd <span style=color:#f92672>=</span> rs<span style=color:#f92672>.</span><span style=color:#a6e22e>getMetaData</span><span style=color:#f92672>();</span>
+		<span style=color:#66d9ef>int</span> columnCount <span style=color:#f92672>=</span> rsmd<span style=color:#f92672>.</span><span style=color:#a6e22e>getColumnCount</span><span style=color:#f92672>();</span>
+		Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> populatedProperties <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>isCheckFullyPopulated<span style=color:#f92672>()</span> <span style=color:#f92672>?</span> <span style=color:#66d9ef>new</span> HashSet<span style=color:#f92672>&lt;&gt;()</span> <span style=color:#f92672>:</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+
+		<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> index <span style=color:#f92672>=</span> 1<span style=color:#f92672>;</span> index <span style=color:#f92672>&lt;=</span> columnCount<span style=color:#f92672>;</span> index<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+			<span style=color:#75715e>// 4.1 从 metadata 查列名;
+</span><span style=color:#75715e></span>			String column <span style=color:#f92672>=</span> JdbcUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>lookupColumnName</span><span style=color:#f92672>(</span>rsmd<span style=color:#f92672>,</span> index<span style=color:#f92672>);</span>
+			<span style=color:#75715e>// 4.2 转换成字段名称;
+</span><span style=color:#75715e></span>			String field <span style=color:#f92672>=</span> lowerCaseName<span style=color:#f92672>(</span>StringUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>delete</span><span style=color:#f92672>(</span>column<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34; &#34;</span><span style=color:#f92672>));</span>
+			<span style=color:#75715e>// 4.3 找到对应哪个字段;
+</span><span style=color:#75715e></span>			PropertyDescriptor pd <span style=color:#f92672>=</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>mappedFields</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>?</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>mappedFields</span><span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span>field<span style=color:#f92672>)</span> <span style=color:#f92672>:</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+			<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>pd <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+					<span style=color:#75715e>// 从结果集中解析出字段值;
+</span><span style=color:#75715e></span>					Object value <span style=color:#f92672>=</span> getColumnValue<span style=color:#f92672>(</span>rs<span style=color:#f92672>,</span> index<span style=color:#f92672>,</span> pd<span style=color:#f92672>);</span>
+					<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>rowNumber <span style=color:#f92672>==</span> 0 <span style=color:#f92672>&amp;&amp;</span> logger<span style=color:#f92672>.</span><span style=color:#a6e22e>isDebugEnabled</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+						logger<span style=color:#f92672>.</span><span style=color:#a6e22e>debug</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Mapping column &#39;&#34;</span> <span style=color:#f92672>+</span> column <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39; to property &#39;&#34;</span> <span style=color:#f92672>+</span> pd<span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>()</span> <span style=color:#f92672>+</span>
+								<span style=color:#e6db74>&#34;&#39; of type &#39;&#34;</span> <span style=color:#f92672>+</span> ClassUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>getQualifiedName</span><span style=color:#f92672>(</span>pd<span style=color:#f92672>.</span><span style=color:#a6e22e>getPropertyType</span><span style=color:#f92672>())</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39;&#34;</span><span style=color:#f92672>);</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#75715e>// 设置属性值到BeanWrapper
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+						bw<span style=color:#f92672>.</span><span style=color:#a6e22e>setPropertyValue</span><span style=color:#f92672>(</span>pd<span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>(),</span> value<span style=color:#f92672>);</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#75715e>// 类型不匹配 1. 基本类型且允许空值则仅打印日志  2.否则抛出异常
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>TypeMismatchException ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+						<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>value <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>primitivesDefaultedForNullValue</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+							<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>logger<span style=color:#f92672>.</span><span style=color:#a6e22e>isDebugEnabled</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+								logger<span style=color:#f92672>.</span><span style=color:#a6e22e>debug</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Intercepted TypeMismatchException for row &#34;</span> <span style=color:#f92672>+</span> rowNumber <span style=color:#f92672>+</span>
+										<span style=color:#e6db74>&#34; and column &#39;&#34;</span> <span style=color:#f92672>+</span> column <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39; with null value when setting property &#39;&#34;</span> <span style=color:#f92672>+</span>
+										pd<span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>()</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39; of type &#39;&#34;</span> <span style=color:#f92672>+</span>
+										ClassUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>getQualifiedName</span><span style=color:#f92672>(</span>pd<span style=color:#f92672>.</span><span style=color:#a6e22e>getPropertyType</span><span style=color:#f92672>())</span> <span style=color:#f92672>+</span>
+										<span style=color:#e6db74>&#34;&#39; on object: &#34;</span> <span style=color:#f92672>+</span> mappedObject<span style=color:#f92672>,</span> ex<span style=color:#f92672>);</span>
+							<span style=color:#f92672>}</span>
+						<span style=color:#f92672>}</span>
+						<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+							<span style=color:#66d9ef>throw</span> ex<span style=color:#f92672>;</span>
+						<span style=color:#f92672>}</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#75715e>// 聚合已经填充的字段名称;
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>populatedProperties <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+						populatedProperties<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>pd<span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>());</span>
+					<span style=color:#f92672>}</span>
+				<span style=color:#f92672>}</span>
+				<span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>NotWritablePropertyException ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+					<span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> DataRetrievalFailureException<span style=color:#f92672>(</span>
+							<span style=color:#e6db74>&#34;Unable to map column &#39;&#34;</span> <span style=color:#f92672>+</span> column <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39; to property &#39;&#34;</span> <span style=color:#f92672>+</span> pd<span style=color:#f92672>.</span><span style=color:#a6e22e>getName</span><span style=color:#f92672>()</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39;&#34;</span><span style=color:#f92672>,</span> ex<span style=color:#f92672>);</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+				<span style=color:#75715e>// No PropertyDescriptor found
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>rowNumber <span style=color:#f92672>==</span> 0 <span style=color:#f92672>&amp;&amp;</span> logger<span style=color:#f92672>.</span><span style=color:#a6e22e>isDebugEnabled</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+					logger<span style=color:#f92672>.</span><span style=color:#a6e22e>debug</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;No property found for column &#39;&#34;</span> <span style=color:#f92672>+</span> column <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39; mapped to field &#39;&#34;</span> <span style=color:#f92672>+</span> field <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;&#39;&#34;</span><span style=color:#f92672>);</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>populatedProperties <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>!</span>populatedProperties<span style=color:#f92672>.</span><span style=color:#a6e22e>equals</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>mappedProperties</span><span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> InvalidDataAccessApiUsageException<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Given ResultSet does not contain all fields &#34;</span> <span style=color:#f92672>+</span>
+					<span style=color:#e6db74>&#34;necessary to populate object of &#34;</span> <span style=color:#f92672>+</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>mappedClass</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;: &#34;</span> <span style=color:#f92672>+</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>mappedProperties</span><span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#66d9ef>return</span> mappedObject<span style=color:#f92672>;</span>
+	<span style=color:#f92672>}</span>
+
+</code></pre></div><h3 id=执行纯sql>执行纯sql</h3><p>JdbcTemplate#execute(java.lang.String)</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>execute</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>logger<span style=color:#f92672>.</span><span style=color:#a6e22e>isDebugEnabled</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+			logger<span style=color:#f92672>.</span><span style=color:#a6e22e>debug</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Executing SQL statement [&#34;</span> <span style=color:#f92672>+</span> sql <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;]&#34;</span><span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#75715e>/**
+</span><span style=color:#75715e>		 * 1. 回调封装SQL 和 statement的具体执行过程; (参数映射和结果映射)
+</span><span style=color:#75715e>		 * Callback to execute the statement.
+</span><span style=color:#75715e>		 */</span>
+		<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ExecuteStatementCallback</span> <span style=color:#66d9ef>implements</span> StatementCallback<span style=color:#f92672>&lt;</span>Object<span style=color:#f92672>&gt;,</span> SqlProvider <span style=color:#f92672>{</span>
+			<span style=color:#a6e22e>@Override</span>
+			<span style=color:#a6e22e>@Nullable</span>
+			<span style=color:#66d9ef>public</span> Object <span style=color:#a6e22e>doInStatement</span><span style=color:#f92672>(</span>Statement stmt<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+				stmt<span style=color:#f92672>.</span><span style=color:#a6e22e>execute</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>);</span>
+				<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#a6e22e>@Override</span>
+			<span style=color:#66d9ef>public</span> String <span style=color:#a6e22e>getSql</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>return</span> sql<span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 2. execute 封装获取连接和异常处理
+</span><span style=color:#75715e></span>		execute<span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> ExecuteStatementCallback<span style=color:#f92672>(),</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=带结果映射的查询>带结果映射的查询</h3><p>封装列表处理</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> List<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>query</span><span style=color:#f92672>(</span>String sql<span style=color:#f92672>,</span> RowMapper<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> rowMapper<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+		<span style=color:#75715e>// RowMapperResultSetExtractor 执行 列表处理;
+</span><span style=color:#75715e></span>		<span style=color:#75715e>// RowMapper 执行单行映射;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>return</span> result<span style=color:#f92672>(</span>query<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>new</span> RowMapperResultSetExtractor<span style=color:#f92672>&lt;&gt;(</span>rowMapper<span style=color:#f92672>)));</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><p>封装结果映射逻辑和实际执行</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#a6e22e>@Nullable</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> T <span style=color:#a6e22e>query</span><span style=color:#f92672>(</span><span style=color:#66d9ef>final</span> String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ResultSetExtractor<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> rse<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+		Assert<span style=color:#f92672>.</span><span style=color:#a6e22e>notNull</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;SQL must not be null&#34;</span><span style=color:#f92672>);</span>
+		Assert<span style=color:#f92672>.</span><span style=color:#a6e22e>notNull</span><span style=color:#f92672>(</span>rse<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;ResultSetExtractor must not be null&#34;</span><span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>logger<span style=color:#f92672>.</span><span style=color:#a6e22e>isDebugEnabled</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+			logger<span style=color:#f92672>.</span><span style=color:#a6e22e>debug</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Executing SQL query [&#34;</span> <span style=color:#f92672>+</span> sql <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;]&#34;</span><span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 1. 封装sql、执行过程、结果映射
+</span><span style=color:#75715e></span>		<span style=color:#75715e>/**
+</span><span style=color:#75715e>		 * Callback to execute the query.
+</span><span style=color:#75715e>		 */</span>
+		<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>QueryStatementCallback</span> <span style=color:#66d9ef>implements</span> StatementCallback<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;,</span> SqlProvider <span style=color:#f92672>{</span>
+			<span style=color:#a6e22e>@Override</span>
+			<span style=color:#a6e22e>@Nullable</span>
+			<span style=color:#66d9ef>public</span> T <span style=color:#a6e22e>doInStatement</span><span style=color:#f92672>(</span>Statement stmt<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+				ResultSet rs <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+				<span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+					<span style=color:#75715e>// 执行sql
+</span><span style=color:#75715e></span>					rs <span style=color:#f92672>=</span> stmt<span style=color:#f92672>.</span><span style=color:#a6e22e>executeQuery</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>);</span>
+					<span style=color:#75715e>// 结果映射
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>return</span> rse<span style=color:#f92672>.</span><span style=color:#a6e22e>extractData</span><span style=color:#f92672>(</span>rs<span style=color:#f92672>);</span>
+				<span style=color:#f92672>}</span>
+				<span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
+					JdbcUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>closeResultSet</span><span style=color:#f92672>(</span>rs<span style=color:#f92672>);</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#a6e22e>@Override</span>
+			<span style=color:#66d9ef>public</span> String <span style=color:#a6e22e>getSql</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>return</span> sql<span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#75715e>// 2. execute 封装获取数据库连接的过程;
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>return</span> execute<span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> QueryStatementCallback<span style=color:#f92672>(),</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><h3 id=带参数映射的查询>带参数映射的查询</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#a6e22e>@Nullable</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> T <span style=color:#a6e22e>queryForObject</span><span style=color:#f92672>(</span>String sql<span style=color:#f92672>,</span> RowMapper<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> rowMapper<span style=color:#f92672>,</span> <span style=color:#a6e22e>@Nullable</span> Object<span style=color:#f92672>...</span> args<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+		List<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> results <span style=color:#f92672>=</span> query<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> args<span style=color:#f92672>,</span> <span style=color:#66d9ef>new</span> RowMapperResultSetExtractor<span style=color:#f92672>&lt;&gt;(</span>rowMapper<span style=color:#f92672>,</span> 1<span style=color:#f92672>));</span>
+		<span style=color:#66d9ef>return</span> DataAccessUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>nullableSingleResult</span><span style=color:#f92672>(</span>results<span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+
+</code></pre></div><p>封装参数</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>	<span style=color:#a6e22e>@Deprecated</span>
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#a6e22e>@Nullable</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> T <span style=color:#a6e22e>query</span><span style=color:#f92672>(</span>String sql<span style=color:#f92672>,</span> <span style=color:#a6e22e>@Nullable</span> Object<span style=color:#f92672>[]</span> args<span style=color:#f92672>,</span> ResultSetExtractor<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> rse<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>return</span> query<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> newArgPreparedStatementSetter<span style=color:#f92672>(</span>args<span style=color:#f92672>),</span> rse<span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+    
+    <span style=color:#66d9ef>protected</span> PreparedStatementSetter <span style=color:#a6e22e>newArgPreparedStatementSetter</span><span style=color:#f92672>(</span><span style=color:#a6e22e>@Nullable</span> Object<span style=color:#f92672>[]</span> args<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> ArgumentPreparedStatementSetter<span style=color:#f92672>(</span>args<span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+
+</code></pre></div><p>由此可见实际参数被封装为</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>
+<span style=color:#75715e>/**
+</span><span style=color:#75715e> * 封装 将多个参数设置到  PreparedStatement 的过程
+</span><span style=color:#75715e> * Simple adapter for {@link PreparedStatementSetter} that applies a given array of arguments.
+</span><span style=color:#75715e> *
+</span><span style=color:#75715e> * @author Juergen Hoeller
+</span><span style=color:#75715e> * @since 3.2.3
+</span><span style=color:#75715e> */</span>
+<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ArgumentPreparedStatementSetter</span> <span style=color:#66d9ef>implements</span> PreparedStatementSetter<span style=color:#f92672>,</span> ParameterDisposer <span style=color:#f92672>{</span>
+
+	<span style=color:#a6e22e>@Nullable</span>
+	<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Object<span style=color:#f92672>[]</span> args<span style=color:#f92672>;</span>
+
+
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * Create a new ArgPreparedStatementSetter for the given arguments.
+</span><span style=color:#75715e>	 * @param args the arguments to set
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#a6e22e>ArgumentPreparedStatementSetter</span><span style=color:#f92672>(</span><span style=color:#a6e22e>@Nullable</span> Object<span style=color:#f92672>[]</span> args<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>args</span> <span style=color:#f92672>=</span> args<span style=color:#f92672>;</span>
+	<span style=color:#f92672>}</span>
+
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * 迭代参数并设置值;
+</span><span style=color:#75715e>	 * @param ps the PreparedStatement to invoke setter methods on
+</span><span style=color:#75715e>	 * @throws SQLException
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setValues</span><span style=color:#f92672>(</span>PreparedStatement ps<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>args</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> i <span style=color:#f92672>&lt;</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>args</span><span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+				Object arg <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>args</span><span style=color:#f92672>[</span>i<span style=color:#f92672>];</span>
+				doSetValue<span style=color:#f92672>(</span>ps<span style=color:#f92672>,</span> i <span style=color:#f92672>+</span> 1<span style=color:#f92672>,</span> arg<span style=color:#f92672>);</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>}</span>
+	<span style=color:#f92672>}</span>
+
+	<span style=color:#75715e>/**
+</span><span style=color:#75715e>	 * 设置单个参数
+</span><span style=color:#75715e>	 * Set the value for prepared statements specified parameter index using the passed in value.
+</span><span style=color:#75715e>	 * This method can be overridden by sub-classes if needed.
+</span><span style=color:#75715e>	 * @param ps the PreparedStatement
+</span><span style=color:#75715e>	 * @param parameterPosition index of the parameter position
+</span><span style=color:#75715e>	 * @param argValue the value to set
+</span><span style=color:#75715e>	 * @throws SQLException if thrown by PreparedStatement methods
+</span><span style=color:#75715e>	 */</span>
+	<span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>doSetValue</span><span style=color:#f92672>(</span>PreparedStatement ps<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> parameterPosition<span style=color:#f92672>,</span> Object argValue<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>argValue <span style=color:#66d9ef>instanceof</span> SqlParameterValue<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+			SqlParameterValue paramValue <span style=color:#f92672>=</span> <span style=color:#f92672>(</span>SqlParameterValue<span style=color:#f92672>)</span> argValue<span style=color:#f92672>;</span>
+			StatementCreatorUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>setParameterValue</span><span style=color:#f92672>(</span>ps<span style=color:#f92672>,</span> parameterPosition<span style=color:#f92672>,</span> paramValue<span style=color:#f92672>,</span> paramValue<span style=color:#f92672>.</span><span style=color:#a6e22e>getValue</span><span style=color:#f92672>());</span>
+		<span style=color:#f92672>}</span>
+		<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+			StatementCreatorUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>setParameterValue</span><span style=color:#f92672>(</span>ps<span style=color:#f92672>,</span> parameterPosition<span style=color:#f92672>,</span> SqlTypeValue<span style=color:#f92672>.</span><span style=color:#a6e22e>TYPE_UNKNOWN</span><span style=color:#f92672>,</span> argValue<span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+	<span style=color:#f92672>}</span>
+
+	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>cleanupParameters</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+		StatementCreatorUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>cleanupParameters</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>args</span><span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+
+<span style=color:#f92672>}</span>
+
+</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#a6e22e>@Nullable</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> T <span style=color:#a6e22e>query</span><span style=color:#f92672>(</span>String sql<span style=color:#f92672>,</span> <span style=color:#a6e22e>@Nullable</span> PreparedStatementSetter pss<span style=color:#f92672>,</span> ResultSetExtractor<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> rse<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+        <span style=color:#75715e>// 封装statement的创建过程
+</span><span style=color:#75715e></span>		<span style=color:#66d9ef>return</span> query<span style=color:#f92672>(</span><span style=color:#66d9ef>new</span> SimplePreparedStatementCreator<span style=color:#f92672>(</span>sql<span style=color:#f92672>),</span> pss<span style=color:#f92672>,</span> rse<span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><p>statement 被 封装为 PreparedStatementCallback 对象, 其包含 参数映射、sql执行、结果解析等功能;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-JAVA data-lang=JAVA>	<span style=color:#a6e22e>@Nullable</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> T <span style=color:#a6e22e>query</span><span style=color:#f92672>(</span>
+			PreparedStatementCreator psc<span style=color:#f92672>,</span> <span style=color:#a6e22e>@Nullable</span> <span style=color:#66d9ef>final</span> PreparedStatementSetter pss<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> ResultSetExtractor<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;</span> rse<span style=color:#f92672>)</span>
+			<span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+
+		Assert<span style=color:#f92672>.</span><span style=color:#a6e22e>notNull</span><span style=color:#f92672>(</span>rse<span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;ResultSetExtractor must not be null&#34;</span><span style=color:#f92672>);</span>
+		logger<span style=color:#f92672>.</span><span style=color:#a6e22e>debug</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Executing prepared SQL query&#34;</span><span style=color:#f92672>);</span>
+
+		<span style=color:#66d9ef>return</span> execute<span style=color:#f92672>(</span>psc<span style=color:#f92672>,</span> <span style=color:#66d9ef>new</span> PreparedStatementCallback<span style=color:#f92672>&lt;</span>T<span style=color:#f92672>&gt;()</span> <span style=color:#f92672>{</span>
+			<span style=color:#a6e22e>@Override</span>
+			<span style=color:#a6e22e>@Nullable</span>
+			<span style=color:#66d9ef>public</span> T <span style=color:#a6e22e>doInPreparedStatement</span><span style=color:#f92672>(</span>PreparedStatement ps<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+				ResultSet rs <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
+				<span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+					<span style=color:#75715e>// 1. 将参数填充都statement;
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>pss <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+						pss<span style=color:#f92672>.</span><span style=color:#a6e22e>setValues</span><span style=color:#f92672>(</span>ps<span style=color:#f92672>);</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#75715e>// 2. 执行sql
+</span><span style=color:#75715e></span>					rs <span style=color:#f92672>=</span> ps<span style=color:#f92672>.</span><span style=color:#a6e22e>executeQuery</span><span style=color:#f92672>();</span>
+					<span style=color:#75715e>// 3. 结果映射;
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>return</span> rse<span style=color:#f92672>.</span><span style=color:#a6e22e>extractData</span><span style=color:#f92672>(</span>rs<span style=color:#f92672>);</span>
+				<span style=color:#f92672>}</span>
+				<span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
+                   <span style=color:#75715e>// 4. 关闭statement; 
+</span><span style=color:#75715e></span>					JdbcUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>closeResultSet</span><span style=color:#f92672>(</span>rs<span style=color:#f92672>);</span>
+					<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>pss <span style=color:#66d9ef>instanceof</span> ParameterDisposer<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+						<span style=color:#f92672>((</span>ParameterDisposer<span style=color:#f92672>)</span> pss<span style=color:#f92672>).</span><span style=color:#a6e22e>cleanupParameters</span><span style=color:#f92672>();</span>
+					<span style=color:#f92672>}</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>},</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+	<span style=color:#f92672>}</span>
+
+</code></pre></div><h3 id=批量更新>批量更新</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>	<span style=color:#a6e22e>@Override</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> <span style=color:#a6e22e>batchUpdate</span><span style=color:#f92672>(</span>String sql<span style=color:#f92672>,</span> <span style=color:#66d9ef>final</span> BatchPreparedStatementSetter pss<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> DataAccessException <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>logger<span style=color:#f92672>.</span><span style=color:#a6e22e>isDebugEnabled</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
+			logger<span style=color:#f92672>.</span><span style=color:#a6e22e>debug</span><span style=color:#f92672>(</span><span style=color:#e6db74>&#34;Executing SQL batch update [&#34;</span> <span style=color:#f92672>+</span> sql <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;]&#34;</span><span style=color:#f92672>);</span>
+		<span style=color:#f92672>}</span>
+
+		<span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> result <span style=color:#f92672>=</span> execute<span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> <span style=color:#f92672>(</span>PreparedStatementCallback<span style=color:#f92672>&lt;</span><span style=color:#66d9ef>int</span><span style=color:#f92672>[]&gt;)</span> ps <span style=color:#f92672>-&gt;</span> <span style=color:#f92672>{</span>
+			<span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
+				<span style=color:#75715e>// 1. 批次大小;
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>int</span> batchSize <span style=color:#f92672>=</span> pss<span style=color:#f92672>.</span><span style=color:#a6e22e>getBatchSize</span><span style=color:#f92672>();</span>
+				InterruptibleBatchPreparedStatementSetter ipss <span style=color:#f92672>=</span>
+						<span style=color:#f92672>(</span>pss <span style=color:#66d9ef>instanceof</span> InterruptibleBatchPreparedStatementSetter <span style=color:#f92672>?</span>
+						<span style=color:#f92672>(</span>InterruptibleBatchPreparedStatementSetter<span style=color:#f92672>)</span> pss <span style=color:#f92672>:</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>);</span>
+				<span style=color:#75715e>// 2. 如果执行批次更新, 则批量设置值, 并一次更新
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>JdbcUtils<span style=color:#f92672>.</span><span style=color:#a6e22e>supportsBatchUpdates</span><span style=color:#f92672>(</span>ps<span style=color:#f92672>.</span><span style=color:#a6e22e>getConnection</span><span style=color:#f92672>()))</span> <span style=color:#f92672>{</span>
+					<span style=color:#75715e>// 2.1  迭代批次
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> i <span style=color:#f92672>&lt;</span> batchSize<span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+						<span style=color:#75715e>// 2.1.1 给第i个批次的statement 设置变量;
+</span><span style=color:#75715e></span>						pss<span style=color:#f92672>.</span><span style=color:#a6e22e>setValues</span><span style=color:#f92672>(</span>ps<span style=color:#f92672>,</span> i<span style=color:#f92672>);</span>
+						<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ipss <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> ipss<span style=color:#f92672>.</span><span style=color:#a6e22e>isBatchExhausted</span><span style=color:#f92672>(</span>i<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+							<span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+						<span style=color:#f92672>}</span>
+						<span style=color:#75715e>// 2.1.2 将该statement加入批次;
+</span><span style=color:#75715e></span>						ps<span style=color:#f92672>.</span><span style=color:#a6e22e>addBatch</span><span style=color:#f92672>();</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#75715e>// 2.2 执行批次
+</span><span style=color:#75715e></span>					<span style=color:#66d9ef>return</span> ps<span style=color:#f92672>.</span><span style=color:#a6e22e>executeBatch</span><span style=color:#f92672>();</span>
+				<span style=color:#f92672>}</span>
+				<span style=color:#75715e>// 3. 如果连接不支持批量执行, 则每次执行, 并统一返回结果;
+</span><span style=color:#75715e></span>				<span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
+					List<span style=color:#f92672>&lt;</span>Integer<span style=color:#f92672>&gt;</span> rowsAffected <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ArrayList<span style=color:#f92672>&lt;&gt;();</span>
+					<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> i <span style=color:#f92672>&lt;</span> batchSize<span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+						<span style=color:#75715e>// 2.1 给该statement设置值;
+</span><span style=color:#75715e></span>						pss<span style=color:#f92672>.</span><span style=color:#a6e22e>setValues</span><span style=color:#f92672>(</span>ps<span style=color:#f92672>,</span> i<span style=color:#f92672>);</span>
+						<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ipss <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> ipss<span style=color:#f92672>.</span><span style=color:#a6e22e>isBatchExhausted</span><span style=color:#f92672>(</span>i<span style=color:#f92672>))</span> <span style=color:#f92672>{</span>
+							<span style=color:#66d9ef>break</span><span style=color:#f92672>;</span>
+						<span style=color:#f92672>}</span>
+						<span style=color:#75715e>// 2.2  执行该statement;
+</span><span style=color:#75715e></span>						rowsAffected<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>ps<span style=color:#f92672>.</span><span style=color:#a6e22e>executeUpdate</span><span style=color:#f92672>());</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> rowsAffectedArray <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[</span>rowsAffected<span style=color:#f92672>.</span><span style=color:#a6e22e>size</span><span style=color:#f92672>()];</span>
+					<span style=color:#66d9ef>for</span> <span style=color:#f92672>(</span><span style=color:#66d9ef>int</span> i <span style=color:#f92672>=</span> 0<span style=color:#f92672>;</span> i <span style=color:#f92672>&lt;</span> rowsAffectedArray<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>;</span> i<span style=color:#f92672>++)</span> <span style=color:#f92672>{</span>
+						rowsAffectedArray<span style=color:#f92672>[</span>i<span style=color:#f92672>]</span> <span style=color:#f92672>=</span> rowsAffected<span style=color:#f92672>.</span><span style=color:#a6e22e>get</span><span style=color:#f92672>(</span>i<span style=color:#f92672>);</span>
+					<span style=color:#f92672>}</span>
+					<span style=color:#66d9ef>return</span> rowsAffectedArray<span style=color:#f92672>;</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>pss <span style=color:#66d9ef>instanceof</span> ParameterDisposer<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
+					<span style=color:#f92672>((</span>ParameterDisposer<span style=color:#f92672>)</span> pss<span style=color:#f92672>).</span><span style=color:#a6e22e>cleanupParameters</span><span style=color:#f92672>();</span>
+				<span style=color:#f92672>}</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>});</span>
+
+		Assert<span style=color:#f92672>.</span><span style=color:#a6e22e>state</span><span style=color:#f92672>(</span>result <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>,</span> <span style=color:#e6db74>&#34;No result array&#34;</span><span style=color:#f92672>);</span>
+		<span style=color:#66d9ef>return</span> result<span style=color:#f92672>;</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div><p>demo 如下 JdbcTemplateTests#testBatchUpdateWithPreparedStatement</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>
+	<span style=color:#a6e22e>@Test</span>
+	<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>testBatchUpdateWithPreparedStatement</span><span style=color:#f92672>()</span> <span style=color:#66d9ef>throws</span> Exception <span style=color:#f92672>{</span>
+		<span style=color:#66d9ef>final</span> String sql <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;UPDATE NOSUCHTABLE SET DATE_DISPATCHED = SYSDATE WHERE ID = ?&#34;</span><span style=color:#f92672>;</span>
+		<span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> ids <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> <span style=color:#f92672>{</span>100<span style=color:#f92672>,</span> 200<span style=color:#f92672>};</span>
+		<span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> rowsAffected <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> <span style=color:#f92672>{</span>1<span style=color:#f92672>,</span> 2<span style=color:#f92672>};</span>
+
+		given<span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>preparedStatement</span><span style=color:#f92672>.</span><span style=color:#a6e22e>executeBatch</span><span style=color:#f92672>()).</span><span style=color:#a6e22e>willReturn</span><span style=color:#f92672>(</span>rowsAffected<span style=color:#f92672>);</span>
+		mockDatabaseMetaData<span style=color:#f92672>(</span><span style=color:#66d9ef>true</span><span style=color:#f92672>);</span>
+
+		BatchPreparedStatementSetter setter <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> BatchPreparedStatementSetter<span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+			<span style=color:#a6e22e>@Override</span>
+			<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setValues</span><span style=color:#f92672>(</span>PreparedStatement ps<span style=color:#f92672>,</span> <span style=color:#66d9ef>int</span> i<span style=color:#f92672>)</span> <span style=color:#66d9ef>throws</span> SQLException <span style=color:#f92672>{</span>
+				ps<span style=color:#f92672>.</span><span style=color:#a6e22e>setInt</span><span style=color:#f92672>(</span>1<span style=color:#f92672>,</span> ids<span style=color:#f92672>[</span>i<span style=color:#f92672>]);</span>
+			<span style=color:#f92672>}</span>
+			<span style=color:#a6e22e>@Override</span>
+			<span style=color:#66d9ef>public</span> <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>getBatchSize</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
+				<span style=color:#66d9ef>return</span> ids<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span><span style=color:#f92672>;</span>
+			<span style=color:#f92672>}</span>
+		<span style=color:#f92672>};</span>
+
+		JdbcTemplate template <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JdbcTemplate<span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>dataSource</span><span style=color:#f92672>,</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>);</span>
+
+		<span style=color:#66d9ef>int</span><span style=color:#f92672>[]</span> actualRowsAffected <span style=color:#f92672>=</span> template<span style=color:#f92672>.</span><span style=color:#a6e22e>batchUpdate</span><span style=color:#f92672>(</span>sql<span style=color:#f92672>,</span> setter<span style=color:#f92672>);</span>
+		assertTrue<span style=color:#f92672>(</span><span style=color:#e6db74>&#34;executed 2 updates&#34;</span><span style=color:#f92672>,</span> actualRowsAffected<span style=color:#f92672>.</span><span style=color:#a6e22e>length</span> <span style=color:#f92672>==</span> 2<span style=color:#f92672>);</span>
+		assertEquals<span style=color:#f92672>(</span>rowsAffected<span style=color:#f92672>[</span>0<span style=color:#f92672>],</span> actualRowsAffected<span style=color:#f92672>[</span>0<span style=color:#f92672>]);</span>
+		assertEquals<span style=color:#f92672>(</span>rowsAffected<span style=color:#f92672>[</span>1<span style=color:#f92672>],</span> actualRowsAffected<span style=color:#f92672>[</span>1<span style=color:#f92672>]);</span>
+
+		verify<span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>preparedStatement</span><span style=color:#f92672>,</span> times<span style=color:#f92672>(</span>2<span style=color:#f92672>)).</span><span style=color:#a6e22e>addBatch</span><span style=color:#f92672>();</span>
+		verify<span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>preparedStatement</span><span style=color:#f92672>).</span><span style=color:#a6e22e>setInt</span><span style=color:#f92672>(</span>1<span style=color:#f92672>,</span> ids<span style=color:#f92672>[</span>0<span style=color:#f92672>]);</span>
+		verify<span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>preparedStatement</span><span style=color:#f92672>).</span><span style=color:#a6e22e>setInt</span><span style=color:#f92672>(</span>1<span style=color:#f92672>,</span> ids<span style=color:#f92672>[</span>1<span style=color:#f92672>]);</span>
+		verify<span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>preparedStatement</span><span style=color:#f92672>).</span><span style=color:#a6e22e>close</span><span style=color:#f92672>();</span>
+		verify<span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>connection</span><span style=color:#f92672>,</span> atLeastOnce<span style=color:#f92672>()).</span><span style=color:#a6e22e>close</span><span style=color:#f92672>();</span>
+	<span style=color:#f92672>}</span>
+</code></pre></div></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/mybatis%E6%BA%90%E7%A0%81/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title></p></a></div><div class="pager__item pager__item--next"><a class=pager__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/configuration%E6%B3%A8%E8%A7%A3%E4%B9%8Bconfigurationclasspostprocessor/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title>Configuration注解之ConfigurationClassPostProcessor</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+<input class=widget-search__submit type=submit value=Search>
+<input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E9%A2%98%E7%9B%AE/>回溯题目</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E8%9E%BA%E6%97%8B%E7%9F%A9%E9%98%B5/>螺旋矩阵</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%86%E6%B2%BB%E9%A2%98%E7%9B%AE%E7%AF%87/>分治题目篇</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%89%91%E5%85%8B%E7%89%8C%E9%97%AE%E9%A2%98/>扑克牌问题</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%A0%B9%E6%8D%AE%E6%95%B0%E5%AD%97%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B8%8B1%E7%9A%84%E6%95%B0%E7%9B%AE%E6%8E%92%E5%BA%8F_1356/>根据数字二进制下1的数目排序_1356</a></li></ul></div></div></aside></div><footer class=footer><div class="container footer__container flex"><div class=footer__copyright>&copy; 2020 月亮.
+<span class=footer__copyright-credits>Generated with <a href=https://gohugo.io/ rel="nofollow noopener" target=_blank>Hugo</a> and <a href=https://github.com/Vimux/Mainroad/ rel="nofollow noopener" target=_blank>Mainroad</a> theme.</span></div></div></footer></div><script async defer src=/halley/js/menu.js></script></body></html>
