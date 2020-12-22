@@ -22,7 +22,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   pluralizelisttitles = false
 
 [Params.logo]
-  subtitle = "时间过去总得留下些痕迹" # Logo subtitle
+  subtitle = "每天进步一点点" # Logo subtitle
 
 [Params.sidebar]
   home = "right"   # Configure layout for home page
@@ -55,6 +55,16 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
     url = "/jdk/"
     weight = -100
     pluralizelisttitles = false
+    
+  [[menu.main]]
+    name = "源码阅读"
+    title = "源码"
+    post = "<span class='alert'></span>"
+    pre = "<i class='fa fa-road'></i>"
+    url = "/源码阅读/"
+    weight = 1
+    pluralizelisttitles = false
+
  [[menu.main]]
     name = "Axon"
     title = "Axon框架解析"
