@@ -3,12 +3,9 @@ title: "Configuration注解之ConfigurationClassPostProcessor"
 date: 2020-12-22T21:39:16+08:00
 draft: false
 ---
+# Configuration 注解之 ConfigurationClassPostProcessor
 
-
-
-
-![cbbd87d57e93d3f39aeb42d13b362590.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p520)
-
+![](https://halley-image.oss-cn-beijing.aliyuncs.com/2020/12/22/16086516575111.jpg)
 
 ### 运行时机
 
@@ -39,6 +36,8 @@ draft: false
 	}
 
 ```
+
+
 
 
 
@@ -215,5 +214,4 @@ AnnotationConfigUtils#registerAnnotationConfigProcessors(BeanDefinitionRegistry,
 5. jpaPresent && PersistenceAnnotationBeanPostProcessor
 6. EventListenerMethodProcessor
 7. DefaultEventListenerFactory
-
 
