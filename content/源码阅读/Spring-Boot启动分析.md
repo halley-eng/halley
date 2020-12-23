@@ -3,6 +3,7 @@ title: "Spring-Boot启动分析"
 date: 2020-12-22T21:39:16+08:00
 draft: false
 tags: ["spring-boot"]
+
 ---
 
 以常见的SpringBoot 工程启动类举例
@@ -13,10 +14,10 @@ tags: ["spring-boot"]
 @EnableConfigCenter
 @EnableMbean
 @EnableScheduling
-public class FcFundingApplication {
+public class FcXxxApplication {
 
   public static void main(String[] args) throws Exception {
-    SpringApplication.run(FcFundingApplication.class, args);
+    SpringApplication.run(FcXxxApplication.class, args);
     Runtime.getRuntime().addShutdownHook(new AppShutdownHook());
   }
 
@@ -25,11 +26,10 @@ public class FcFundingApplication {
 
 这里简单的通过 SpringApplication#run 就可以启动Spring 容器, 并让其运行在 Web 容器中;
 
-
 下面是其核心源码
 
 ```java
-	public ConfigurableApplicationContext run(String... args) {
+public ConfigurableApplicationContext run(String... args) {
 		// 1. 计数器初始化并启动
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
@@ -79,10 +79,9 @@ public class FcFundingApplication {
 	}
 ```
 
+其中如下图所示正常流程分成七个不同的阶段:
 
-其中如下图所示正常流程分成七个不同的阶段: 
-
-1. starting : 监听器加载后, 通知启动中; 
+1. starting : 监听器加载后, 通知启动中;
 2. environmentPrepared: 加载完环境变量
 3. contextPrepared： 应用完上下文初始化器
 4. contextLoaded ： 加载完成spring的bean
@@ -90,14 +89,15 @@ public class FcFundingApplication {
 6. runding: 前五步没有任何异常
 7. failed: 前五步有异常
 
-![697e5af79a53492b26a1eb172a284ae6.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p519)
+```
+![20201223182413](https://halley-image.oss-cn-beijing.aliyuncs.com/picgo20201223182413.png)
 
-
+```
 
 其中比较复杂的是启动上下文的流程:
 
 ```java
-	private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
+private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
 			SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
 		context.setEnvironment(environment);
 		// 1. 配置 beanNameGenerator、 resourceLoader、 addConversionService
@@ -135,7 +135,6 @@ public class FcFundingApplication {
 	}
 ```
 
-
 ### 总结
 
-SpringApplication#run 方法主要负责容器环境准备过程中的7个不同阶段; 
+SpringApplication#run 方法主要负责容器环境准备过程中的7个不同阶段;
