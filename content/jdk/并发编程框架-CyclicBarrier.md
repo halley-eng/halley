@@ -2,13 +2,12 @@
 title: "并发编程框架 CyclicBarrier"
 date: 2020-11-25T21:37:30+08:00
 draft: false
+
 ---
 
 ![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/concurrent/cyclicbarrier.jpg)
 
 ### 数据结构
-
-
 
 ```java
     /**
@@ -36,17 +35,16 @@ draft: false
     private int count;
 ```
 
-
 ### await
 
 各参与方通过调用await相关方法
-1. 使用同步锁lock
-2. 依次到达屏障处, 除非最后一个到达都会阻塞在屏障处; 
-3. 最后一个到达后执行后置命令, 并退出;
 
+1. 使用同步锁 lock
+2. 依次到达屏障处, 除非最后一个到达都会阻塞在屏障处
+3. 最后一个到达后执行后置命令, 并退出
 
-```java
-    /**
+```
+/**
      * Main barrier code, covering the various policies.
      */
     private int dowait(boolean timed, long nanos)
@@ -58,7 +56,7 @@ draft: false
 
         try {
             final Generation g = generation;
-            // 2. 第一次检测当前代的broken标示;
+            // 2. 第一次检测当前代的broken标识;
             if (g.broken)
                 throw new BrokenBarrierException();
 
@@ -131,20 +129,16 @@ draft: false
             lock.unlock();
         }
     }
-
 ```
-
-
 
 ### 重置锁屏障
 
 1. 获取锁
-1. breakBarrier: 对当前代的Generate添加中断表示;
-2. nextGeneration: 开启下一代，并唤醒
-
+2. breakBarrier: 对当前代的Generate添加中断标识;
+3. nextGeneration: 开启下一代，并唤醒
 
 ```java
-    
+  
      /**
      * Resets the barrier to its initial state.  If any parties are
      * currently waiting at the barrier, they will return with a
@@ -167,8 +161,8 @@ draft: false
 ```
 
 1. 更新broken标示
-1. 唤醒当前代所有的等待者
-    1. 这些等待着会被唤醒, 然后检测broken标示, 并因此抛出BrokenBarrierException异常
+2. 唤醒当前代所有的等待者
+   1. 这些等待着会被唤醒, 然后检测broken标示, 并因此抛出BrokenBarrierException异常
 
 ```java
     /**
@@ -185,10 +179,10 @@ draft: false
 
 ```
 
-
 开始下一代, 其中会
+
 1. 先唤醒上一代所有的等待者
-    1. 这些等待着会被唤醒, 然后检测broken标示, 并因此抛出BrokenBarrierException异常
+   1. 这些等待着会被唤醒, 然后检测broken标示, 并因此抛出BrokenBarrierException异常
 2. 重新初始化下一代上下文;
 
 ```java
@@ -207,15 +201,13 @@ draft: false
 
 ### Demo
 
-
-
 ```java
   
  class Solver {
    final int N;
    final float[][] data;
    final CyclicBarrier barrier;
-    
+  
    // 每个工作对象处理一行, 之后进入await, 
    class Worker implements Runnable {
      int myRow;
@@ -255,4 +247,3 @@ draft: false
 ### 总结
 
 CylicBarrier 对外方法只有await, reset 两个。 共同实现每count次触发一次屏障命令command, 并唤醒相关方继续执行的操作;
-

@@ -2,10 +2,14 @@
 title: "并发编程框架 CountDown"
 date: 2020-11-25T21:38:02+08:00
 draft: false
+
 ---
 
-
 ![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/concurrent/countdown.jpg)
+
+CountDownLatch  仅有一个sync属性， 并且是根据AQS自定义的Sync类型
+
+## Sync 实现
 
 ```java
     private static final class Sync extends AbstractQueuedSynchronizer {
@@ -20,7 +24,7 @@ draft: false
         }
 
         protected int tryAcquireShared(int acquires) {
-            // 知道当前剩余可获取信号量为0的时候 才能获取到共享锁;
+            // 直到剩余可获取信号量为0的时候 才能获取到共享锁;
             return (getState() == 0) ? 1 : -1;
         }
 
@@ -41,6 +45,7 @@ draft: false
     }
 ```
 
+## countdown 信号量到 0 级联唤醒等待者
 
 用户调用countdown函数, 底层是释放共享锁
 
@@ -70,8 +75,8 @@ draft: false
         }
 ```
 
-
 修改后的状态如果是0，则会唤醒等待线程去获取共享锁
+
 ```java
      protected int tryAcquireShared(int acquires) {
             // 直到当前剩余可获取信号量为0的时候 才能获取到共享锁;
@@ -82,5 +87,3 @@ draft: false
 那么上面肯定也可以获取到
 
 则await当前CountDown的线程会被唤醒;
-
-

@@ -2,27 +2,26 @@
 title: "并发编程框架 FutureTask"
 date: 2020-11-25T21:30:47+08:00
 draft: false
+
 ---
-
-
 
 ![ss](https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/futuretask/uml.jpg)
 
 ### Future模式
 
 Future代表异步执行结果. 用户可以
+
 1. 调用get方法获取执行结果
 2. 调用cancel方法取消执行
 3. 调用get(long, TimeUnit) 支持超时的获取结果;
 
 内存一致性保证:
-   异步计算 happen-before 另外一个线程的Future.get
-   
-###  RunnableFuture<V> 实现
+异步计算 happen-before 另外一个线程的Future.get
 
-用于定义一种Future, 同时也是一个Runnable. 
-一旦改Runnable运行完成, 那么该Future就能得到结果;
+### RunnableFuture<V> 实现
 
+用于定义一种Future, 同时也是一个Runnable.
+一旦该Runnable运行完成, 那么该Future就能得到结果;
 
 ```java
 /**
@@ -48,10 +47,10 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
 ### FutureTask 实现
 
 在FutureTask的使用场景中:
+
 1. 任务的执行和任务的执行状况查看在不同的线程
 2. 不同的线程通过状态变量state, 保证并发安全, 达到协同工作的目的;
 3. 任何修改状态的操作, 都要检测前置状态是否正确, 并使用CAS修改之;
-
 
 #### 状态定义
 
@@ -81,10 +80,11 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
     private static final int INTERRUPTING = 5;
     private static final int INTERRUPTED  = 6;
 ```
+
 #### 任务的执行
 
-```java
-    public void run() {
+```
+public void run() {
         // 当前不是NEW或者给当前任务绑定当前线程执行失败;
         if (state != NEW ||
             !UNSAFE.compareAndSwapObject(this, runnerOffset,
@@ -122,7 +122,6 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
                 handlePossibleCancellationInterrupt(s);
         }
     }
-
 ```
 
 
@@ -189,9 +188,7 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
     }
 ```
 
-
 #### 设置异常执行结果
-
 
 ```java
     protected void setException(Throwable t) {
@@ -201,7 +198,7 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
             finishCompletion();
         }
     }
-    
+  
 ```
 
 #### 查询执行结果
@@ -220,7 +217,7 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
     }
 ```
 
-等待结果返回: 
+等待结果返回:
 
 ```java
     /**
@@ -294,10 +291,6 @@ public interface RunnableFuture<V> extends Runnable, Future<V> {
 
 1. 认识FutureTask的7种状态
 2. 最终get方法的三种结果
-    1. 正常返回
-    2. CancellationException
-    3. ExecutionException
-
-
-
-
+   1. 正常返回
+   2. CancellationException
+   3. ExecutionException
