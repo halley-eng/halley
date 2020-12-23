@@ -89,6 +89,9 @@ public ConfigurableApplicationContext run(String... args) {
 6. runding: 前五步没有任何异常
 7. failed: 前五步有异常
 
+![697e5af79a53492b26a1eb172a284ae6.png](evernotecid://0C0C6CA7-E0B1-4D07-A08B-2457E22E1166/appyinxiangcom/2181761/ENResource/p519)
+
+
 ```
 ![20201223182413](https://halley-image.oss-cn-beijing.aliyuncs.com/picgo20201223182413.png)
 
