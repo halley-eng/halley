@@ -26,93 +26,92 @@
 </span><span style=color:#75715e>     * generation or when broken.
 </span><span style=color:#75715e>     */</span>
     <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> count<span style=color:#f92672>;</span>
-</code></pre></div><h3 id=await>await</h3><p>各参与方通过调用await相关方法</p><ol><li>使用同步锁lock</li><li>依次到达屏障处, 除非最后一个到达都会阻塞在屏障处;</li><li>最后一个到达后执行后置命令, 并退出;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
-</span><span style=color:#75715e>     * Main barrier code, covering the various policies.
-</span><span style=color:#75715e>     */</span>
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>int</span> <span style=color:#a6e22e>dowait</span><span style=color:#f92672>(</span><span style=color:#66d9ef>boolean</span> timed<span style=color:#f92672>,</span> <span style=color:#66d9ef>long</span> nanos<span style=color:#f92672>)</span>
-        <span style=color:#66d9ef>throws</span> InterruptedException<span style=color:#f92672>,</span> BrokenBarrierException<span style=color:#f92672>,</span>
-               TimeoutException <span style=color:#f92672>{</span>
-        <span style=color:#75715e>// 1. 各个线程以同步的方式进入到循环屏障;
-</span><span style=color:#75715e></span>        <span style=color:#66d9ef>final</span> ReentrantLock lock <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span><span style=color:#f92672>.</span><span style=color:#a6e22e>lock</span><span style=color:#f92672>;</span>
-        lock<span style=color:#f92672>.</span><span style=color:#a6e22e>lock</span><span style=color:#f92672>();</span>
+</code></pre></div><h3 id=await>await</h3><p>各参与方通过调用await相关方法</p><ol><li>使用同步锁 lock</li><li>依次到达屏障处, 除非最后一个到达都会阻塞在屏障处</li><li>最后一个到达后执行后置命令, 并退出</li></ol><pre><code>/**
+     * Main barrier code, covering the various policies.
+     */
+    private int dowait(boolean timed, long nanos)
+        throws InterruptedException, BrokenBarrierException,
+               TimeoutException {
+        // 1. 各个线程以同步的方式进入到循环屏障;
+        final ReentrantLock lock = this.lock;
+        lock.lock();
 
-        <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
-            <span style=color:#66d9ef>final</span> Generation g <span style=color:#f92672>=</span> generation<span style=color:#f92672>;</span>
-            <span style=color:#75715e>// 2. 第一次检测当前代的broken标示;
-</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>g<span style=color:#f92672>.</span><span style=color:#a6e22e>broken</span><span style=color:#f92672>)</span>
-                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> BrokenBarrierException<span style=color:#f92672>();</span>
+        try {
+            final Generation g = generation;
+            // 2. 第一次检测当前代的broken标识;
+            if (g.broken)
+                throw new BrokenBarrierException();
 
-            <span style=color:#75715e>// 3. 响应中断
-</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>interrupted</span><span style=color:#f92672>())</span> <span style=color:#f92672>{</span>
-                breakBarrier<span style=color:#f92672>();</span>
-                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> InterruptedException<span style=color:#f92672>();</span>
-            <span style=color:#f92672>}</span>
+            // 3. 响应中断
+            if (Thread.interrupted()) {
+                breakBarrier();
+                throw new InterruptedException();
+            }
 
-            <span style=color:#75715e>// 4. 当前是最后一个线程, 去执行相应的action, 最后一个线程不用去加入条件队列进入阻塞的流程;
-</span><span style=color:#75715e></span>            <span style=color:#66d9ef>int</span> index <span style=color:#f92672>=</span> <span style=color:#f92672>--</span>count<span style=color:#f92672>;</span>  <span style=color:#75715e>// 更新剩余等待的线程数目；
-</span><span style=color:#75715e></span>            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>index <span style=color:#f92672>==</span> 0<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>  <span style=color:#75715e>// tripped
-</span><span style=color:#75715e></span>                <span style=color:#66d9ef>boolean</span> ranAction <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
-                <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
-                    <span style=color:#75715e>//
-</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>final</span> Runnable command <span style=color:#f92672>=</span> barrierCommand<span style=color:#f92672>;</span>
-                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>command <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>)</span>
-                        command<span style=color:#f92672>.</span><span style=color:#a6e22e>run</span><span style=color:#f92672>();</span>
+            // 4. 当前是最后一个线程, 去执行相应的action, 最后一个线程不用去加入条件队列进入阻塞的流程;
+            int index = --count;  // 更新剩余等待的线程数目；
+            if (index == 0) {  // tripped
+                boolean ranAction = false;
+                try {
+                    //
+                    final Runnable command = barrierCommand;
+                    if (command != null)
+                        command.run();
 
-                    ranAction <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span> <span style=color:#75715e>// 标记已经运行过action
-</span><span style=color:#75715e></span>                    nextGeneration<span style=color:#f92672>();</span> <span style=color:#75715e>// 唤醒其他人, 并重新初始化下一代;
-</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>return</span> 0<span style=color:#f92672>;</span>
-                <span style=color:#f92672>}</span> <span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
-                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>ranAction<span style=color:#f92672>)</span>
-                        breakBarrier<span style=color:#f92672>();</span>
-                <span style=color:#f92672>}</span>
-            <span style=color:#f92672>}</span>
+                    ranAction = true; // 标记已经运行过action
+                    nextGeneration(); // 唤醒其他人, 并重新初始化下一代;
+                    return 0;
+                } finally {
+                    if (!ranAction)
+                        breakBarrier();
+                }
+            }
 
-            <span style=color:#75715e>// loop until tripped, broken, interrupted, or timed out
-</span><span style=color:#75715e></span>            <span style=color:#75715e>// 5. 循环直到broken，中断或超时
-</span><span style=color:#75715e></span>            <span style=color:#66d9ef>for</span> <span style=color:#f92672>(;;)</span> <span style=color:#f92672>{</span>
-                <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
-                    <span style=color:#75715e>// 5.1 没有设置超时时间, 直接丢进条件队列, 需要等待该条件被notify
-</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(!</span>timed<span style=color:#f92672>)</span>
-                        trip<span style=color:#f92672>.</span><span style=color:#a6e22e>await</span><span style=color:#f92672>();</span>
-                    <span style=color:#75715e>// 5.2 设置超时时间的等待: 支持超时响应的加入条件队列;
-</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>nanos <span style=color:#f92672>&gt;</span> 0L<span style=color:#f92672>)</span> <span style=color:#75715e>// 继续等待;
-</span><span style=color:#75715e></span>                        nanos <span style=color:#f92672>=</span> trip<span style=color:#f92672>.</span><span style=color:#a6e22e>awaitNanos</span><span style=color:#f92672>(</span>nanos<span style=color:#f92672>);</span>
+            // loop until tripped, broken, interrupted, or timed out
+            // 5. 循环直到broken，中断或超时
+            for (;;) {
+                try {
+                    // 5.1 没有设置超时时间, 直接丢进条件队列, 需要等待该条件被notify
+                    if (!timed)
+                        trip.await();
+                    // 5.2 设置超时时间的等待: 支持超时响应的加入条件队列;
+                    else if (nanos &gt; 0L) // 继续等待;
+                        nanos = trip.awaitNanos(nanos);
 
-                <span style=color:#f92672>}</span> <span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>InterruptedException ie<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
-                    <span style=color:#75715e>// 5.3 中断退出;
-</span><span style=color:#75715e></span>                    <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>g <span style=color:#f92672>==</span> generation <span style=color:#f92672>&amp;&amp;</span> <span style=color:#f92672>!</span> g<span style=color:#f92672>.</span><span style=color:#a6e22e>broken</span><span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
-                        breakBarrier<span style=color:#f92672>();</span> <span style=color:#75715e>// 更新当前代标示, 并触发各等待线程继续执行;
-</span><span style=color:#75715e></span>                        <span style=color:#66d9ef>throw</span> ie<span style=color:#f92672>;</span>   <span style=color:#75715e>// 抛出异常;
-</span><span style=color:#75715e></span>                    <span style=color:#f92672>}</span> <span style=color:#66d9ef>else</span> <span style=color:#f92672>{</span>
-                    <span style=color:#75715e>// 5.4
-</span><span style=color:#75715e></span>                        <span style=color:#75715e>// We&#39;re about to finish waiting even if we had not
-</span><span style=color:#75715e></span>                        <span style=color:#75715e>// been interrupted, so this interrupt is deemed to
-</span><span style=color:#75715e></span>                        <span style=color:#75715e>// &#34;belong&#34; to subsequent execution.
-</span><span style=color:#75715e></span>                        Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>().</span><span style=color:#a6e22e>interrupt</span><span style=color:#f92672>();</span>
-                    <span style=color:#f92672>}</span>
-                <span style=color:#f92672>}</span>
+                } catch (InterruptedException ie) {
+                    // 5.3 中断退出;
+                    if (g == generation &amp;&amp; ! g.broken) {
+                        breakBarrier(); // 更新当前代标示, 并触发各等待线程继续执行;
+                        throw ie;   // 抛出异常;
+                    } else {
+                    // 5.4
+                        // We're about to finish waiting even if we had not
+                        // been interrupted, so this interrupt is deemed to
+                        // &quot;belong&quot; to subsequent execution.
+                        Thread.currentThread().interrupt();
+                    }
+                }
 
-                <span style=color:#75715e>// 5.5 第二次检测broken标示,
-</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>g<span style=color:#f92672>.</span><span style=color:#a6e22e>broken</span><span style=color:#f92672>)</span>
-                    <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> BrokenBarrierException<span style=color:#f92672>();</span>
-                <span style=color:#75715e>// 5.6 当前处理代被异常结束；
-</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>g <span style=color:#f92672>!=</span> generation<span style=color:#f92672>)</span>
-                    <span style=color:#66d9ef>return</span> index<span style=color:#f92672>;</span>
+                // 5.5 第二次检测broken标示,
+                if (g.broken)
+                    throw new BrokenBarrierException();
+                // 5.6 当前处理代被异常结束；
+                if (g != generation)
+                    return index;
 
-                <span style=color:#75715e>// 5.7 设置了超时时间, 并且超时则标记当前代结束，并开启下一代;
-</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>timed <span style=color:#f92672>&amp;&amp;</span> nanos <span style=color:#f92672>&lt;=</span> 0L<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
-                    breakBarrier<span style=color:#f92672>();</span>
-                    <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> TimeoutException<span style=color:#f92672>();</span>
-                <span style=color:#f92672>}</span>
-            <span style=color:#f92672>}</span>
+                // 5.7 设置了超时时间, 并且超时则标记当前代结束，并开启下一代;
+                if (timed &amp;&amp; nanos &lt;= 0L) {
+                    breakBarrier();
+                    throw new TimeoutException();
+                }
+            }
 
-        <span style=color:#f92672>}</span> <span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
-            <span style=color:#75715e>// 解锁;
-</span><span style=color:#75715e></span>            lock<span style=color:#f92672>.</span><span style=color:#a6e22e>unlock</span><span style=color:#f92672>();</span>
-        <span style=color:#f92672>}</span>
-    <span style=color:#f92672>}</span>
-
-</code></pre></div><h3 id=重置锁屏障>重置锁屏障</h3><ol><li>获取锁</li><li>breakBarrier: 对当前代的Generate添加中断表示;</li><li>nextGeneration: 开启下一代，并唤醒</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    
+        } finally {
+            // 解锁;
+            lock.unlock();
+        }
+    }
+</code></pre><h3 id=重置锁屏障>重置锁屏障</h3><ol><li>获取锁</li><li>breakBarrier: 对当前代的Generate添加中断标识;</li><li>nextGeneration: 开启下一代，并唤醒</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>  
      <span style=color:#75715e>/**
 </span><span style=color:#75715e>     * Resets the barrier to its initial state.  If any parties are
 </span><span style=color:#75715e>     * currently waiting at the barrier, they will return with a
@@ -160,7 +159,7 @@
    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> N<span style=color:#f92672>;</span>
    <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>float</span><span style=color:#f92672>[][]</span> data<span style=color:#f92672>;</span>
    <span style=color:#66d9ef>final</span> CyclicBarrier barrier<span style=color:#f92672>;</span>
-    
+  
    <span style=color:#75715e>// 每个工作对象处理一行, 之后进入await, 
 </span><span style=color:#75715e></span>   <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Worker</span> <span style=color:#66d9ef>implements</span> Runnable <span style=color:#f92672>{</span>
      <span style=color:#66d9ef>int</span> myRow<span style=color:#f92672>;</span>
@@ -195,7 +194,7 @@
        threads<span style=color:#f92672>.</span><span style=color:#a6e22e>add</span><span style=color:#f92672>(</span>thread<span style=color:#f92672>);</span>
        thread<span style=color:#f92672>.</span><span style=color:#a6e22e>start</span><span style=color:#f92672>();</span>
    <span style=color:#f92672>}</span>
-</code></pre></div><h3 id=总结>总结</h3><p>CylicBarrier 对外方法只有await, reset 两个。 共同实现每count次触发一次屏障命令command, 并唤醒相关方继续执行的操作;</p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-semaphore/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>并发编程框架 Semaphore</p></a></div><div class="pager__item pager__item--next"><a class=pager__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-countdown/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title>并发编程框架 CountDown</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
+</code></pre></div><h3 id=总结>总结</h3><p>CylicBarrier 对外方法只有await, reset 两个。 共同实现每count次触发一次屏障命令command, 并唤醒相关方继续执行的操作;</p></div></article></main><div class="authorbox clearfix"><figure class=authorbox__avatar><img alt="Halley avatar" src=/halley/img/avatar.png class=avatar height=90 width=90></figure><div class=authorbox__header><span class=authorbox__name>About Halley</span></div><div class=authorbox__description>I&rsquo;am interest in compute sience</div></div><nav class="pager flex"><div class="pager__item pager__item--prev"><a class=pager__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-semaphore/ rel=prev><span class=pager__subtitle>«&#8201;Previous</span><p class=pager__title>并发编程框架 Semaphore</p></a></div><div class="pager__item pager__item--next"><a class=pager__link href=/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-countdownlatch/ rel=next><span class=pager__subtitle>Next&#8201;»</span><p class=pager__title>并发编程框架 CountDown</p></a></div></nav></div><aside class=sidebar><div class="widget-search widget"><form class=widget-search__form role=search method=get action=https://google.com/search><label><input class=widget-search__field type=search placeholder=SEARCH... name=q aria-label=SEARCH...></label>
 <input class=widget-search__submit type=submit value=Search>
 <input type=hidden name=sitesearch value=https://halley-eng.github.io/halley/></form></div><div class="widget-recent widget"><h4 class=widget__title>Recent Posts</h4><div class=widget__content><ul class=widget__list><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%9B%9E%E6%BA%AF%E9%A2%98%E7%9B%AE/>回溯题目</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E8%9E%BA%E6%97%8B%E7%9F%A9%E9%98%B5/>螺旋矩阵</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E5%88%86%E6%B2%BB%E9%A2%98%E7%9B%AE%E7%AF%87/>分治题目篇</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%89%91%E5%85%8B%E7%89%8C%E9%97%AE%E9%A2%98/>扑克牌问题</a></li><li class=widget__item><a class=widget__link href=/halley/%E7%AE%97%E6%B3%95/%E6%A0%B9%E6%8D%AE%E6%95%B0%E5%AD%97%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%B8%8B1%E7%9A%84%E6%95%B0%E7%9B%AE%E6%8E%92%E5%BA%8F_1356/>根据数字二进制下1的数目排序_1356</a></li></ul></div></div><div class="widget-taglist widget"><h4 class=widget__title>Tags</h4><div class=widget__content><a class="widget-taglist__link widget__link btn" href=/halley/tags/mybatis/ title=mybatis>mybatis</a>
 <a class="widget-taglist__link widget__link btn" href=/halley/tags/shardingspare/ title=shardingspare>shardingspare</a>

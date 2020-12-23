@@ -1,6 +1,6 @@
 <!doctype html><html class=no-js lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><title>并发编程框架 FutureTask - 月亮</title><script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script><meta name=description content><meta property="og:title" content="并发编程框架 FutureTask"><meta property="og:description" content="Future模式 Future代表异步执行结果. 用户可以
  调用get方法获取执行结果 调用cancel方法取消执行 调用get(long, TimeUnit) 支持超时的获取结果;  内存一致性保证: 异步计算 happen-before 另外一个线程的Future.get
-RunnableFuture实现 用于定义一种Future, 同时也是一个Runnable. 一旦改Runnable运行完成, 那么该Future就能得到结果;
+RunnableFuture实现 用于定义一种Future, 同时也是一个Runnable. 一旦该Runnable运行完成, 那么该Future就能得到结果;
 /** * A {@link Future} that is {@link Runnable}. Successful execution of * the {@code run} method causes completion of the {@code Future} * and allows access to its results. * @see FutureTask * @see Executor * @since 1.6 * @author Doug Lea * @param <V> The result type returned by this Future's {@code get} method */ public interface RunnableFuture<V> extends Runnable, Future<V> { /** * Sets this Future to the result of its computation * unless it has been cancelled."><meta property="og:type" content="article"><meta property="og:url" content="https://halley-eng.github.io/halley/jdk/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A1%86%E6%9E%B6-futuretask/"><meta property="article:published_time" content="2020-11-25T21:30:47+08:00"><meta property="article:modified_time" content="2020-11-25T21:30:47+08:00"><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=dns-prefetch href=//fonts.googleapis.com><link rel=dns-prefetch href=//fonts.gstatic.com><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700"><link rel=stylesheet href=/halley/css/style.css><link rel="shortcut icon" href=/halley/favicon.ico></head><body class=body><div class="container container--outer"><header class=header><div class="container header__container"><div class=logo><a class=logo__link href=/halley/ title=月亮 rel=home><div class="logo__item logo__text"><div class=logo__title>月亮</div><div class=logo__tagline>每天进步一点点</div></div></a></div><nav class=menu><button class=menu__btn aria-haspopup=true aria-expanded=false tabindex=0>
 <span class=menu__btn-title tabindex=-1>Menu</span></button><ul class=menu__list><li class=menu__item><a class=menu__link href=/halley/jdk/><i class="fa fa-road"></i><span class=menu__text>JDK</span>
 <span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E7%AE%97%E6%B3%95/><i class="fa fa-road"></i><span class=menu__text>算法</span>
@@ -8,7 +8,7 @@ RunnableFuture实现 用于定义一种Future, 同时也是一个Runnable. 一�
 <span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/><i class="fa fa-road"></i><span class=menu__text>源码阅读</span>
 <span class=alert></span></a></li><li class=menu__item><a class=menu__link href=/halley/about/><span class=menu__text>关于作者</span></a></li></ul></nav></div></header><div class="wrapper flex"><div class=primary><main class=main role=main><article class=post><header class=post__header><h1 class=post__title>并发编程框架 FutureTask</h1><div class="post__meta meta"><div class="meta__item-datetime meta__item"><svg class="meta__icon icon icon-time" width="16" height="14" viewBox="0 0 30 28"><path d="M15 0C7 0 1 6 1 14s6 14 14 14 14-6 14-14S23 0 15 0zm0 25C9 25 4 20 4 14S9 3 15 3s11 5 11 11-5 11-11 11zm1-18h-2v8.4l6.8 4.4L22 18l-6-3.8V7z"/></svg><time class=meta__text datetime=2020-11-25T21:30:47+08:00>November 25, 2020</time></div></div></header><div class="content post__content clearfix"><p><img src=https://cdn.jsdelivr.net/gh/halley-eng/halley/static/images/jdk/futuretask/uml.jpg alt=ss></p><h3 id=future模式>Future模式</h3><p>Future代表异步执行结果. 用户可以</p><ol><li>调用get方法获取执行结果</li><li>调用cancel方法取消执行</li><li>调用get(long, TimeUnit) 支持超时的获取结果;</li></ol><p>内存一致性保证:
 异步计算 happen-before 另外一个线程的Future.get</p><h3 id=runnablefuturev-实现>RunnableFuture 实现</h3><p>用于定义一种Future, 同时也是一个Runnable.
-一旦改Runnable运行完成, 那么该Future就能得到结果;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#75715e>/**
+一旦该Runnable运行完成, 那么该Future就能得到结果;</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#75715e>/**
 </span><span style=color:#75715e> * A {@link Future} that is {@link Runnable}. Successful execution of
 </span><span style=color:#75715e> * the {@code run} method causes completion of the {@code Future}
 </span><span style=color:#75715e> * and allows access to its results.
@@ -50,46 +50,45 @@ RunnableFuture实现 用于定义一种Future, 同时也是一个Runnable. 一�
     <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> CANCELLED    <span style=color:#f92672>=</span> 4<span style=color:#f92672>;</span>
     <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> INTERRUPTING <span style=color:#f92672>=</span> 5<span style=color:#f92672>;</span>
     <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>int</span> INTERRUPTED  <span style=color:#f92672>=</span> 6<span style=color:#f92672>;</span>
-</code></pre></div><h4 id=任务的执行>任务的执行</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>run</span><span style=color:#f92672>()</span> <span style=color:#f92672>{</span>
-        <span style=color:#75715e>// 当前不是NEW或者给当前任务绑定当前线程执行失败;
-</span><span style=color:#75715e></span>        <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>state <span style=color:#f92672>!=</span> NEW <span style=color:#f92672>||</span>
-            <span style=color:#f92672>!</span>UNSAFE<span style=color:#f92672>.</span><span style=color:#a6e22e>compareAndSwapObject</span><span style=color:#f92672>(</span><span style=color:#66d9ef>this</span><span style=color:#f92672>,</span> runnerOffset<span style=color:#f92672>,</span>
-                                         <span style=color:#66d9ef>null</span><span style=color:#f92672>,</span> Thread<span style=color:#f92672>.</span><span style=color:#a6e22e>currentThread</span><span style=color:#f92672>()))</span>
-            <span style=color:#66d9ef>return</span><span style=color:#f92672>;</span>
-        <span style=color:#75715e>// 已经确保 执行依赖的状态当前为NEW, 并且给当前任务绑定当前线程执行中;
-</span><span style=color:#75715e></span>        <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
-            Callable<span style=color:#f92672>&lt;</span>V<span style=color:#f92672>&gt;</span> c <span style=color:#f92672>=</span> callable<span style=color:#f92672>;</span>
-            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>c <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> state <span style=color:#f92672>==</span> NEW<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
-                V result<span style=color:#f92672>;</span>
-                <span style=color:#66d9ef>boolean</span> ran<span style=color:#f92672>;</span>
-                <span style=color:#66d9ef>try</span> <span style=color:#f92672>{</span>
-                    <span style=color:#75715e>// 触发任务执行;
-</span><span style=color:#75715e></span>                    result <span style=color:#f92672>=</span> c<span style=color:#f92672>.</span><span style=color:#a6e22e>call</span><span style=color:#f92672>();</span>
-                    ran <span style=color:#f92672>=</span> <span style=color:#66d9ef>true</span><span style=color:#f92672>;</span>
-                <span style=color:#f92672>}</span> <span style=color:#66d9ef>catch</span> <span style=color:#f92672>(</span>Throwable ex<span style=color:#f92672>)</span> <span style=color:#f92672>{</span>
-                <span style=color:#75715e>// 设置异常执行结果
-</span><span style=color:#75715e></span>                    result <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
-                    ran <span style=color:#f92672>=</span> <span style=color:#66d9ef>false</span><span style=color:#f92672>;</span>
-                    setException<span style=color:#f92672>(</span>ex<span style=color:#f92672>);</span>
-                <span style=color:#f92672>}</span>
-                <span style=color:#75715e>// 设置正常训醒结果
-</span><span style=color:#75715e></span>                <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>ran<span style=color:#f92672>)</span>
-                    set<span style=color:#f92672>(</span>result<span style=color:#f92672>);</span>
-            <span style=color:#f92672>}</span>
-        <span style=color:#f92672>}</span> <span style=color:#66d9ef>finally</span> <span style=color:#f92672>{</span>
-            <span style=color:#75715e>// runner must be non-null until state is settled to
-</span><span style=color:#75715e></span>            <span style=color:#75715e>// prevent concurrent calls to run()
-</span><span style=color:#75715e></span>            runner <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span><span style=color:#f92672>;</span>
-            <span style=color:#75715e>// 设置中断执行结果;
-</span><span style=color:#75715e></span>            <span style=color:#75715e>// state must be re-read after nulling runner to prevent
-</span><span style=color:#75715e></span>            <span style=color:#75715e>// leaked interrupts
-</span><span style=color:#75715e></span>            <span style=color:#66d9ef>int</span> s <span style=color:#f92672>=</span> state<span style=color:#f92672>;</span>
-            <span style=color:#66d9ef>if</span> <span style=color:#f92672>(</span>s <span style=color:#f92672>&gt;=</span> INTERRUPTING<span style=color:#f92672>)</span> <span style=color:#75715e>//
-</span><span style=color:#75715e></span>                handlePossibleCancellationInterrupt<span style=color:#f92672>(</span>s<span style=color:#f92672>);</span>
-        <span style=color:#f92672>}</span>
-    <span style=color:#f92672>}</span>
-
-</code></pre></div><h4 id=设置正常运行结果>设置正常运行结果</h4><ol><li>状态从NEW推到COMPLETING</li><li>设置运行结果</li><li>状态从COMPLETING推到NORMAL</li><li>唤醒等待节点;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
+</code></pre></div><h4 id=任务的执行>任务的执行</h4><pre><code>public void run() {
+        // 当前不是NEW或者给当前任务绑定当前线程执行失败;
+        if (state != NEW ||
+            !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                         null, Thread.currentThread()))
+            return;
+        // 已经确保 执行依赖的状态当前为NEW, 并且给当前任务绑定当前线程执行中;
+        try {
+            Callable&lt;V&gt; c = callable;
+            if (c != null &amp;&amp; state == NEW) {
+                V result;
+                boolean ran;
+                try {
+                    // 触发任务执行;
+                    result = c.call();
+                    ran = true;
+                } catch (Throwable ex) {
+                // 设置异常执行结果
+                    result = null;
+                    ran = false;
+                    setException(ex);
+                }
+                // 设置正常训醒结果
+                if (ran)
+                    set(result);
+            }
+        } finally {
+            // runner must be non-null until state is settled to
+            // prevent concurrent calls to run()
+            runner = null;
+            // 设置中断执行结果;
+            // state must be re-read after nulling runner to prevent
+            // leaked interrupts
+            int s = state;
+            if (s &gt;= INTERRUPTING) //
+                handlePossibleCancellationInterrupt(s);
+        }
+    }
+</code></pre><h4 id=设置正常运行结果>设置正常运行结果</h4><ol><li>状态从NEW推到COMPLETING</li><li>设置运行结果</li><li>状态从COMPLETING推到NORMAL</li><li>唤醒等待节点;</li></ol><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
 </span><span style=color:#75715e>     * Sets the result of this future to the given value unless
 </span><span style=color:#75715e>     * this future has already been set or has been cancelled.
 </span><span style=color:#75715e>     *
@@ -144,7 +143,7 @@ RunnableFuture实现 用于定义一种Future, 同时也是一个Runnable. 一�
 </span><span style=color:#75715e></span>            finishCompletion<span style=color:#f92672>();</span>
         <span style=color:#f92672>}</span>
     <span style=color:#f92672>}</span>
-    
+  
 </code></pre></div><h4 id=查询执行结果>查询执行结果</h4><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>    <span style=color:#75715e>/**
 </span><span style=color:#75715e>     * @throws CancellationException {@inheritDoc}
 </span><span style=color:#75715e>     */</span>
