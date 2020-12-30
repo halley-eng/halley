@@ -45,4 +45,9 @@ List
 Vector ArrayList LinkedList CopyOnWriteArrayList Queue
 LinkedList ArrayDeque ConcurrentLinkedDeque BlockingDeque Set
 LinkedHashSet TreeSet Map
-IdentityHashMap&amp;lt;K,V&amp;gt; HashMap&amp;lt;K,V&amp;gt; LinkedHashMap&amp;lt;K,V&amp;gt; ConcurrentSkipListMap&amp;lt;K,V&amp;gt; TreeMap&amp;lt;K,V&amp;gt; WeakHashMap&amp;lt;K,V&amp;gt; Hashtable&amp;lt;K,V&amp;gt; Properties 共 14 篇</description></item></channel></rss>
+IdentityHashMap&amp;lt;K,V&amp;gt; HashMap&amp;lt;K,V&amp;gt; LinkedHashMap&amp;lt;K,V&amp;gt; ConcurrentSkipListMap&amp;lt;K,V&amp;gt; TreeMap&amp;lt;K,V&amp;gt; WeakHashMap&amp;lt;K,V&amp;gt; Hashtable&amp;lt;K,V&amp;gt; Properties 共 14 篇</description></item><item><title/><link>https://halley-eng.github.io/halley/jdk/%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B%E4%B9%8Bcompletablefuture/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://halley-eng.github.io/halley/jdk/%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B%E4%B9%8Bcompletablefuture/</guid><description>Future 接口介绍 JDK5 新增了 Future 接口，用于描述一个异步计算的结果。虽然 Future 以及相关使用方法提供了异步执行任务的能力，但是对于结果的获取却是很不方便，只能通过阻塞或者轮询的方式得到任务的结果。
+阻塞的方式显然和我们的异步编程的初衷相违背， 轮询的方式又会耗费无谓的 CPU 资源，而且也不能及时地得到计算结果， 为什么不能用观察者设计模式呢？即当计算结果完成及时通知监听者。
+有一些开源框架实现了我们的设想，例如 Netty 的 ChannelFuture 类扩展了 Future 接口，通过提供 addListener 方法实现支持回调方式的异步编程。Netty 中所有的 I/O 操作都是异步的,这意味着任何的 I/O 调用都将立即返回，而不保证这些被请求的 I/O 操作在调用结束的时候已经完成。取而代之地，你会得到一个返回的 ChannelFuture 实例，这个实例将给你一些关于 I/O 操作结果或者状态的信息。当一个 I/O 操作开始的时候，一个新的 Future 对象就会被创建。在开始的时候，新的 Future 是未完成的状态－－它既非成功、失败，也非被取消，因为 I/O 操作还没有结束。如果 I/O 操作以成功、失败或者被取消中的任何一种状态结束了，那么这个 Future 将会被标记为已完成，并包含更多详细的信息（例如：失败的原因）。请注意，即使是失败和被取消的状态，也是属于已完成的状态。
+下面主要介绍下CompletableFuture的实现和相关源码解析;
+同步执行动作 示例 static void thenApplyExample() { CompletableFuture&amp;lt;String&amp;gt; cf = CompletableFuture.completedFuture(&amp;#34;message&amp;#34;).thenApply(s -&amp;gt; { assertFalse(Thread.currentThread().isDaemon()); returns.toUpperCase(); }); assertEquals(&amp;#34;MESSAGE&amp;#34;, cf.getNow(null)); } 以上代码在计算正常完成的前提下将执行动作（此处为转换成大写字母）。
+相关源码 接收任务API</description></item></channel></rss>
