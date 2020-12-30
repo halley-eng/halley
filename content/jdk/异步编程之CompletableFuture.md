@@ -6,8 +6,6 @@ tags: ["并发"]
 
 ---
 
-Future 接口介绍
-
 JDK5 新增了 Future 接口，用于描述一个异步计算的结果。虽然 Future 以及相关使用方法提供了异步执行任务的能力，但是对于结果的获取却是很不方便，只能通过阻塞或者轮询的方式得到任务的结果。
 
 1. 阻塞的方式显然和我们的异步编程的初衷相违背，
@@ -123,7 +121,7 @@ static void thenApplyExample() {
                    // 则会优先使用之, 去运行该任务, 此后直接返回;
                    if (c != null && !c.claim())
                        return false;
-               // 2.3 没有定义线程池的情况下, 这里会同步执行任务 并设置任务的执行结果;                    
+               // 2.3 没有定义线程池的情况下, 这里会同步执行任务 并设置任务的执行结果;                  
                    // 任务封装UniApply不能处理完成该任务, 则在调用线程执行该任务, 并完成之;
                    @SuppressWarnings("unchecked") S s = (S) r;
                    completeValue(f.apply(s));
@@ -434,7 +432,7 @@ andTree 会将所有的 Future 构建一颗二叉树, 最终返回根节点.
 
     static CompletableFuture<Void> andTree(CompletableFuture<?>[] cfs,
                                            int lo, int hi) {
-        // 当前需要构建的节点 d; 它将依赖子任务的运行完成, 并能够响应子任务的完成信号;                                                                               
+        // 当前需要构建的节点 d; 它将依赖子任务的运行完成, 并能够响应子任务的完成信号;                                                                             
         CompletableFuture<Void> d = new CompletableFuture<Void>();
         // 1. 递归边界条件, 当前节点直接完成; 
         if (lo > hi) // empty
@@ -447,7 +445,7 @@ andTree 会将所有的 Future 构建一颗二叉树, 最终返回根节点.
             // 2.2 递归封装左子树
             if ((a = (lo == mid ? cfs[lo] :
                       andTree(cfs, lo, mid))) == null || 
-                // 递归封装右子树                  
+                // 递归封装右子树                
                 (b = (lo == hi ? a : (hi == mid+1) ? cfs[hi] :
                       andTree(cfs, mid+1, hi)))  == null)
                 throw new NullPointerException();
